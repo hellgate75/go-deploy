@@ -5,12 +5,12 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/hellgate75/go-deploy/net/generic"
+	"golang.org/x/crypto/ssh"
 	"io"
 	"io/ioutil"
 	"net"
 	"os"
-
-	"golang.org/x/crypto/ssh"
 )
 
 type sshScriptType byte
@@ -24,22 +24,6 @@ const (
 	interactiveShell sshShellType = iota
 	nonInteractiveShell
 )
-
-// Manages the ssh remote scripting execution
-type SSHScript interface {
-
-	// ExecuteWithOutput: Executes script(s) or command(s) using standard I/O
-	ExecuteWithOutput() ([]byte, error)
-
-	// ExecuteWithFullOutput: Executes script(s) or command(s) using standard and error I/O
-	ExecuteWithFullOutput() ([]byte, error)
-
-	// SetStdio: Sets the shell standard and error I/O streams
-	SetStdio(stdout, stderr io.Writer) SSHScript
-
-	// NewCmd: Creates a client command
-	NewCmd(cmd string) SSHScript
-}
 
 type sshScript struct {
 	client     *ssh.Client
@@ -55,8 +39,7 @@ type sshScript struct {
 // Execute
 func (rs *sshScript) execute() error {
 	if rs.err != nil {
-		fmt.Println(rs.err)
-		return rs.err
+		return errors.New("SSHScript.execute: " + rs.err.Error())
 	}
 
 	if rs._type == cmdLine {
@@ -66,7 +49,7 @@ func (rs *sshScript) execute() error {
 	} else if rs._type == scriptFile {
 		return rs.runScriptFile()
 	} else {
-		return errors.New("SSHScript.execute: Not supported sshScript type")
+		return errors.New(fmt.Sprintf("SSHScript.execute: Not supported execution type: %v", rs._type))
 	}
 }
 
@@ -77,6 +60,9 @@ func (rs *sshScript) ExecuteWithOutput() ([]byte, error) {
 	var out bytes.Buffer
 	rs.stdout = &out
 	err := rs.execute()
+	if err != nil {
+		err = errors.New("SSHScript.ExecuteWithFullOutput: " + err.Error())
+	}
 	return out.Bytes(), err
 }
 
@@ -96,20 +82,20 @@ func (rs *sshScript) ExecuteWithFullOutput() ([]byte, error) {
 	rs.stderr = &stderr
 	err := rs.execute()
 	if err != nil {
-		return stderr.Bytes(), err
+		return stderr.Bytes(), errors.New("SSHScript.ExecuteWithFullOutput: " + err.Error())
 	}
 	return stdout.Bytes(), err
 }
 
-func (rs *sshScript) NewCmd(cmd string) SSHScript {
+func (rs *sshScript) NewCmd(cmd string) generic.CommandsScript {
 	_, err := rs.script.WriteString(cmd + "\n")
 	if err != nil {
-		rs.err = err
+		rs.err = errors.New("SSHScript.NewCmd: " + err.Error())
 	}
 	return rs
 }
 
-func (rs *sshScript) SetStdio(stdout, stderr io.Writer) SSHScript {
+func (rs *sshScript) SetStdio(stdout, stderr io.Writer) generic.CommandsScript {
 	rs.stdout = stdout
 	rs.stderr = stderr
 	return rs
@@ -118,7 +104,7 @@ func (rs *sshScript) SetStdio(stdout, stderr io.Writer) SSHScript {
 func (rs *sshScript) runCmd(cmd string) error {
 	session, err := rs.client.NewSession()
 	if err != nil {
-		return err
+		return errors.New("SSHScript.runCmd: " + err.Error())
 	}
 	defer session.Close()
 
@@ -126,7 +112,7 @@ func (rs *sshScript) runCmd(cmd string) error {
 	session.Stderr = rs.stderr
 
 	if err := session.Run(cmd); err != nil {
-		return err
+		return errors.New("SSHScript.runCmd: " + err.Error())
 	}
 	return nil
 }
@@ -138,11 +124,11 @@ func (rs *sshScript) runCmds() error {
 			break
 		}
 		if err != nil {
-			return err
+			return errors.New("SSHScript.runCmds: " + err.Error())
 		}
 
 		if err := rs.runCmd(statment); err != nil {
-			return err
+			return errors.New("SSHScript.runCmds: " + err.Error())
 		}
 	}
 
@@ -160,10 +146,10 @@ func (rs *sshScript) runScript() error {
 	session.Stderr = rs.stderr
 
 	if err := session.Shell(); err != nil {
-		return err
+		return errors.New("SSHScript.runScript: " + err.Error())
 	}
 	if err := session.Wait(); err != nil {
-		return err
+		return errors.New("SSHScript.runScript: " + err.Error())
 	}
 
 	return nil
@@ -177,41 +163,29 @@ func (rs *sshScript) runScriptFile() error {
 	}
 	_, err = io.Copy(&buffer, file)
 	if err != nil {
-		return err
+		return errors.New("SSHScript.runScriptFile: " + err.Error())
 	}
 
 	rs.script = &buffer
-	return rs.runScript()
-}
-
-// Configuration for the remote session terminal
-type TerminalConfig struct {
-	Term   string
-	Height int
-	Weight int
-	Modes  ssh.TerminalModes
-}
-
-// Manages the interaction on client side with the remote SSH Shell
-type SSHShell interface {
-	// Start: start a remote shell on client
-	Start() error
-
-	// SetStdio: Sets the shell standard and error I/O streams
-	SetStdio(stdin io.Reader, stdout, stderr io.Writer) SSHShell
+	err = rs.runScript()
+	rs.script = bytes.NewBufferString("")
+	if err != nil {
+		errors.New("SSHScript.runScriptFile: " + err.Error())
+	}
+	return nil
 }
 
 type sshShell struct {
 	client         *ssh.Client
 	requestPty     bool
-	terminalConfig *TerminalConfig
+	terminalConfig *generic.TerminalConfig
 
 	stdin  io.Reader
 	stdout io.Writer
 	stderr io.Writer
 }
 
-func (rs *sshShell) SetStdio(stdin io.Reader, stdout, stderr io.Writer) SSHShell {
+func (rs *sshShell) SetStdio(stdin io.Reader, stdout, stderr io.Writer) generic.RemoteShell {
 	rs.stdin = stdin
 	rs.stdout = stdout
 	rs.stderr = stderr
@@ -244,48 +218,30 @@ func (rs *sshShell) Start() error {
 	if rs.requestPty {
 		tc := rs.terminalConfig
 		if tc == nil {
-			tc = &TerminalConfig{
+			tc = &generic.TerminalConfig{
 				Term:   "xterm",
 				Height: 40,
 				Weight: 80,
+				Modes: ssh.TerminalModes{
+					ssh.ECHO:  0, // Disable echoing
+					ssh.IGNCR: 1, // Ignore CR on input.
+				},
 			}
 		}
 		if err := session.RequestPty(tc.Term, tc.Height, tc.Weight, tc.Modes); err != nil {
-			return err
+			return errors.New("SSHShell.Start: " + err.Error())
 		}
 	}
 
 	if err := session.Shell(); err != nil {
-		return err
+		return errors.New("SSHShell.Start: " + err.Error())
 	}
 
 	if err := session.Wait(); err != nil {
-		return err
+		return errors.New("SSHShell.Start: " + err.Error())
 	}
 
 	return nil
-}
-
-// Manages the client server connectivity
-type SSHClient interface {
-
-	// Close: Cloeses the reote connection
-	Close() error
-
-	// Terminal: Creates an interactive shell on client.
-	Terminal(config *TerminalConfig) SSHShell
-
-	// NewCmd: Creates a client command
-	NewCmd(cmd string) SSHScript
-
-	// Script: Creates a script client command list
-	Script(script string) SSHScript
-
-	// ScriptFile: Creates a script client command list from file
-	ScriptFile(fname string) SSHScript
-
-	// Shell: Creates a noninteractive shell on client.
-	Shell() SSHShell
 }
 
 type sshClient struct {
@@ -296,7 +252,7 @@ func (c *sshClient) Close() error {
 	return c.client.Close()
 }
 
-func (c *sshClient) Terminal(config *TerminalConfig) SSHShell {
+func (c *sshClient) Terminal(config *generic.TerminalConfig) generic.RemoteShell {
 	return &sshShell{
 		client:         c.client,
 		terminalConfig: config,
@@ -304,7 +260,7 @@ func (c *sshClient) Terminal(config *TerminalConfig) SSHShell {
 	}
 }
 
-func (c *sshClient) NewCmd(cmd string) SSHScript {
+func (c *sshClient) NewCmd(cmd string) generic.CommandsScript {
 	return &sshScript{
 		_type:  cmdLine,
 		client: c.client,
@@ -312,7 +268,7 @@ func (c *sshClient) NewCmd(cmd string) SSHScript {
 	}
 }
 
-func (c *sshClient) Script(script string) SSHScript {
+func (c *sshClient) Script(script string) generic.CommandsScript {
 	return &sshScript{
 		_type:  rawScript,
 		client: c.client,
@@ -320,7 +276,7 @@ func (c *sshClient) Script(script string) SSHScript {
 	}
 }
 
-func (c *sshClient) ScriptFile(fname string) SSHScript {
+func (c *sshClient) ScriptFile(fname string) generic.CommandsScript {
 	return &sshScript{
 		_type:      scriptFile,
 		client:     c.client,
@@ -328,42 +284,18 @@ func (c *sshClient) ScriptFile(fname string) SSHScript {
 	}
 }
 
-func (c *sshClient) Shell() SSHShell {
+func (c *sshClient) Shell() generic.RemoteShell {
 	return &sshShell{
 		client:     c.client,
 		requestPty: false,
 	}
 }
 
-// SSHConnectionHandler: SSH Connection handler and client connectivity maintainer
-type SSHConnectionHandler interface {
-	// GetClient: Retrieves current connected client or nil elsewise
-	GetClient() SSHClient
-
-	// IsConnected: Gives state about connection success
-	IsConnected() bool
-
-	// Close: Closes the remote connection
-	Close() error
-
-	// ConnectWithPasswd: Connect the SSH server with given passwd authmethod.
-	ConnectWithPasswd(addr string, user string, passwd string) error
-
-	// ConnectWithKey: Connect the SSH server with given SSH server with key authmethod.
-	ConnectWithKey(addr string, user string, keyfile string) error
-
-	// ConnectWithKeyAndPassphrase: Connect the SSH server with given key and a passphrase to decrypt the private key
-	ConnectWithKeyAndPassphrase(addr string, user, keyfile string, passphrase string) error
-
-	// Connect: Connect the SSH server using given network, address and configuration
-	Connect(network string, addr string, config *ssh.ClientConfig) error
-}
-
 type sshConnection struct {
-	_client SSHClient
+	_client generic.NetworkClient
 }
 
-func (conn *sshConnection) GetClient() SSHClient {
+func (conn *sshConnection) GetClient() generic.NetworkClient {
 	return conn._client
 }
 
@@ -450,7 +382,7 @@ func (conn *sshConnection) Connect(network string, addr string, config *ssh.Clie
 }
 
 // NewSSHConnection: Creates a new SSH connection handler
-func NewSSHConnection() SSHConnectionHandler {
+func NewSSHConnection() generic.ConnectionHandler {
 	return &sshConnection{
 		_client: nil,
 	}
