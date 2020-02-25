@@ -1,18 +1,18 @@
 package types
 
 import (
-	"github.com/hellgate75/go-deploy/types/cmdtypes"
-	"fmt"
 	"errors"
+	"fmt"
+	"github.com/hellgate75/go-deploy/types/cmdtypes"
+	"gopkg.in/yaml.v3"
 	"io/ioutil"
 	"os"
-	"gopkg.in/yaml.v3"
 	"strings"
 )
 
 type Feed struct {
-	Name 		string 							`yaml:"name,omitempty"`
-	Options 	map[interface{}]interface{} 	`yaml:",omitempty"`
+	Name    string                      `yaml:"name,omitempty"`
+	Options map[interface{}]interface{} `yaml:",omitempty"`
 }
 
 type IFeed interface {
@@ -23,16 +23,16 @@ type IFeed interface {
 
 func (feed *Feed) Load(path string) error {
 	file, err := os.Open(path)
-	if  err != nil {
+	if err != nil {
 		return err
 	}
 	var data []byte
 	data, err = ioutil.ReadAll(file)
-	if  err != nil {
+	if err != nil {
 		return err
 	}
 	err = yaml.Unmarshal(data, feed)
-	if  err != nil {
+	if err != nil {
 		return err
 	}
 	return nil
@@ -40,16 +40,16 @@ func (feed *Feed) Load(path string) error {
 
 func (feed *Feed) Save(path string) error {
 	_, err := os.Stat(path)
-	if  err != nil {
+	if err != nil {
 		os.Remove(path)
 	}
 	var data []byte
 	data, err = yaml.Marshal(feed)
-	if  err != nil {
+	if err != nil {
 		return err
 	}
 	err = ioutil.WriteFile(path, data, 0666)
-	if  err != nil {
+	if err != nil {
 		return err
 	}
 	return nil
@@ -57,7 +57,7 @@ func (feed *Feed) Save(path string) error {
 
 func (feed Feed) Validate() (*cmdtypes.FeedExec, []error) {
 	var errors []error = make([]error, 0)
-	var steps  []*cmdtypes.Step  = make([]*cmdtypes.Step, 0)
+	var steps []*cmdtypes.Step = make([]*cmdtypes.Step, 0)
 	for key, value := range feed.Options {
 		stepsX, errorsX := EvaluateSteps(key, value)
 		for _, stepX := range stepsX {
@@ -67,14 +67,14 @@ func (feed Feed) Validate() (*cmdtypes.FeedExec, []error) {
 			errors = append(errors, errX)
 		}
 	}
-	return & cmdtypes.FeedExec{
-			Steps: steps,	
-		   }, errors
+	return &cmdtypes.FeedExec{
+		Steps: steps,
+	}, errors
 }
 
 func EvaluateSteps(key interface{}, value interface{}) ([]*cmdtypes.Step, []error) {
 	var errorsList []error = make([]error, 0)
-	var steps  []*cmdtypes.Step  = make([]*cmdtypes.Step, 0)
+	var steps []*cmdtypes.Step = make([]*cmdtypes.Step, 0)
 	var keyStepType int = 0
 	var keyType string = fmt.Sprintf("%T", key)
 	var valueType string = fmt.Sprintf("%T", value)
@@ -97,7 +97,7 @@ func EvaluateSteps(key interface{}, value interface{}) ([]*cmdtypes.Step, []erro
 					}
 				}
 			} else {
-				
+
 				if strings.ToLower(keyVal) == "import" {
 					if valueType == "[]string" || valueType == "[]interface{}" {
 						var feeds []*cmdtypes.FeedExec = make([]*cmdtypes.FeedExec, 0)
@@ -105,11 +105,11 @@ func EvaluateSteps(key interface{}, value interface{}) ([]*cmdtypes.Step, []erro
 						if valueType == "[]string" {
 							for _, str := range value.([]string) {
 								arr = append(arr, str)
-							}						
+							}
 						} else {
 							for _, iface := range value.([]interface{}) {
 								arr = append(arr, fmt.Sprintf("%v", iface))
-							}						
+							}
 						}
 						for _, path := range arr {
 							var cfeed *Feed = &Feed{}
@@ -117,31 +117,35 @@ func EvaluateSteps(key interface{}, value interface{}) ([]*cmdtypes.Step, []erro
 							if err != nil {
 								errorsList = append(errorsList, err)
 							} else {
-								fEx, exceptions := cfeed.Validate();
+								fEx, exceptions := cfeed.Validate()
 								if len(exceptions) > 0 {
 									for _, errX := range exceptions {
 										errorsList = append(errorsList, errX)
-									} 
+									}
 								} else {
 									feeds = append(feeds, fEx)
 								}
 							}
-								
+
 						}
 						steps = append(steps, cmdtypes.NewImportStep(feeds))
 					} else {
 						errorsList = append(errorsList, errors.New(fmt.Sprintf("Invalid import type %v, expected []string", valueType)))
 					}
-						
+
 				} else {
-					steps = append(steps, cmdtypes.NewStep( keyStepType, value))
+					step, err := cmdtypes.NewStep(keyStepType, value)
+					if err != nil {
+						errorsList = append(errorsList, err)
+					} else {
+						steps = append(steps, step)
+					}
 				}
 			}
 		}
 	} else {
-		
-	}
-	
-	return steps, errorsList	
-}
 
+	}
+
+	return steps, errorsList
+}
