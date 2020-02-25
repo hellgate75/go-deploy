@@ -25,6 +25,151 @@ const (
 	nonInteractiveShell
 )
 
+type sshTranfer struct {
+	client *ssh.Client
+	stdout io.Writer
+	stderr io.Writer
+}
+
+func (ts *sshTranfer) SetStdio(stdout, stderr io.Writer) generic.FileTransfer {
+	ts.stdout = stdout
+	ts.stderr = stderr
+	return ts
+}
+
+func (ts *sshTranfer) MkDir(path string) error {
+	return ts.MkDirAs(path, 0644)
+}
+
+func (ts *sshTranfer) MkDirAs(path string, mode os.FileMode) error {
+	var globalError error = nil
+	session, err := ts.client.NewSession()
+	if err != nil {
+		return errors.New("FileTransfer.MkDir: " + err.Error())
+	}
+	writer, _ := session.StdinPipe()
+	defer func() {
+		if r := recover(); r != nil {
+			globalError = errors.New("FileTransfer.MkDir: " + fmt.Sprintf("%v", r))
+		}
+		if writer != nil {
+			writer.Close()
+		}
+		if session != nil {
+			session.Close()
+		}
+	}()
+	mkDir(path, writer, mode)
+	return globalError
+}
+
+func (ts *sshTranfer) TransferFile(path string, remotePath string) error {
+	return ts.TransferFileAs(path, remotePath, 0644)
+}
+
+func (ts *sshTranfer) TransferFileAs(path string, remotePath string, mode os.FileMode) error {
+	var globalError error = nil
+	session, err := ts.client.NewSession()
+	if err != nil {
+		return errors.New("FileTransfer.TransferFile: " + err.Error())
+	}
+	writer, _ := session.StdinPipe()
+	defer func() {
+		if r := recover(); r != nil {
+			globalError = errors.New("FileTransfer.TransferFile" + fmt.Sprintf("%v", r))
+		}
+		if writer != nil {
+			writer.Close()
+		}
+		if session != nil {
+			session.Close()
+		}
+	}()
+	file, errF := os.Open(path)
+	if errF != nil {
+		return errors.New("FileTransfer.TransferFile::OpenFile: " + errF.Error())
+	}
+	content, errR := ioutil.ReadAll(file)
+	if errR != nil {
+		return errors.New("FileTransfer.TransferFile::ReadFile: " + errR.Error())
+	}
+	copyFile(content, remotePath, writer, mode)
+	return globalError
+}
+
+func (ts *sshTranfer) TransferFolder(path string, remotePath string) error {
+	return ts.TransferFolderAs(path, remotePath, 0644)
+}
+
+func (ts *sshTranfer) TransferFolderAs(path string, remotePath string, mode os.FileMode) error {
+	var globalError error = nil
+	session, err := ts.client.NewSession()
+	if err != nil {
+		return errors.New("FileTransfer.TransferFolder: " + err.Error())
+	}
+	writer, _ := session.StdinPipe()
+	defer func() {
+		if r := recover(); r != nil {
+			globalError = errors.New("FileTransfer.TransferFolder" + fmt.Sprintf("%v", r))
+		}
+		if writer != nil {
+			writer.Close()
+		}
+		if session != nil {
+			session.Close()
+		}
+	}()
+	stat, errS := os.Stat(path)
+	if errS != nil {
+		return errors.New("FileTransfer.TransferFolder::StatFile: " + errS.Error())
+	}
+	if !stat.IsDir() {
+		return ts.TransferFileAs(path, remotePath, mode)
+	}
+	executeFunc(path, remotePath, writer, mode)
+	return globalError
+}
+
+func executeFunc(path string, remotePath string, writer io.WriteCloser, mode os.FileMode) {
+	stat, errS := os.Stat(path)
+	if errS != nil {
+		panic(errS)
+	}
+	if stat.IsDir() {
+		mkDir(remotePath, writer, mode)
+		files, err := ioutil.ReadDir(".")
+		if err != nil {
+			panic(err)
+		}
+		for _, f := range files {
+			var fName = path + string(os.PathSeparator) + f.Name()
+			var fRemoteName = remotePath + "/" + f.Name()
+			executeFunc(fName, fRemoteName, writer, f.Mode())
+		}
+	} else {
+		file, errF := os.Open(path)
+		if errF != nil {
+			panic(errF.Error())
+		}
+		content, errR := ioutil.ReadAll(file)
+		if errR != nil {
+			panic(errR.Error())
+		}
+		copyFile(content, remotePath, writer, mode)
+	}
+
+}
+
+func mkDir(path string, writer io.WriteCloser, mode os.FileMode) {
+	fmt.Fprintln(writer, "D"+mode.String(), 0, path) // mkdir
+}
+
+func copyFile(content []byte, path string, writer io.WriteCloser, mode os.FileMode) {
+	fmt.Fprintln(writer, "C"+mode.String(), len(content), path) // copyfile
+	writer.Write(content)
+	fmt.Fprint(writer, "\x00")
+}
+
 type sshScript struct {
 	client     *ssh.Client
 	_type      sshScriptType
@@ -41,7 +186,6 @@ func (rs *sshScript) execute() error {
 	if rs.err != nil {
 		return errors.New("SSHScript.execute: " + rs.err.Error())
 	}
-
 	if rs._type == cmdLine {
 		return rs.runCmds()
 	} else if rs._type == rawScript {
@@ -284,6 +428,12 @@ func (c *sshClient) ScriptFile(fname string) generic.CommandsScript {
 	}
 }
 
+func (c *sshClient) FileTranfer() generic.FileTransfer {
+	return &sshTranfer{
+		client: c.client,
+	}
+}
+
 func (c *sshClient) Shell() generic.RemoteShell {
 	return &sshShell{
 		client:     c.client,
@@ -370,7 +520,7 @@ func (conn *sshConnection) ConnectWithKeyAndPassphrase(addr string, user, keyfil
 	return conn.Connect("tcp", addr, config)
 }
 
-func (conn *sshConnection) Connect(network string, addr string, config *ssh.ClientConfig) error {
+func (conn *sshConnection) Connect(network, addr string, config *ssh.ClientConfig) error {
 	client, err := ssh.Dial(network, addr, config)
 	if err != nil {
 		return errors.New("SSHConnectionHandler.Connect: " + err.Error())

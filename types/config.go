@@ -1,26 +1,82 @@
 package types
 
-import (
-	"errors"
-	"fmt"
-	"gopkg.in/yaml.v3"
-	"io/ioutil"
-	"os"
+import ()
+
+type deploySourceTypeValue byte
+type deployDescriptorTypeValue byte
+type deployBehaviouralTypeValue byte
+type DeploymentTypeValue string
+type DescriptorTypeValue string
+type StrategyTypeValue string
+type RestMethodTypeValue string
+type NetProtocolTypeValue string
+
+const (
+	unknownSource deploySourceTypeValue = 0
+	fileSource    deploySourceTypeValue = iota + 1
+	httpSource
+	restSource
+	pipeSource
+	streamSource
+	unknownDeployment deploySourceTypeValue      = 0
+	oneShotDeployment deployBehaviouralTypeValue = iota + 1
+	continuousDeployment
+	onDemandDeployment
+	periodicDeployment
+	yamlDescriptorType deployDescriptorTypeValue = iota + 1
+	jsonDescriptorType
+	UNKNOWN                       DeploymentTypeValue  = "UNKNOWN"
+	FILE_SOURCE                   DeploymentTypeValue  = "FILE_SOURCE"
+	HTTP_SOURCE                   DeploymentTypeValue  = "HTTP_SOURCE"
+	REST_SOURCE                   DeploymentTypeValue  = "REST_SOURCE"
+	PIPE_SOURCE                   DeploymentTypeValue  = "PIPE_SOURCE"
+	STREAM_SOURCE                 DeploymentTypeValue  = "STREAM_SOURCE"
+	YAML_DESCRIPTOR               DescriptorTypeValue  = "YAML"
+	JSON_DESCRIPTOR               DescriptorTypeValue  = "JSON"
+	XML_DESCRIPTOR                DescriptorTypeValue  = "XML"
+	ONE_SHOT_DEPLOYMENT           StrategyTypeValue    = "ONE_SHOT_DEPLOYMENT"
+	CONTINUOUS_DEPLOYMENT         StrategyTypeValue    = "CONTINUOUS_DEPLOYMENT"
+	ON_DEMAND_DEPLOYMENT          StrategyTypeValue    = "ON_DEMAND_DEPLOYMENT"
+	PERIODIC_DEPLOYMENT           StrategyTypeValue    = "PERIODIC_DEPLOYMENT"
+	REST_GET_REQUEST              RestMethodTypeValue  = "GET"
+	REST_POST_REQUEST             RestMethodTypeValue  = "POST"
+	DEPLOY_CONFIG_FILE_NAME       string               = "deploy-config"
+	DEPLOY_DATA_FILE_NAME         string               = "deploy-data"
+	DEPLOY_NET_FILE_NAME          string               = "deploy-net"
+	NET_PROTOCOL_SSH              NetProtocolTypeValue = "SSH"
+	NET_PROTOCOL_GO_DEPLOY_CLIENT NetProtocolTypeValue = "GO_DEPLOY"
 )
 
+type DeployType struct {
+	DeploymentType DeploymentTypeValue `yaml:"deploymentType,omitempty" json:"deploymentType,omitempty" xml:"deployment-type,chardata,omitempty"`
+	DescriptorType DescriptorTypeValue `yaml:"descriptorType,omitempty" json:"descriptorType,omitempty" xmk:"descriptor-type,chardata,omitempty"`
+	StrategyType   StrategyTypeValue   `yaml:"strategyType,omitempty" json:"strategyType,omitempty" json:"strategy-type,chardata,omitempty"`
+	Scheduled      string              `yaml:"scheduled,omitempty" json:"scheduled,omitempty" json:"scheduled,chardata,omitempty"`
+	Method         RestMethodTypeValue `yaml:"restMethod,omitempty" json:"restMethod,omitempty" json:"restMethod,chardata,omitempty"`
+	PostBody       string              `yaml:"postBody,omitempty" json:"postBody,omitempty" json:"post-body,chardata,omitempty"`
+}
+
+type NetProtocolType struct {
+	NetProtocol NetProtocolTypeValue `yaml:"protocol,omitempty" json:"protocol,omitempty" xml:"protocol,chardata,omitempty"`
+	UserName    string               `yaml:"userName,omitempty" json:"userName,omitempty" xml:"username,chardata,omitempty"`
+	Password    string               `yaml:"password,omitempty" json:"password,omitempty" xml:"password,chardata,omitempty"`
+	KeyFile     string               `yaml:"keyFile,omitempty" json:"keyFile,omitempty" xml:"keyfile,chardata,omitempty"`
+	Passphrase  string               `yaml:"passphrase,omitempty" json:"passphrase,omitempty" xml:"passphrase,chardata,omitempty"`
+}
+
 type DeployConfig struct {
-	DeployName string
-	UseHosts   []string
-	UseVars    []string
-	ConfigDir  string
+	DeployName string   `yaml:"deployName,omitempty" json:"deployName,omitempty" xml:"deploy-name,chardata,omitempty"`
+	UseHosts   []string `yaml:"useHosts,omitempty" json:"useHosts,omitempty" xml:"use-hosts,chardata,omitempty"`
+	UseVars    []string `yaml:"useVars,omitempty" json:"useVars,omitempty" xml:"use-vars,chardata,omitempty"`
+	ConfigDir  string   `yaml:"configDir,omitempty" json:"configDir,omitempty" xml:"config-dir,chardata,omitempty"`
 }
 
 func (dc *DeployConfig) Yaml() (string, error) {
 	return toYaml(dc)
 }
 
-func (dc *DeployConfig) FromFile(path string) (*DeployConfig, error) {
-	itf, err := fromFile(path, dc)
+func (dc *DeployConfig) FromYamlFile(path string) (*DeployConfig, error) {
+	itf, err := fromYamlFile(path, dc)
 	if err != nil {
 		return nil, err
 	}
@@ -28,32 +84,11 @@ func (dc *DeployConfig) FromFile(path string) (*DeployConfig, error) {
 	return conf, nil
 }
 
-func fromFile(path string, itf interface{}) (interface{}, error) {
-	_, errS := os.Stat(path)
-	if errS != nil {
-		return nil, errors.New("fromFile::Stats: " + errS.Error())
-	}
-	file, errF := os.Open(path)
-	if errF != nil {
-		return nil, errors.New("fromFile::OpenFile: " + errF.Error())
-	}
-	bytes, errR := ioutil.ReadAll(file)
-	if errR != nil {
-		return nil, errors.New("fromFile::ReadFile: " + errR.Error())
-	}
-	err := yaml.Unmarshal(bytes, itf)
+func (dc *DeployConfig) FromYamlCode(yamlCode string) (*DeployConfig, error) {
+	itf, err := fromYamlCode(yamlCode, dc)
 	if err != nil {
-		return nil, errors.New("fromFile::Unmarshal: " + err.Error())
-	} else {
-		return itf, nil
+		return nil, err
 	}
-}
-
-func toYaml(itf interface{}) (string, error) {
-	bytes, err := yaml.Marshal(itf)
-	if err != nil {
-		return "", errors.New("toYaml::Marchal: " + err.Error())
-	} else {
-		return fmt.Sprintf("\n%s", bytes), nil
-	}
+	var conf *DeployConfig = itf.(*DeployConfig)
+	return conf, nil
 }

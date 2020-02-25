@@ -43,7 +43,7 @@ func main() {
 					Logger.Println(fmt.Sprintf("Error retriving Config Yaml: %v", errL))
 				}
 				Logger.Println("Load config from file ...")
-				dc, errC := config.FromFile("./config.yaml")
+				dc, errC := config.FromYamlFile("./config.yaml")
 				if errC == nil {
 					Logger.Println(fmt.Sprintf("Config: %v", dc))
 				} else {

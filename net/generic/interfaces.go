@@ -3,9 +3,35 @@ package generic
 import (
 	"golang.org/x/crypto/ssh"
 	"io"
+	"os"
 )
 
-// Manages the ssh remote scripting execution
+// Manages the remote file transfer
+type FileTransfer interface {
+
+	//MkDir: Create Remote folder
+	MkDir(path string) error
+
+	//MkDir: Create Remote folder
+	MkDirAs(path string, mode os.FileMode) error
+
+	//TransferFile: Tranfer single file
+	TransferFileAs(path string, remotePath string, mode os.FileMode) error
+
+	//TransferFolder: Tranfer folder recursively
+	TransferFolderAs(path string, remotePath string, mode os.FileMode) error
+
+	//TransferFile: Tranfer single file
+	TransferFile(path string, remotePath string) error
+
+	//TransferFolder: Tranfer folder recursively
+	TransferFolder(path string, remotePath string) error
+
+	// SetStdio: Sets the tranfer standard and error I/O streams
+	SetStdio(stdout, stderr io.Writer) FileTransfer
+}
+
+// Manages the remote scripting execution
 type CommandsScript interface {
 
 	// ExecuteWithOutput: Executes script(s) or command(s) using standard I/O
@@ -58,6 +84,9 @@ type NetworkClient interface {
 
 	// Shell: Creates a noninteractive shell on client.
 	Shell() RemoteShell
+
+	// FileTranfer: Creates a file transfer manager session.
+	FileTranfer() FileTransfer
 }
 
 // SSHConnectionHandler: Remote Connection handler and client connectivity maintainer
@@ -81,5 +110,5 @@ type ConnectionHandler interface {
 	ConnectWithKeyAndPassphrase(addr string, user, keyfile string, passphrase string) error
 
 	// Connect: Connect the SSH server using given network, address and configuration
-	Connect(network string, addr string, config *ssh.ClientConfig) error
+	Connect(network, addr string, config *ssh.ClientConfig) error
 }
