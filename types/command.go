@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/hellgate75/go-deploy/types/cmdtypes"
+	"github.com/hellgate75/go-deploy/types/generic"
 	"gopkg.in/yaml.v3"
 	"io/ioutil"
 	"os"
@@ -55,9 +56,9 @@ func (feed *Feed) Save(path string) error {
 	return nil
 }
 
-func (feed Feed) Validate() (*cmdtypes.FeedExec, []error) {
+func (feed Feed) Validate() (*generic.FeedExec, []error) {
 	var errors []error = make([]error, 0)
-	var steps []*cmdtypes.Step = make([]*cmdtypes.Step, 0)
+	var steps []*generic.Step = make([]*generic.Step, 0)
 	for key, value := range feed.Options {
 		stepsX, errorsX := EvaluateSteps(key, value)
 		for _, stepX := range stepsX {
@@ -67,20 +68,19 @@ func (feed Feed) Validate() (*cmdtypes.FeedExec, []error) {
 			errors = append(errors, errX)
 		}
 	}
-	return &cmdtypes.FeedExec{
+	return &generic.FeedExec{
 		Steps: steps,
 	}, errors
 }
 
-func EvaluateSteps(key interface{}, value interface{}) ([]*cmdtypes.Step, []error) {
+func EvaluateSteps(key interface{}, value interface{}) ([]*generic.Step, []error) {
 	var errorsList []error = make([]error, 0)
-	var steps []*cmdtypes.Step = make([]*cmdtypes.Step, 0)
-	var keyStepType int = 0
+	var steps []*generic.Step = make([]*generic.Step, 0)
 	var keyType string = fmt.Sprintf("%T", key)
 	var valueType string = fmt.Sprintf("%T", value)
 	var err error
 	if keyType == "string" {
-		keyStepType, err = cmdtypes.KeyToType(fmt.Sprintf("%v", key))
+		//keyStepType, err = cmdtypes.KeyToType(fmt.Sprintf("%v", key))
 		if err != nil {
 			errorsList = append(errorsList, err)
 		} else {
@@ -100,7 +100,7 @@ func EvaluateSteps(key interface{}, value interface{}) ([]*cmdtypes.Step, []erro
 
 				if strings.ToLower(keyVal) == "import" {
 					if valueType == "[]string" || valueType == "[]interface{}" {
-						var feeds []*cmdtypes.FeedExec = make([]*cmdtypes.FeedExec, 0)
+						var feeds []*generic.FeedExec = make([]*generic.FeedExec, 0)
 						var arr []string = make([]string, 0)
 						if valueType == "[]string" {
 							for _, str := range value.([]string) {
@@ -134,7 +134,7 @@ func EvaluateSteps(key interface{}, value interface{}) ([]*cmdtypes.Step, []erro
 					}
 
 				} else {
-					step, err := cmdtypes.NewStep(keyStepType, value)
+					step, err := cmdtypes.NewStep(keyType, value)
 					if err != nil {
 						errorsList = append(errorsList, err)
 					} else {

@@ -1,81 +1,47 @@
 package cmdtypes
 
 import (
-	"errors"
-	"strings"
+	"github.com/hellgate75/go-deploy/types/generic"
 )
 
-const (
-	FEED_TYPE_IMPORT = iota + 1
-	FEED_TYPE_SHELL
-	FEED_TYPE_SERVICE
-	FEED_TYPE_COPY
-)
-
-type FeedExec struct {
-	Steps []*Step
-}
-
-func KeyToType(key string) (int, error) {
-	switch strings.ToLower(key) {
-	case "import":
-		return FEED_TYPE_IMPORT, nil
-	case "service":
-		return FEED_TYPE_SERVICE, nil
-	case "shell":
-		return FEED_TYPE_SHELL, nil
-	case "copy":
-		return FEED_TYPE_COPY, nil
-	default:
-		return 0, errors.New("Unable to decode key: " + key)
-	}
-}
-
-type Step struct {
-	StepType int
-	StepData interface{}
-	Children []*Step
-	Feeds    []*FeedExec
-}
-
-func NewStep(stepType int, stepData interface{}) (*Step, error) {
+func NewStep(stepType string, stepData interface{}) (*generic.Step, error) {
 	data, err := NewConverter(stepType).Convert(stepData)
 	if err != nil {
 		return nil, err
 	}
-	return &Step{
+	return &generic.Step{
 		StepType: stepType,
 		StepData: data,
-		Children: make([]*Step, 0),
-		Feeds:    make([]*FeedExec, 0),
+		Children: make([]*generic.Step, 0),
+		Feeds:    make([]*generic.FeedExec, 0),
 	}, nil
 }
 
-func NewStepWtihChildren(stepType int, stepData interface{}, children []*Step) (*Step, error) {
+func NewStepWtihChildren(stepType string, stepData interface{}, children []*generic.Step) (*generic.Step, error) {
 	data, err := NewConverter(stepType).Convert(stepData)
 	if err != nil {
 		return nil, err
 	}
-	return &Step{
+	return &generic.Step{
 		StepType: stepType,
 		StepData: data,
 		Children: children,
-		Feeds:    make([]*FeedExec, 0),
+		Feeds:    make([]*generic.FeedExec, 0),
 	}, nil
 }
 
-func NewImportStep(feeds []*FeedExec) *Step {
-	return &Step{
-		StepType: FEED_TYPE_IMPORT,
+func NewImportStep(feeds []*generic.FeedExec) *generic.Step {
+	return &generic.Step{
+		StepType: "import",
 		StepData: nil,
-		Children: make([]*Step, 0),
+		Children: make([]*generic.Step, 0),
 		Feeds:    feeds,
 	}
 }
 
-func NewImportStepWithChildren(feeds []*FeedExec, children []*Step) *Step {
-	return &Step{
-		StepType: FEED_TYPE_IMPORT,
+func NewImportStepWithChildren(feeds []*generic.FeedExec, children []*generic.Step) *generic.Step {
+	return &generic.Step{
+		StepType: "import",
 		StepData: nil,
 		Children: children,
 		Feeds:    feeds,

@@ -2,8 +2,8 @@ package cmd
 
 import (
 	"github.com/hellgate75/go-deploy/io"
+	"github.com/hellgate75/go-deploy/log"
 	"github.com/hellgate75/go-deploy/types"
-	"log"
 	"os"
 	"runtime"
 	"strings"
@@ -16,7 +16,7 @@ const (
 )
 
 type Bootstrap interface {
-	Load(baseDir string, suffix string, format types.DescriptorTypeValue, logger *log.Logger) []error
+	Load(baseDir string, suffix string, format types.DescriptorTypeValue, logger log.Logger) []error
 	GetDeployConfig() *types.DeployConfig
 	GetDeployType() *types.DeployType
 	GetNetType() *types.NetProtocolType
@@ -76,7 +76,7 @@ func userHomeDir() string {
 	return os.Getenv("HOME")
 }
 
-func (bootstrap *bootstrap) Load(baseDir string, suffix string, format types.DescriptorTypeValue, logger *log.Logger) []error {
+func (bootstrap *bootstrap) Load(baseDir string, suffix string, format types.DescriptorTypeValue, logger log.Logger) []error {
 	if baseDir == "" {
 		baseDir = "./.godeploy"
 	}
@@ -93,7 +93,7 @@ func (bootstrap *bootstrap) Load(baseDir string, suffix string, format types.Des
 
 	var configFileList []string = io.FindFilesIn(baseDir, true, DEPLOY_CONFIG_FILE_NAME+suffixString)
 	for _, configFilePath := range configFileList {
-		logger.Println("configFilePath:" + configFilePath)
+		logger.Debug("configFilePath:" + configFilePath)
 		if io.IsFolder(configFilePath) {
 			var files []string = io.GetMatchedFiles(configFilePath, true, matcher)
 			for _, configFilePathX := range files {
@@ -132,7 +132,7 @@ func (bootstrap *bootstrap) Load(baseDir string, suffix string, format types.Des
 
 	var dataFileList []string = io.FindFilesIn(baseDir, true, DEPLOY_DATA_FILE_NAME+suffixString)
 	for _, dataFilePath := range dataFileList {
-		logger.Println("dataFilePath:" + dataFilePath)
+		logger.Debug("dataFilePath:" + dataFilePath)
 		if io.IsFolder(dataFilePath) {
 			var files []string = io.GetMatchedFiles(dataFilePath, true, matcher)
 			for _, dataFilePathX := range files {
@@ -171,7 +171,7 @@ func (bootstrap *bootstrap) Load(baseDir string, suffix string, format types.Des
 
 	var netFileList []string = io.FindFilesIn(baseDir, true, DEPLOY_NET_FILE_NAME+suffixString)
 	for _, netFilePath := range netFileList {
-		logger.Println("netFilePath:" + netFilePath)
+		logger.Debug("netFilePath:" + netFilePath)
 		if io.IsFolder(netFilePath) {
 			var files []string = io.GetMatchedFiles(netFilePath, true, matcher)
 			for _, netFilePathX := range files {

@@ -43,35 +43,35 @@ type logger struct {
 }
 
 func (logger *logger) Trace(in ...interface{}) {
-	logger.log(traceLevel, in)
+	logger.log(traceLevel, in...)
 }
 
 func (logger *logger) Debug(in ...interface{}) {
-	logger.log(debugLevel, in)
+	logger.log(debugLevel, in...)
 }
 
 func (logger *logger) Info(in ...interface{}) {
-	logger.log(infoLevel, in)
+	logger.log(infoLevel, in...)
 }
 
 func (logger *logger) Warn(in ...interface{}) {
-	logger.log(warningLevel, in)
+	logger.log(warningLevel, in...)
 }
 
 func (logger *logger) Error(in ...interface{}) {
-	logger.log(errorLevel, in)
+	logger.log(errorLevel, in...)
 }
 
 func (logger *logger) Fatal(in ...interface{}) {
-	logger.log(fatalLevel, in)
+	logger.log(fatalLevel, in...)
 }
 
 func (logger *logger) Printf(format string, in ...interface{}) {
-	fmt.Printf(format, in)
+	fmt.Printf(format, in...)
 }
 
 func (logger *logger) Println(in ...interface{}) {
-	fmt.Println(in)
+	fmt.Println(in...)
 }
 
 func (logger *logger) SetVerbosity(verbosity LogLevel) {
@@ -83,12 +83,8 @@ func (logger *logger) GetVerbosity() LogLevel {
 
 func (logger *logger) log(level LogLevelValue, in ...interface{}) {
 	if level >= logger.verbosity {
-		var itfs []interface{} = make([]interface{}, 0)
-		itfs = append(itfs, " "+string(toVerbosityLevel(level))+" ")
-		for _, itf := range itfs {
-			itfs = append(itfs, itf)
-		}
-		logger.logger.Println(itfs...)
+		var itfs string = " " + string(toVerbosityLevel(level)) + " " + fmt.Sprint(in...)
+		logger.logger.Println(itfs)
 	}
 }
 

@@ -13,6 +13,7 @@ import (
 
 var (
 	name     string = ""
+	loglevel string = "."
 	workdir  string = "."
 	dir      string = ""
 	useHosts string = ""
@@ -41,6 +42,7 @@ func init() {
 	fs = flag.NewFlagSet("go-deploy", flag.PanicOnError)
 	fs.StringVar(&name, "name", name, "Deployment unit name")
 	fs.StringVar(&workdir, "workDir", ".", "Working directory")
+	fs.StringVar(&loglevel, "verbosity", "INFO", "Log Level Verbosity")
 	fs.StringVar(&dir, "dir", "."+io.GetPathSeparator()+types.DEFAULT_CONFIG_FOLDER, "Deployment config folder")
 	fs.StringVar(&useHosts, "hosts", "", "Required Hosts files (comma separated file path list)")
 	fs.StringVar(&useVars, "vars", "", "Required Vars files (comma separated file path list)")
@@ -78,12 +80,13 @@ func ParseArguments() (*types.DeployConfig, error) {
 		return nil, err
 	}
 	return &types.DeployConfig{
-		DeployName:  name,
-		WorkDir:     workdir,
-		ConfigDir:   dir,
-		UseHosts:    strings.Split(useHosts, ","),
-		UseVars:     strings.Split(useVars, ","),
-		ConfigLang:  types.DescriptorTypeValue(format),
-		EnvSelector: env,
+		DeployName:   name,
+		WorkDir:      workdir,
+		LogVerbosity: loglevel,
+		ConfigDir:    dir,
+		UseHosts:     strings.Split(useHosts, ","),
+		UseVars:      strings.Split(useVars, ","),
+		ConfigLang:   types.DescriptorTypeValue(format),
+		EnvSelector:  env,
 	}, nil
 }

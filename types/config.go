@@ -229,13 +229,14 @@ func (npt *NetProtocolType) FromJsonCode(jsonCode string) (*NetProtocolType, err
 }
 
 type DeployConfig struct {
-	DeployName  string              `yaml:"deployName,omitempty" json:"deployName,omitempty" xml:"deploy-name,chardata,omitempty"`
-	UseHosts    []string            `yaml:"useHosts,omitempty" json:"useHosts,omitempty" xml:"use-hosts,chardata,omitempty"`
-	UseVars     []string            `yaml:"useVars,omitempty" json:"useVars,omitempty" xml:"use-vars,chardata,omitempty"`
-	WorkDir     string              `yaml:"workDir,omitempty" json:"workDir,omitempty" xml:"work-dir,chardata,omitempty"`
-	ConfigDir   string              `yaml:"configDir,omitempty" json:"configDir,omitempty" xml:"config-dir,chardata,omitempty"`
-	ConfigLang  DescriptorTypeValue `yaml:"configLang,omitempty" json:"configLang,omitempty" xml:"config-lang,chardata,omitempty"`
-	EnvSelector string              `yaml:"env,omitempty" json:"env,omitempty" xml:"env,chardata,omitempty"`
+	DeployName   string              `yaml:"deployName,omitempty" json:"deployName,omitempty" xml:"deploy-name,chardata,omitempty"`
+	LogVerbosity string              `yaml:"verbosity,omitempty" json:"verbosity,omitempty" xml:"verbosity,chardata,omitempty"`
+	UseHosts     []string            `yaml:"useHosts,omitempty" json:"useHosts,omitempty" xml:"use-hosts,chardata,omitempty"`
+	UseVars      []string            `yaml:"useVars,omitempty" json:"useVars,omitempty" xml:"use-vars,chardata,omitempty"`
+	WorkDir      string              `yaml:"workDir,omitempty" json:"workDir,omitempty" xml:"work-dir,chardata,omitempty"`
+	ConfigDir    string              `yaml:"configDir,omitempty" json:"configDir,omitempty" xml:"config-dir,chardata,omitempty"`
+	ConfigLang   DescriptorTypeValue `yaml:"configLang,omitempty" json:"configLang,omitempty" xml:"config-lang,chardata,omitempty"`
+	EnvSelector  string              `yaml:"env,omitempty" json:"env,omitempty" xml:"env,chardata,omitempty"`
 }
 
 func (dc *DeployConfig) Merge(dc2 *DeployConfig) *DeployConfig {
@@ -254,19 +255,20 @@ func (dc *DeployConfig) Merge(dc2 *DeployConfig) *DeployConfig {
 		useVars = append(useVars, val)
 	}
 	return &DeployConfig{
-		ConfigDir:   bestString(dc2.ConfigDir, dc.ConfigDir),
-		WorkDir:     bestString(dc2.WorkDir, dc.WorkDir),
-		ConfigLang:  DescriptorTypeValue(bestString(string(dc2.ConfigLang), string(dc.ConfigLang))),
-		DeployName:  bestString(dc2.DeployName, dc.DeployName),
-		EnvSelector: bestString(dc2.EnvSelector, dc.EnvSelector),
-		UseHosts:    useHosts,
-		UseVars:     useVars,
+		ConfigDir:    bestString(dc2.ConfigDir, dc.ConfigDir),
+		WorkDir:      bestString(dc2.WorkDir, dc.WorkDir),
+		LogVerbosity: bestString(dc2.LogVerbosity, dc.LogVerbosity),
+		ConfigLang:   DescriptorTypeValue(bestString(string(dc2.ConfigLang), string(dc.ConfigLang))),
+		DeployName:   bestString(dc2.DeployName, dc.DeployName),
+		EnvSelector:  bestString(dc2.EnvSelector, dc.EnvSelector),
+		UseHosts:     useHosts,
+		UseVars:      useVars,
 	}
 }
 
 func (dc *DeployConfig) String() string {
-	return fmt.Sprintf("DeployConfig{DeployName: \"%s\", UseHosts: %v, UseVars: %v, WorkDir: \"%s\", ConfigDir: \"%s\", ConfigLang: \"%v\", EnvSelector: \"%s\"}",
-		dc.DeployName, dc.UseHosts, dc.UseVars, dc.WorkDir, dc.ConfigDir, dc.ConfigLang, dc.EnvSelector)
+	return fmt.Sprintf("DeployConfig{DeployName: \"%s\", UseHosts: %v, UseVars: %v, WorkDir: \"%s\", ConfigDir: \"%s\", ConfigLang: \"%v\", LogVerbosity: \"%v\", EnvSelector: \"%s\"}",
+		dc.DeployName, dc.UseHosts, dc.UseVars, dc.WorkDir, dc.ConfigDir, dc.ConfigLang, dc.LogVerbosity, dc.EnvSelector)
 }
 
 func (dc *DeployConfig) Yaml() (string, error) {
