@@ -17,7 +17,7 @@ type Bootstrap interface {
 	Load(baseDir string, suffix string, format types.DescriptorTypeValue, logger *log.Logger) []error
 	GetDeployConfig() *types.DeployConfig
 	GetDeployType() *types.DeployType
-	GetnetType() *types.NetProtocolType
+	GetNetType() *types.NetProtocolType
 }
 
 type bootstrap struct {
@@ -34,7 +34,7 @@ func (bootstrap *bootstrap) GetDeployType() *types.DeployType {
 	return bootstrap.deployType
 }
 
-func (bootstrap *bootstrap) GetnetType() *types.NetProtocolType {
+func (bootstrap *bootstrap) GetNetType() *types.NetProtocolType {
 	return bootstrap.netType
 }
 
