@@ -99,3 +99,5 @@ func (service *serviceCommand) Convert(cmdValues interface{}) (interface{}, erro
 }
 
 var Converter generic.Converter = &serviceCommand{}
+
+func main() {}

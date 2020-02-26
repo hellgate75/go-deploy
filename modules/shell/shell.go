@@ -125,3 +125,5 @@ func (shell *shellCommand) Convert(cmdValues interface{}) (interface{}, error) {
 }
 
 var Converter generic.Converter = &shellCommand{}
+
+func main() {}

@@ -3,9 +3,12 @@ package modules
 import (
 	"errors"
 	"fmt"
+	"github.com/hellgate75/go-deploy/io"
 	"github.com/hellgate75/go-deploy/types/generic"
 	"plugin"
 )
+
+var ModulesFolder = "mod"
 
 func seek(module string, symbol string) (plugin.Symbol, error) {
 	plugin, err := plugin.Open(module)
@@ -20,7 +23,7 @@ func seek(module string, symbol string) (plugin.Symbol, error) {
 }
 
 func LoadExecutorForModule(module string) (generic.Executor, error) {
-	var path string = "./modules/" + module + "/" + module + ".so"
+	var path string = "./" + io.GetPathSeparator() + ModulesFolder + io.GetPathSeparator() + module + io.GetPathSeparator() + module + io.GetShareLibExt()
 	symCollector, err := seek(path, "Executor")
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("Errors fetching plugin module : \"%s\". Details: %s", module, err.Error()))
@@ -34,7 +37,7 @@ func LoadExecutorForModule(module string) (generic.Executor, error) {
 }
 
 func LoadConverterForModule(module string) (generic.Converter, error) {
-	var path string = "./modules/" + module + "/" + module + ".so"
+	var path string = "./" + io.GetPathSeparator() + ModulesFolder + io.GetPathSeparator() + module + io.GetPathSeparator() + module + io.GetShareLibExt()
 	symCollector, err := seek(path, "Executor")
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("Errors fetching plugin module : \"%s\". Details: %s", module, err.Error()))

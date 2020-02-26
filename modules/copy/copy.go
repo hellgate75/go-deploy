@@ -118,3 +118,5 @@ func (copyCmd *copyCommand) Convert(cmdValues interface{}) (interface{}, error) 
 }
 
 var Converter generic.Converter = &copyCommand{}
+
+func main() {}

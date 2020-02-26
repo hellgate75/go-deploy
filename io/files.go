@@ -15,6 +15,14 @@ func GetPathSeparator() string {
 	return string(os.PathSeparator)
 }
 
+// Gets the Path Separator as string type
+func GetShareLibExt() string {
+	if runtime.GOOS == "windows" {
+		return ".dll"
+	}
+	return ".so"
+}
+
 //Verify if a atring file path corresponds to a directory
 func IsFolder(path string) bool {
 	fileInfo, err := os.Stat(path)

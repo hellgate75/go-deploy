@@ -1,2 +1,5 @@
 **/.project*
 **/vendor
+**/*.exe
+**/*.dll
+**/*.so
