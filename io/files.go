@@ -3,11 +3,15 @@ package io
 import (
 	"io/ioutil"
 	"os"
+	"runtime"
 	"strings"
 )
 
 // Gets the Path Separator as string type
 func GetPathSeparator() string {
+	if runtime.GOOS == "windows" {
+		return "\\"
+	}
 	return string(os.PathSeparator)
 }
 

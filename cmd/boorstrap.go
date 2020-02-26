@@ -4,6 +4,8 @@ import (
 	"github.com/hellgate75/go-deploy/io"
 	"github.com/hellgate75/go-deploy/types"
 	"log"
+	"os"
+	"runtime"
 	"strings"
 )
 
@@ -18,6 +20,8 @@ type Bootstrap interface {
 	GetDeployConfig() *types.DeployConfig
 	GetDeployType() *types.DeployType
 	GetNetType() *types.NetProtocolType
+	GetDefaultDeployType() *types.DeployType
+	GetDefaultNetType() *types.NetProtocolType
 }
 
 type bootstrap struct {
@@ -36,6 +40,40 @@ func (bootstrap *bootstrap) GetDeployType() *types.DeployType {
 
 func (bootstrap *bootstrap) GetNetType() *types.NetProtocolType {
 	return bootstrap.netType
+}
+
+func (bootstrap *bootstrap) GetDefaultDeployType() *types.DeployType {
+	return &types.DeployType{
+		DeploymentType: types.FILE_SOURCE,
+		DescriptorType: types.YAML_DESCRIPTOR,
+		Method:         "",
+		PostBody:       "",
+		StrategyType:   types.ONE_SHOT_DEPLOYMENT,
+	}
+}
+
+func (bootstrap *bootstrap) GetDefaultNetType() *types.NetProtocolType {
+	return &types.NetProtocolType{
+		NetProtocol: types.NET_PROTOCOL_SSH,
+		UserName:    "docker",
+		KeyFile:     userHomeDir() + io.GetPathSeparator() + ".ssh" + io.GetPathSeparator() + "id_rsa.pub",
+	}
+}
+
+func userHomeDir() string {
+	if runtime.GOOS == "windows" {
+		home := os.Getenv("HOMEDRIVE") + os.Getenv("HOMEPATH")
+		if home == "" {
+			home = os.Getenv("USERPROFILE")
+		}
+		return home
+	} else if runtime.GOOS == "linux" {
+		home := os.Getenv("XDG_CONFIG_HOME")
+		if home != "" {
+			return home
+		}
+	}
+	return os.Getenv("HOME")
 }
 
 func (bootstrap *bootstrap) Load(baseDir string, suffix string, format types.DescriptorTypeValue, logger *log.Logger) []error {
@@ -169,6 +207,7 @@ func (bootstrap *bootstrap) Load(baseDir string, suffix string, format types.Des
 			}
 		}
 	}
+
 	var deployConfig *types.DeployConfig = nil
 
 	for _, deployConfigX := range configFileObjectList {

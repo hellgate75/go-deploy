@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/hellgate75/go-deploy/cmd"
-  "github.com/hellgate75/go-deploy/types"
+	"github.com/hellgate75/go-deploy/types"
 	"log"
 	"os"
 )
@@ -23,6 +23,10 @@ func main() {
 		Logger.Println(fmt.Sprint("Exit ..."))
 		os.Exit(0)
 	}()
+	fmt.Println(cmd.Banner)
+	fmt.Println("GO DEPLOY " + cmd.Version)
+	fmt.Println("Authors:", cmd.Authors)
+	fmt.Println(cmd.Disclaimer + "\n")
 	if !cmd.RequiresHelp() {
 		Logger.Println(fmt.Sprint("Main ..."))
 		config, err := cmd.ParseArguments()
@@ -35,43 +39,40 @@ func main() {
 				Logger.Println("Error: No target defined")
 				cmd.Usage()
 			} else {
-//				Logger.Println("Recovering config yaml format ...")
-//				Logger.Println(fmt.Sprintf("Target: %v", target))
-//				yaml, errL := config.Yaml()
-//				if errL == nil {
-//					Logger.Println(fmt.Sprintf("Config Yaml: %v", yaml))
-//				} else {
-//					Logger.Println(fmt.Sprintf("Error retriving Config Yaml: %v", errL))
-//				}
-//				Logger.Println("Load config from file ...")
-//				dc, errC := config.FromYamlFile("./config.yaml")
-//				if errC == nil {
-//					Logger.Println(fmt.Sprintf("Config: %v", dc.String()))
-//					yaml, errL = (*dc).Yaml()
-//					if errL == nil {
-//						Logger.Println(fmt.Sprintf("YAML: %v", yaml))
-//					} else {
-//						Logger.Println(fmt.Sprintf("Error retriving Config Yaml: %v", errL))
-//					}
-
-//				} else {
-//					Logger.Println(fmt.Sprintf("Error loading Config: %v", errC))
-//				}
-        var boostrap cmd.BootStrap = cmd.NewBootStrap()
-        errB := boostrap.Load(config.ConfigDir, config.EnvSelector, config.ConfigLang, Logger)
-				os.Exit(0)
-				if errB != nil {
-           Logger.Println("Error: During config files load...")
-				  os.Exit (1)
+				var boostrap cmd.Bootstrap = cmd.NewBootStrap()
+				errB := boostrap.Load(config.ConfigDir, config.EnvSelector, config.ConfigLang, Logger)
+				Logger.Println(fmt.Sprintf("Errors during config load: %b", len(errB)))
+				if len(errB) > 0 {
+					var errors string = ""
+					for _, errX := range errB {
+						prefix := ""
+						if len(errors) > 0 {
+							prefix = "\n"
+						}
+						errors += prefix + errX.Error()
+					}
+					Logger.Println(fmt.Sprintf("Error: During config files load <%v>...", errors))
+					os.Exit(1)
 				}
-        var dc *types.DeployConfig = boostrap.GetDeployConfig()
-	      var dt *types.DeployType = boostrap.GetDeployType()
-	      var nt *types.NetProtocolType = boostrap.GetNetType()
-        Logger.Println(fmt.Sprintf("Deploy Config: %v\nDeployType: %v\nNetType: %v\n", *dc, *dt, *nt))
+				var dc *types.DeployConfig = boostrap.GetDeployConfig()
+				if dc == nil {
+					dc = &types.DeployConfig{}
+				}
+				dc = dc.Merge(config)
+				var dt *types.DeployType = boostrap.GetDeployType()
+				if dt == nil {
+					dt = &types.DeployType{}
+				}
+				dt = boostrap.GetDefaultDeployType().Merge(dt)
+				var nt *types.NetProtocolType = boostrap.GetNetType()
+				if nt == nil {
+					nt = &types.NetProtocolType{}
+				}
+				nt = boostrap.GetDefaultNetType().Merge(nt)
+				Logger.Println(fmt.Sprintf("Configuration Summary: \nDeploy Config: %v\nDeployType: %v\nNetType: %v\n", dc.String(), dt.String(), nt.String()))
 			}
 		}
 	} else {
 		os.Exit(0)
 	}
-	os.Exit(1)
 }

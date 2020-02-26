@@ -3,6 +3,7 @@ package cmd
 import (
 	"flag"
 	"fmt"
+	"github.com/hellgate75/go-deploy/io"
 	"github.com/hellgate75/go-deploy/types"
 	"math/rand"
 	"os"
@@ -12,6 +13,7 @@ import (
 
 var (
 	name     string = ""
+	workdir  string = "."
 	dir      string = ""
 	useHosts string = ""
 	useVars  string = ""
@@ -20,11 +22,26 @@ var (
 	fs       *flag.FlagSet
 )
 
+const (
+	Banner string = `
+    ###   ###     ###   #### ###   #      ###  #   #
+   #   # #   #    #  #  #    #  #  #     #   #  # #
+   #     #   #    #   # #    #   # #     #   #   #
+   # ### #   #    #   # ###  ####  #     #   #   #
+    #  # #   #    #  #  #    #     #     #   #   #
+     ##   ###     ###   #### #     #####  ###    #
+`
+	Version    string = "v. 1.0.0"
+	Authors    string = "Fabrizio Torelli (hellgate75@gmail.com)"
+	Disclaimer string = "No Warranty is given on use of this product"
+)
+
 func init() {
 	name = fmt.Sprintf("deploy-%v", strconv.FormatUint(rand.Uint64(), 10))
 	fs = flag.NewFlagSet("go-deploy", flag.PanicOnError)
 	fs.StringVar(&name, "name", name, "Deployment unit name")
-	fs.StringVar(&dir, "dir", ".deploy", "Deployment config folder")
+	fs.StringVar(&workdir, "workDir", ".", "Working directory")
+	fs.StringVar(&dir, "dir", "."+io.GetPathSeparator()+types.DEFAULT_CONFIG_FOLDER, "Deployment config folder")
 	fs.StringVar(&useHosts, "hosts", "", "Required Hosts files (comma separated file path list)")
 	fs.StringVar(&useVars, "vars", "", "Required Vars files (comma separated file path list)")
 	fs.StringVar(&format, "language", "YAML", "Config File Language (YAML, XML or JSON)")
@@ -62,6 +79,7 @@ func ParseArguments() (*types.DeployConfig, error) {
 	}
 	return &types.DeployConfig{
 		DeployName:  name,
+		WorkDir:     workdir,
 		ConfigDir:   dir,
 		UseHosts:    strings.Split(useHosts, ","),
 		UseVars:     strings.Split(useVars, ","),
