@@ -64,9 +64,9 @@ func main() {
            Logger.Println("Error: During config files load...")
 				  os.Exit (1)
 				}
-        var dc *types.DeployConfig = GetDeployConfig()
-	      var dt *types.DeployType = GetDeployType()
-	      var nt *types.NetProtocolType = GetNetType()
+        var dc *types.DeployConfig = boostrap.GetDeployConfig()
+	      var dt *types.DeployType = boostrap.GetDeployType()
+	      var nt *types.NetProtocolType = boostrap.GetNetType()
         Logger.Println(fmt.Sprintf("Deploy Config: %v\nDeployType: %v\nNetType: %v\n", *dc, *dt, *nt))
 			}
 		}
