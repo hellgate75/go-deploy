@@ -67,7 +67,7 @@ func main() {
         var dc *types.DeployConfig = GetDeployConfig()
 	      var dt *types.DeployType = GetDeployType()
 	      var nt *types.NetProtocolType = GetNetType()
-        Logger.Println(fmt.Sprintf("Deploy Config: %v\nDeployType: %v\nNetType: %v\n", dc, dt, nt))
+        Logger.Println(fmt.Sprintf("Deploy Config: %v\nDeployType: %v\nNetType: %v\n", *dc, *dt, *nt))
 			}
 		}
 	} else {
