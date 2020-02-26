@@ -4,3 +4,5 @@ usehosts:
 usevars:
 - ./vars.yaml
 configdir: ./.build
+configLang: YAML
+env: dev

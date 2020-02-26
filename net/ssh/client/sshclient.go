@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	depio "github.com/hellgate75/go-deploy/io"
 	"github.com/hellgate75/go-deploy/net/generic"
 	"golang.org/x/crypto/ssh"
 	"io"
@@ -142,7 +143,7 @@ func executeFunc(path string, remotePath string, writer io.WriteCloser, mode os.
 			panic(err)
 		}
 		for _, f := range files {
-			var fName = path + string(os.PathSeparator) + f.Name()
+			var fName = path + depio.GetPathSeparator() + f.Name()
 			var fRemoteName = remotePath + "/" + f.Name()
 			executeFunc(fName, fRemoteName, writer, f.Mode())
 		}

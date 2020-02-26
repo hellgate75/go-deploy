@@ -11,19 +11,24 @@ import (
 )
 
 var (
-	name     string
-	dir      string
-	useHosts string
-	useVars  string
+	name     string = ""
+	dir      string = ""
+	useHosts string = ""
+	useVars  string = ""
+	format   string = "YAML"
+	env      string = ""
 	fs       *flag.FlagSet
 )
 
 func init() {
+	name = fmt.Sprintf("deploy-%v", strconv.FormatUint(rand.Uint64(), 10))
 	fs = flag.NewFlagSet("go-deploy", flag.PanicOnError)
-	fs.StringVar(&name, "name", fmt.Sprintf("deploy-%v", strconv.FormatUint(rand.Uint64(), 10)), "Deployment unit name")
+	fs.StringVar(&name, "name", name, "Deployment unit name")
 	fs.StringVar(&dir, "dir", ".deploy", "Deployment config folder")
 	fs.StringVar(&useHosts, "hosts", "", "Required Hosts files (comma separated file path list)")
 	fs.StringVar(&useVars, "vars", "", "Required Vars files (comma separated file path list)")
+	fs.StringVar(&format, "language", "YAML", "Config File Language (YAML, XML or JSON)")
+	fs.StringVar(&env, "suffix", "", "configuration file suffix (no default)")
 }
 
 func RequiresHelp() bool {
@@ -56,9 +61,11 @@ func ParseArguments() (*types.DeployConfig, error) {
 		return nil, err
 	}
 	return &types.DeployConfig{
-		DeployName: name,
-		ConfigDir:  dir,
-		UseHosts:   strings.Split(useHosts, ","),
-		UseVars:    strings.Split(useVars, ","),
+		DeployName:  name,
+		ConfigDir:   dir,
+		UseHosts:    strings.Split(useHosts, ","),
+		UseVars:     strings.Split(useVars, ","),
+		ConfigLang:  types.DescriptorTypeValue(format),
+		EnvSelector: env,
 	}, nil
 }
