@@ -40,7 +40,7 @@ func (bootstrap *bootstrap) GetNetType() *types.NetProtocolType {
 
 func (bootstrap *bootstrap) Load(baseDir string, suffix string, format types.DescriptorTypeValue, logger *log.Logger) []error {
 	if baseDir == "" {
-		baseDir = "./.ddeploy"
+		baseDir = "./.godeploy"
 	}
 	var suffixString string = ""
 	if suffix != "" {
