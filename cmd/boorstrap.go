@@ -13,9 +13,15 @@ const (
 	DEPLOY_CONFIG_FILE_NAME string = "deploy-config"
 	DEPLOY_DATA_FILE_NAME   string = "deploy-data"
 	DEPLOY_NET_FILE_NAME    string = "deploy-net"
+	DEPLOY_ENVS_FILE_NAME   string = "deploy-envs"
+	DEFAULT_CONFIG_FOLDER   string = "env"
+	DEFAULT_CHARTS_FOLDER   string = "charts"
+	DEFAULT_MODULES_FOLDER  string = "mod"
+	DEFAULT_SYSTEM_FOLDER   string = ".go-deploy"
 )
 
 type Bootstrap interface {
+	Init(baseDir string, suffix string, format types.DescriptorTypeValue, logger log.Logger) []error
 	Load(baseDir string, suffix string, format types.DescriptorTypeValue, logger log.Logger) []error
 	GetDeployConfig() *types.DeployConfig
 	GetDeployType() *types.DeployType
@@ -76,9 +82,9 @@ func userHomeDir() string {
 	return os.Getenv("HOME")
 }
 
-func (bootstrap *bootstrap) Load(baseDir string, suffix string, format types.DescriptorTypeValue, logger log.Logger) []error {
+func (bootstrap *bootstrap) Init(baseDir string, suffix string, format types.DescriptorTypeValue, logger log.Logger) []error {
 	if baseDir == "" {
-		baseDir = "./.godeploy"
+		baseDir = "./" + DEFAULT_CONFIG_FOLDER
 	}
 	var suffixString string = ""
 	if suffix != "" {
@@ -88,8 +94,6 @@ func (bootstrap *bootstrap) Load(baseDir string, suffix string, format types.Des
 	var matcher func(string) bool = getMatcher(format)
 
 	var configFileObjectList []*types.DeployConfig = make([]*types.DeployConfig, 0)
-	var dataFileObjectList []*types.DeployType = make([]*types.DeployType, 0)
-	var netFileObjectList []*types.NetProtocolType = make([]*types.NetProtocolType, 0)
 
 	var configFileList []string = io.FindFilesIn(baseDir, true, DEPLOY_CONFIG_FILE_NAME+suffixString)
 	for _, configFilePath := range configFileList {
@@ -129,6 +133,35 @@ func (bootstrap *bootstrap) Load(baseDir string, suffix string, format types.Des
 			}
 		}
 	}
+
+	var deployConfig *types.DeployConfig = nil
+
+	for _, deployConfigX := range configFileObjectList {
+		if deployConfig == nil {
+			deployConfig = deployConfigX
+		} else {
+			deployConfig = deployConfig.Merge(deployConfigX)
+		}
+	}
+
+	bootstrap.deployConfig = deployConfig
+
+	return errors
+}
+
+func (bootstrap *bootstrap) Load(baseDir string, suffix string, format types.DescriptorTypeValue, logger log.Logger) []error {
+	if baseDir == "" {
+		baseDir = "./" + DEFAULT_CONFIG_FOLDER
+	}
+	var suffixString string = ""
+	if suffix != "" {
+		suffixString = "-" + suffix
+	}
+	var errors []error = make([]error, 0)
+	var matcher func(string) bool = getMatcher(format)
+
+	var dataFileObjectList []*types.DeployType = make([]*types.DeployType, 0)
+	var netFileObjectList []*types.NetProtocolType = make([]*types.NetProtocolType, 0)
 
 	var dataFileList []string = io.FindFilesIn(baseDir, true, DEPLOY_DATA_FILE_NAME+suffixString)
 	for _, dataFilePath := range dataFileList {
@@ -207,18 +240,6 @@ func (bootstrap *bootstrap) Load(baseDir string, suffix string, format types.Des
 			}
 		}
 	}
-
-	var deployConfig *types.DeployConfig = nil
-
-	for _, deployConfigX := range configFileObjectList {
-		if deployConfig == nil {
-			deployConfig = deployConfigX
-		} else {
-			deployConfig = deployConfig.Merge(deployConfigX)
-		}
-	}
-
-	bootstrap.deployConfig = deployConfig
 
 	var deployType *types.DeployType = nil
 

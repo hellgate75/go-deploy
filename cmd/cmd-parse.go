@@ -12,15 +12,18 @@ import (
 )
 
 var (
-	name     string = ""
-	loglevel string = "."
-	workdir  string = "."
-	dir      string = ""
-	useHosts string = ""
-	useVars  string = ""
-	format   string = "YAML"
-	env      string = ""
-	fs       *flag.FlagSet
+	name      string = ""
+	loglevel  string = "."
+	workdir   string = "."
+	modDir    string = ""
+	chartsDir string = ""
+	configDir string = ""
+	systemDir string = ""
+	useHosts  string = ""
+	useVars   string = ""
+	format    string = "YAML"
+	env       string = ""
+	fs        *flag.FlagSet
 )
 
 const (
@@ -43,7 +46,10 @@ func init() {
 	fs.StringVar(&name, "name", name, "Deployment unit name")
 	fs.StringVar(&workdir, "workDir", ".", "Working directory")
 	fs.StringVar(&loglevel, "verbosity", "INFO", "Log Level Verbosity")
-	fs.StringVar(&dir, "dir", "."+io.GetPathSeparator()+types.DEFAULT_CONFIG_FOLDER, "Deployment config folder")
+	fs.StringVar(&modDir, "modDir", "."+io.GetPathSeparator()+DEFAULT_MODULES_FOLDER, "Go Deploy modules dir")
+	fs.StringVar(&chartsDir, "chartsDir", "."+io.GetPathSeparator()+DEFAULT_CHARTS_FOLDER, "Deployment charts folder")
+	fs.StringVar(&configDir, "configDir", "."+io.GetPathSeparator()+DEFAULT_CONFIG_FOLDER, "Deployment config folder")
+	fs.StringVar(&systemDir, "goDeployDir", userHomeDir()+io.GetPathSeparator()+DEFAULT_SYSTEM_FOLDER, "Go Deploy system folder")
 	fs.StringVar(&useHosts, "hosts", "", "Required Hosts files (comma separated file path list)")
 	fs.StringVar(&useVars, "vars", "", "Required Vars files (comma separated file path list)")
 	fs.StringVar(&format, "language", "YAML", "Config File Language (YAML, XML or JSON)")
@@ -65,11 +71,11 @@ func Usage() {
 }
 
 func GetTarget() string {
-	if len(os.Args) == 1 && os.Args[0][0:1] != "-" {
+	if len(os.Args) == 2 && os.Args[0][0:1] != "-" {
 		return os.Args[0]
-	} else if len(os.Args) == 2 && os.Args[0][0:1] != "-" {
+	} else if len(os.Args) == 3 && os.Args[0][0:1] != "-" {
 		return os.Args[1]
-	} else if len(os.Args) > 2 && os.Args[len(os.Args)-2][0:1] != "-" {
+	} else if len(os.Args) > 3 && os.Args[len(os.Args)-2][0:1] != "-" {
 		return os.Args[len(os.Args)-1]
 	}
 	return ""
@@ -83,7 +89,10 @@ func ParseArguments() (*types.DeployConfig, error) {
 		DeployName:   name,
 		WorkDir:      workdir,
 		LogVerbosity: loglevel,
-		ConfigDir:    dir,
+		ConfigDir:    configDir,
+		ChartsDir:    chartsDir,
+		SystemDir:    systemDir,
+		ModulesDir:   modDir,
 		UseHosts:     strings.Split(useHosts, ","),
 		UseVars:      strings.Split(useVars, ","),
 		ConfigLang:   types.DescriptorTypeValue(format),

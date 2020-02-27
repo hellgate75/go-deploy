@@ -1,8 +1,0 @@
-deployname: My first deployment
-usehosts:
-- ./.hosts
-usevars:
-- ./vars.yaml
-configdir: ./.build
-configLang: YAML
-env: dev

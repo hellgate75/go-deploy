@@ -1,0 +1,5 @@
+environments:
+- name: dev
+  value: Development D01
+- name: sit
+  value: Test S01

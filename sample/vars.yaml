@@ -1,0 +1,5 @@
+vars:
+- name: APP_NAME
+  value: Sample deploy scenario
+- name: DATA_FOLDER
+  value: data

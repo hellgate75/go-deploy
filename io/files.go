@@ -3,9 +3,31 @@ package io
 import (
 	"io/ioutil"
 	"os"
+	"path"
+	"path/filepath"
 	"runtime"
 	"strings"
 )
+
+func GetCurrentFolder() string {
+	cPath, err := os.Getwd()
+	if err != nil {
+		cPath, err := os.Executable()
+		if err != nil {
+			cPath, err = filepath.Abs(".")
+			if err != nil {
+				return "."
+			}
+			return cPath
+		}
+		cPath = path.Dir(cPath)
+	}
+	cPath, err = filepath.Abs(cPath)
+	if err != nil {
+		return "."
+	}
+	return filepath.Clean(cPath)
+}
 
 // Gets the Path Separator as string type
 func GetPathSeparator() string {
@@ -15,7 +37,7 @@ func GetPathSeparator() string {
 	return string(os.PathSeparator)
 }
 
-// Gets the Path Separator as string type
+// Gets the Shared libraries extension included by dot, related to current O/S
 func GetShareLibExt() string {
 	if runtime.GOOS == "windows" {
 		return ".dll"

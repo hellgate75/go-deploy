@@ -1,0 +1,12 @@
+deployname: My first deployment
+useHosts:
+- env/hosts
+useVars:
+- vars.yaml
+configDir: env
+chartsDir: charts
+modulesDir: .
+systemDir:
+configLang: YAML
+env: dev
+verbosity: INFO
