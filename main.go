@@ -9,6 +9,8 @@ import (
 	"github.com/hellgate75/go-deploy/types/module"
 	"github.com/hellgate75/go-deploy/utils"
 	"os"
+	"strconv"
+	"time"
 )
 
 var Logger log.Logger = log.NewLogger(log.INFO)
@@ -20,6 +22,7 @@ func init() {
 			os.Exit(1)
 		}
 	}()
+	module.Logger = Logger
 	Logger.Println(cmd.Banner)
 	Logger.Println("GO DEPLOY " + cmd.Version)
 	Logger.Println("Authors:", cmd.Authors)
@@ -28,12 +31,16 @@ func init() {
 }
 
 func main() {
+	var start time.Time = time.Now()
 	defer func() {
 		if r := recover(); r != nil {
 			Logger.Error(fmt.Sprintf("Recovery:\n- %v", r))
 			os.Exit(1)
 		}
 		Logger.Trace(fmt.Sprint("Exit ..."))
+		var end time.Time = time.Now()
+		var duration time.Duration = end.Sub(start)
+		Logger.Warn(fmt.Sprintf("Total elapsed time: %s", duration.String()))
 		os.Exit(0)
 	}()
 	if !cmd.RequiresHelp() {
@@ -136,7 +143,26 @@ func main() {
 						Logger.Error(fmt.Sprintf("Error trying to validate Feed for file: %s -> Details: %s", filePath, errors))
 						os.Exit(1)
 					}
-					Logger.Warn(fmt.Sprintf("Feed Exec: %v", feedEx))
+					if len(feedEx.Steps) > 0 {
+						Logger.Warn(fmt.Sprintf("Reading file: %s, discovered %s main steps!!", filePath, strconv.Itoa(len(feedEx.Steps))))
+						errExList := boostrap.Run(feedEx, Logger)
+						if len(errExList) > 0 {
+							var errors string = ""
+							for _, errX := range errExList {
+								prefix := ""
+								if len(errors) > 0 {
+									prefix = "\n"
+								}
+								errors += prefix + errX.Error()
+							}
+							Logger.Error(fmt.Sprintf("Error: During deploy execution -> <%v>...", errors))
+							os.Exit(1)
+						}
+					} else {
+						Logger.Warn(fmt.Sprintf("Unable to find any command in the given file: %s", filePath))
+						Logger.Warn("Nothing to do here!!")
+					}
+					Logger.Warn("Deploy procedure complete!!")
 				} else {
 					Logger.Warn(fmt.Sprintf("Feature %v NOT IMPLEMENTED yet!!", dt.DeploymentType))
 				}

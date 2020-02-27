@@ -23,6 +23,7 @@ const (
 type Bootstrap interface {
 	Init(baseDir string, suffix string, format module.DescriptorTypeValue, logger log.Logger) []error
 	Load(baseDir string, suffix string, format module.DescriptorTypeValue, logger log.Logger) []error
+	Run(feed *module.FeedExec, logger log.Logger) []error
 	GetDeployConfig() *module.DeployConfig
 	GetDeployType() *module.DeployType
 	GetNetType() *module.NetProtocolType
@@ -55,6 +56,11 @@ func (bootstrap *bootstrap) GetDefaultDeployConfig() *module.DeployConfig {
 		return nil
 	}
 	return dt
+}
+
+func (bootstrap *bootstrap) Run(feed *module.FeedExec, logger log.Logger) []error {
+	var errList []error = make([]error, 0)
+	return errList
 }
 
 func (bootstrap *bootstrap) GetDefaultDeployType() *module.DeployType {

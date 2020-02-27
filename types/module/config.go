@@ -11,7 +11,7 @@ import (
 	"sync"
 )
 
-var Logger log.Logger = log.NewLogger(log.VerbosityLevelFromString(RuntimeDeployConfig.LogVerbosity))
+var Logger log.Logger = nil
 
 type deploySourceTypeValue byte
 type deployDescriptorTypeValue byte

@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"github.com/hellgate75/go-deploy/log"
 	"github.com/hellgate75/go-deploy/modules"
 	"github.com/hellgate75/go-deploy/types/module"
 	"reflect"
@@ -10,10 +11,13 @@ import (
 	"strings"
 )
 
+var Logger log.Logger = log.NewLogger(log.VerbosityLevelFromString(module.RuntimeDeployConfig.LogVerbosity))
+
 type shellExecutor struct {
 }
 
 func (shell *shellExecutor) Execute(step module.Step) error {
+	Logger.Warn(fmt.Sprintf("shell.Executor.Execute -> Executing command : %s", step.StepType))
 	return nil
 }
 

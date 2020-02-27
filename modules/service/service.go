@@ -3,16 +3,20 @@ package service
 import (
 	"errors"
 	"fmt"
+	"github.com/hellgate75/go-deploy/log"
 	"github.com/hellgate75/go-deploy/modules"
 	"github.com/hellgate75/go-deploy/types/module"
 	"reflect"
 	"strings"
 )
 
+var Logger log.Logger = log.NewLogger(log.VerbosityLevelFromString(module.RuntimeDeployConfig.LogVerbosity))
+
 type serviceExecutor struct {
 }
 
 func (shell *serviceExecutor) Execute(step module.Step) error {
+	Logger.Warn(fmt.Sprintf("service.Executor.Execute -> Executing command : %s", step.StepType))
 	return nil
 }
 
