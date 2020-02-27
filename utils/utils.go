@@ -3,8 +3,25 @@ package utils
 import (
 	"github.com/hellgate75/go-deploy/io"
 	"path/filepath"
+	"runtime"
 	"strings"
 )
+
+// Gets the Shared libraries extension included by dot, related to current O/S
+func GetShareLibExt() string {
+	if runtime.GOOS == "windows" {
+		return ".dll"
+	}
+	return ".so"
+}
+
+// Gets the Shared libraries extension included by dot, related to current O/S
+func IsWindows() bool {
+	if runtime.GOOS == "windows" {
+		return true
+	}
+	return false
+}
 
 func FixFolder(folder string, baseDir string, defaultdirName string) string {
 	if folder == "" {

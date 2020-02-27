@@ -9,6 +9,11 @@ import (
 	"strings"
 )
 
+func ExistsFile(path string) bool {
+	_, err := os.Stat(path)
+	return err == nil
+}
+
 func GetCurrentFolder() string {
 	cPath, err := os.Getwd()
 	if err != nil {
@@ -35,14 +40,6 @@ func GetPathSeparator() string {
 		return "\\"
 	}
 	return string(os.PathSeparator)
-}
-
-// Gets the Shared libraries extension included by dot, related to current O/S
-func GetShareLibExt() string {
-	if runtime.GOOS == "windows" {
-		return ".dll"
-	}
-	return ".so"
 }
 
 //Verify if a atring file path corresponds to a directory

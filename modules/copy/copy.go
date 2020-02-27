@@ -9,6 +9,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"unsafe"
 )
 
 var Logger log.Logger = log.NewLogger(log.VerbosityLevelFromString(module.RuntimeDeployConfig.LogVerbosity))
@@ -123,5 +124,29 @@ func (copyCmd *copyCommand) Convert(cmdValues interface{}) (interface{}, error) 
 }
 
 var Converter modules.Converter = &copyCommand{}
+
+//go:linkname modules_seekModule [github.com/hellgate75/go-deploy/modules.seekModules]
+func modules_seekModule(module string, feature string, acceptance chan bool, featureAcceptance chan bool, response chan interface{}) {
+	if module == "copy" {
+		acceptance <- true
+		if feature == "Converter" {
+			featureAcceptance <- true
+			response <- &copyCommand{}
+		} else if feature == "Executor" {
+			featureAcceptance <- true
+			response <- &copyCmdExecutor{}
+		} else {
+			featureAcceptance <- false
+			response <- nil
+		}
+
+	} else {
+		acceptance <- false
+	}
+}
+
+// doInit is defined in package runtime
+//go:linkname doInit runtime.doInit
+func doInit(t unsafe.Pointer) // t should be a *runtime.initTask
 
 func main() {}

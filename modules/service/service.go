@@ -8,6 +8,7 @@ import (
 	"github.com/hellgate75/go-deploy/types/module"
 	"reflect"
 	"strings"
+	"unsafe"
 )
 
 var Logger log.Logger = log.NewLogger(log.VerbosityLevelFromString(module.RuntimeDeployConfig.LogVerbosity))
@@ -104,5 +105,29 @@ func (service *serviceCommand) Convert(cmdValues interface{}) (interface{}, erro
 }
 
 var Converter modules.Converter = &serviceCommand{}
+
+//go:linkname modules_seekModule [github.com/hellgate75/go-deploy/modules.seekModules]
+func modules_seekModule(module string, feature string, acceptance chan bool, featureAcceptance chan bool, response chan interface{}) {
+	if module == "service" {
+		acceptance <- true
+		if feature == "Converter" {
+			featureAcceptance <- true
+			response <- &serviceCommand{}
+		} else if feature == "Executor" {
+			featureAcceptance <- true
+			response <- &serviceExecutor{}
+		} else {
+			featureAcceptance <- false
+			response <- nil
+		}
+
+	} else {
+		acceptance <- false
+	}
+}
+
+// doInit is defined in package runtime
+//go:linkname doInit runtime.doInit
+func doInit(t unsafe.Pointer) // t should be a *runtime.initTask
 
 func main() {}

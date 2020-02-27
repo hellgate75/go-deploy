@@ -3,3 +3,5 @@
 **/*.exe
 **/*.dll
 **/*.so
+**/.externalToolBuilders
+**/.settings

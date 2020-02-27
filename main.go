@@ -5,6 +5,7 @@ import (
 	"github.com/hellgate75/go-deploy/cmd"
 	"github.com/hellgate75/go-deploy/io"
 	"github.com/hellgate75/go-deploy/log"
+	"github.com/hellgate75/go-deploy/modules"
 	"github.com/hellgate75/go-deploy/types/generic"
 	"github.com/hellgate75/go-deploy/types/module"
 	"github.com/hellgate75/go-deploy/utils"
@@ -23,6 +24,8 @@ func init() {
 		}
 	}()
 	module.Logger = Logger
+	generic.Logger = Logger
+	modules.Logger = Logger
 	Logger.Println(cmd.Banner)
 	Logger.Println("GO DEPLOY " + cmd.Version)
 	Logger.Println("Authors:", cmd.Authors)
@@ -103,7 +106,7 @@ func main() {
 						if len(errors) > 0 {
 							prefix = "\n"
 						}
-						errors += prefix + errX.Error()
+						errors += prefix + "- " + errX.Error()
 					}
 					Logger.Error(fmt.Sprintf("Error: During config files load -> <%v>...", errors))
 					os.Exit(1)
@@ -127,7 +130,7 @@ func main() {
 					var feed generic.IFeed = generic.NewFeed("default")
 					err = feed.Load(filePath)
 					if err != nil {
-						Logger.Error(fmt.Sprintf("Error trying to load Feed for file: $s -> Details: ", filePath, err.Error()))
+						Logger.Error(fmt.Sprintf("Error trying to load Feed for file: %s -> Details: \n%s", filePath, err.Error()))
 						os.Exit(1)
 					}
 					feedEx, errValList := feed.Validate()
@@ -138,9 +141,9 @@ func main() {
 							if len(errors) > 0 {
 								prefix = "\n"
 							}
-							errors += prefix + errX.Error()
+							errors += prefix + "- " + errX.Error()
 						}
-						Logger.Error(fmt.Sprintf("Error trying to validate Feed for file: %s -> Details: %s", filePath, errors))
+						Logger.Error(fmt.Sprintf("Error trying to validate Feed for file: %s -> Details: \n%s", filePath, errors))
 						os.Exit(1)
 					}
 					if len(feedEx.Steps) > 0 {

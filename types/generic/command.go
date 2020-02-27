@@ -5,12 +5,15 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
+	"github.com/hellgate75/go-deploy/log"
 	"github.com/hellgate75/go-deploy/types/module"
 	"gopkg.in/yaml.v3"
 	"io/ioutil"
 	"os"
 	"strings"
 )
+
+var Logger log.Logger = nil
 
 func (oset *OptionsSet) Load(path string) error {
 	file, err := os.Open(path)
@@ -65,13 +68,24 @@ func (oset *OptionsSet) Save(path string) error {
 func (feed OptionsSet) Validate() ([]*module.Step, []error) {
 	var errors []error = make([]error, 0)
 	var steps []*module.Step = make([]*module.Step, 0)
-	for key, value := range feed.Options {
-		stepsX, errorsX := EvaluateSteps(key, value)
-		for _, stepX := range stepsX {
-			steps = append(steps, stepX)
+	for _, command := range feed.Steps {
+		var commandMap = map[interface{}]interface{}(command)
+		var name string = ""
+		if val, ok := commandMap["name"]; ok {
+			name = fmt.Sprintf("%v", val)
+		} else if val, ok := commandMap["NAME"]; ok {
+			name = fmt.Sprintf("%v", val)
 		}
-		for _, errX := range errorsX {
-			errors = append(errors, errX)
+		for key, value := range command {
+			if key != "name" && key != "NAME" {
+				stepsX, errorsX := EvaluateSteps(name, key, value)
+				for _, stepX := range stepsX {
+					steps = append(steps, stepX)
+				}
+				for _, errX := range errorsX {
+					errors = append(errors, errX)
+				}
+			}
 		}
 	}
 	return steps, errors
@@ -136,13 +150,24 @@ func (feed *Feed) Save(path string) error {
 func (feed Feed) Validate() (*module.FeedExec, []error) {
 	var errors []error = make([]error, 0)
 	var steps []*module.Step = make([]*module.Step, 0)
-	for key, value := range feed.Options {
-		stepsX, errorsX := EvaluateSteps(key, value)
-		for _, stepX := range stepsX {
-			steps = append(steps, stepX)
+	for _, command := range feed.Steps {
+		var commandMap = map[interface{}]interface{}(command)
+		var name string = ""
+		if val, ok := commandMap["name"]; ok {
+			name = fmt.Sprintf("%v", val)
+		} else if val, ok := commandMap["NAME"]; ok {
+			name = fmt.Sprintf("%v", val)
 		}
-		for _, errX := range errorsX {
-			errors = append(errors, errX)
+		for key, value := range command {
+			if key != "name" && key != "NAME" {
+				stepsX, errorsX := EvaluateSteps(name, key, value)
+				for _, stepX := range stepsX {
+					steps = append(steps, stepX)
+				}
+				for _, errX := range errorsX {
+					errors = append(errors, errX)
+				}
+			}
 		}
 	}
 	return &module.FeedExec{
@@ -150,7 +175,7 @@ func (feed Feed) Validate() (*module.FeedExec, []error) {
 	}, errors
 }
 
-func EvaluateSteps(key interface{}, value interface{}) ([]*module.Step, []error) {
+func EvaluateSteps(name string, key interface{}, value interface{}) ([]*module.Step, []error) {
 	var errorsList []error = make([]error, 0)
 	var steps []*module.Step = make([]*module.Step, 0)
 	var keyType string = fmt.Sprintf("%T", key)
@@ -162,17 +187,8 @@ func EvaluateSteps(key interface{}, value interface{}) ([]*module.Step, []error)
 		} else {
 			//New Step
 			var keyVal string = fmt.Sprintf("%v", key)
-			if strings.Index(valueType, "map[") > 0 {
-				for key, value := range value.(map[interface{}]interface{}) {
-					stepsX, errorsX := EvaluateSteps(key, value)
-					for _, stepX := range stepsX {
-						steps = append(steps, stepX)
-					}
-					for _, errX := range errorsX {
-						errorsList = append(errorsList, errX)
-					}
-				}
-			} else {
+			Logger.Warn(fmt.Sprintf("valueType: %v", valueType))
+			if strings.Index(valueType, "map[") == 0 {
 
 				if strings.ToLower(keyVal) == "import" {
 					if valueType == "[]string" || valueType == "[]interface{}" {
@@ -204,7 +220,7 @@ func EvaluateSteps(key interface{}, value interface{}) ([]*module.Step, []error)
 							}
 
 						}
-						steps = append(steps, NewImportStep(feeds))
+						steps = append(steps, NewImportStep(name, feeds))
 					} else {
 						errorsList = append(errorsList, errors.New(fmt.Sprintf("Invalid import type %v, expected []string", valueType)))
 					}
@@ -239,23 +255,34 @@ func EvaluateSteps(key interface{}, value interface{}) ([]*module.Step, []error)
 							}
 
 						}
-						steps = append(steps, NewImportStep(feeds))
+						steps = append(steps, NewImportStep(name, feeds))
 					} else {
 						errorsList = append(errorsList, errors.New(fmt.Sprintf("Invalid import type %v, expected []string", valueType)))
 					}
 
 				} else {
-					step, err := NewStep(keyType, value)
+					step, err := NewStep(name, fmt.Sprintf("%v", key), value)
 					if err != nil {
 						errorsList = append(errorsList, err)
 					} else {
 						steps = append(steps, step)
 					}
 				}
+			} else {
+				//				for key, value := range map[interface{}]interface{}(value) {
+				//					stepsX, errorsX := EvaluateSteps(key, value)
+				//					for _, stepX := range stepsX {
+				//						steps = append(steps, stepX)
+				//					}
+				//					for _, errX := range errorsX {
+				//						errorsList = append(errorsList, errX)
+				//					}
+				//				}
+				errorsList = append(errorsList, errors.New("Value type: "+valueType+" is not expected one (map[interface{}]interface{})"))
 			}
 		}
 	} else {
-
+		errorsList = append(errorsList, errors.New("Key type: "+keyType+" is not expected one (string)"))
 	}
 
 	return steps, errorsList
@@ -263,7 +290,7 @@ func EvaluateSteps(key interface{}, value interface{}) ([]*module.Step, []error)
 
 func NewFeed(defaultName string) IFeed {
 	return &Feed{
-		Name:    defaultName,
-		Options: make(map[interface{}]interface{}),
+		Name:  defaultName,
+		Steps: make([]map[interface{}]interface{}, 0),
 	}
 }

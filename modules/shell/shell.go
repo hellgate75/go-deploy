@@ -9,6 +9,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"unsafe"
 )
 
 var Logger log.Logger = log.NewLogger(log.VerbosityLevelFromString(module.RuntimeDeployConfig.LogVerbosity))
@@ -33,11 +34,12 @@ func (shell shellCommand) String() string {
 * Shell command structure
  */
 type shellCommand struct {
-	Exec     string
-	RunAs    string
-	AsRoot   bool
-	WithVars []string
-	WithList []string
+	Exec      string
+	RunAs     string
+	AsRoot    bool
+	WithVars  []string
+	WithList  []string
+	SaveState string
 }
 
 func (shell *shellCommand) Convert(cmdValues interface{}) (interface{}, error) {
@@ -58,6 +60,7 @@ func (shell *shellCommand) Convert(cmdValues interface{}) (interface{}, error) {
 	var asRoot bool = false
 	var withVars []string = make([]string, 0)
 	var withList []string = make([]string, 0)
+	var asVar string = ""
 	if len(valType) > 3 && "map" == valType[0:3] {
 		for key, value := range cmdValues.(map[string]interface{}) {
 			var elemValType string = fmt.Sprintf("%v", value)
@@ -68,6 +71,12 @@ func (shell *shellCommand) Convert(cmdValues interface{}) (interface{}, error) {
 					strings.Join(value.([]string), " ")
 				} else {
 					return nil, errors.New("Unable to parse command: shell.exec, with aguments of type " + elemValType + ", expected type string or []string")
+				}
+			} else if strings.ToLower(key) == "saveState" {
+				if elemValType == "string" {
+					asVar = fmt.Sprintf("%v", value)
+				} else {
+					return nil, errors.New("Unable to parse command: shell.asVar, with aguments of type " + elemValType + ", expected type string")
 				}
 			} else if strings.ToLower(key) == "runas" {
 				if elemValType == "string" {
@@ -122,13 +131,39 @@ func (shell *shellCommand) Convert(cmdValues interface{}) (interface{}, error) {
 		return nil, superError
 	}
 	return shellCommand{
-		Exec:     exec,
-		RunAs:    runAs,
-		AsRoot:   asRoot,
-		WithVars: withVars,
+		Exec:      exec,
+		RunAs:     runAs,
+		AsRoot:    asRoot,
+		WithVars:  withVars,
+		SaveState: asVar,
 	}, nil
 }
 
 var Converter modules.Converter = &shellCommand{}
+
+//go:linkname modules_seekModule [github.com/hellgate75/go-deploy/modules.seekModules]
+func modules_seekModule(module string, feature string, acceptance chan bool, featureAcceptance chan bool, response chan interface{}) {
+	Logger.Warn(fmt.Sprintf("shell.modules_seekModule -> module: %s, feature: %s||", module, feature))
+	if module == "shell" {
+		acceptance <- true
+		if feature == "Converter" {
+			featureAcceptance <- true
+			response <- &shellCommand{}
+		} else if feature == "Executor" {
+			featureAcceptance <- true
+			response <- &shellExecutor{}
+		} else {
+			featureAcceptance <- false
+			response <- nil
+		}
+
+	} else {
+		acceptance <- false
+	}
+}
+
+// doInit is defined in package runtime
+//go:linkname doInit runtime.doInit
+func doInit(t unsafe.Pointer) // t should be a *runtime.initTask
 
 func main() {}

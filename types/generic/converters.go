@@ -2,6 +2,7 @@ package generic
 
 import (
 	"errors"
+	"fmt"
 	"github.com/hellgate75/go-deploy/modules"
 )
 
@@ -13,7 +14,7 @@ type NilCommandConverter struct {
 }
 
 func (nilCommand *NilCommandConverter) Convert(cmdValues interface{}) (interface{}, error) {
-	return nil, errors.New("Not implemented type: " + nilCommand.CmdType)
+	return nil, errors.New("NilCommandConverter -> Not implemented type: " + nilCommand.CmdType)
 
 }
 
@@ -26,6 +27,7 @@ func NewConverter(cmdType string) modules.Converter {
 	//	case FEED_TYPE_COPY:
 	//		return &CopyCommand{}
 	//	}
+	Logger.Warn(fmt.Sprintf("NewConverter -> cmdType: %s", cmdType))
 	converter, err := modules.LoadConverterForModule(cmdType)
 	if err != nil {
 		return &NilCommandConverter{

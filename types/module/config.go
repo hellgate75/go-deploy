@@ -100,6 +100,7 @@ type Printable interface {
 }
 
 type Step struct {
+	Name     string
 	StepType string
 	StepData interface{}
 	Children []*Step

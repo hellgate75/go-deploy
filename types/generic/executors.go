@@ -14,7 +14,7 @@ type NilCommandExecutor struct {
 }
 
 func (nilCommand *NilCommandExecutor) Execute(step module.Step) error {
-	return errors.New("Not implemented type: " + nilCommand.CmdType)
+	return errors.New("NilCommandExecutor -> Not implemented type: " + nilCommand.CmdType)
 
 }
 
