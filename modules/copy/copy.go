@@ -3,7 +3,8 @@ package copy
 import (
 	"errors"
 	"fmt"
-	"github.com/hellgate75/go-deploy/types/generic"
+	"github.com/hellgate75/go-deploy/modules"
+	"github.com/hellgate75/go-deploy/types/module"
 	"reflect"
 	"strconv"
 	"strings"
@@ -12,11 +13,11 @@ import (
 type copyCmdExecutor struct {
 }
 
-func (shell *copyCmdExecutor) Execute(step generic.Step) error {
+func (shell *copyCmdExecutor) Execute(step module.Step) error {
 	return nil
 }
 
-var Executor generic.Executor = &copyCmdExecutor{}
+var Executor modules.Executor = &copyCmdExecutor{}
 
 var ERROR_TYPE reflect.Type = reflect.TypeOf(errors.New(""))
 
@@ -117,6 +118,6 @@ func (copyCmd *copyCommand) Convert(cmdValues interface{}) (interface{}, error) 
 	}, nil
 }
 
-var Converter generic.Converter = &copyCommand{}
+var Converter modules.Converter = &copyCommand{}
 
 func main() {}

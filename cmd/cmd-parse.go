@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/hellgate75/go-deploy/io"
-	"github.com/hellgate75/go-deploy/types"
+	"github.com/hellgate75/go-deploy/types/module"
 	"math/rand"
 	"os"
 	"strconv"
@@ -81,11 +81,11 @@ func GetTarget() string {
 	return ""
 }
 
-func ParseArguments() (*types.DeployConfig, error) {
+func ParseArguments() (*module.DeployConfig, error) {
 	if err := fs.Parse(os.Args[1:]); err != nil {
 		return nil, err
 	}
-	return &types.DeployConfig{
+	return &module.DeployConfig{
 		DeployName:   name,
 		WorkDir:      workdir,
 		LogVerbosity: loglevel,
@@ -95,7 +95,7 @@ func ParseArguments() (*types.DeployConfig, error) {
 		ModulesDir:   modDir,
 		UseHosts:     strings.Split(useHosts, ","),
 		UseVars:      strings.Split(useVars, ","),
-		ConfigLang:   types.DescriptorTypeValue(format),
+		ConfigLang:   module.DescriptorTypeValue(format),
 		EnvSelector:  env,
 	}, nil
 }

@@ -3,7 +3,8 @@ package main
 import (
 	"errors"
 	"fmt"
-	"github.com/hellgate75/go-deploy/types/generic"
+	"github.com/hellgate75/go-deploy/modules"
+	"github.com/hellgate75/go-deploy/types/module"
 	"reflect"
 	"strconv"
 	"strings"
@@ -12,11 +13,11 @@ import (
 type shellExecutor struct {
 }
 
-func (shell *shellExecutor) Execute(step generic.Step) error {
+func (shell *shellExecutor) Execute(step module.Step) error {
 	return nil
 }
 
-var Executor generic.Executor = &shellExecutor{}
+var Executor modules.Executor = &shellExecutor{}
 
 var ERROR_TYPE reflect.Type = reflect.TypeOf(errors.New(""))
 
@@ -124,6 +125,6 @@ func (shell *shellCommand) Convert(cmdValues interface{}) (interface{}, error) {
 	}, nil
 }
 
-var Converter generic.Converter = &shellCommand{}
+var Converter modules.Converter = &shellCommand{}
 
 func main() {}

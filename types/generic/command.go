@@ -1,32 +1,22 @@
-package types
+package generic
 
 import (
 	"encoding/json"
 	"encoding/xml"
 	"errors"
 	"fmt"
-	"github.com/hellgate75/go-deploy/types/cmdtypes"
-	"github.com/hellgate75/go-deploy/types/generic"
+	"github.com/hellgate75/go-deploy/types/module"
 	"gopkg.in/yaml.v3"
 	"io/ioutil"
 	"os"
 	"strings"
 )
 
-var RuntimeDeployConfig *DeployConfig = nil
-var RuntimeDeployType *DeployType = nil
-var RuntimeNetworkType *NetProtocolType = nil
+var RuntimeDeployConfig *module.DeployConfig = nil
+var RuntimeDeployType *module.DeployType = nil
+var RuntimeNetworkType *module.NetProtocolType = nil
 
-var ChartsDescriptorFormat DescriptorTypeValue = DescriptorTypeValue("YAML")
-
-type Feed struct {
-	Name    string                      `yaml:"name,omitempty" json:"name,omitempty" xml:"name,chardata,omitempty"`
-	Options map[interface{}]interface{} `yaml:"options,omitempty" json:"options,omitempty" xml:"option,chardata,omitempty"`
-}
-
-type OptionsSet struct {
-	Options map[interface{}]interface{} `yaml:",omitempty" json:"options,omitempty" xml:"option,chardata,omitempty"`
-}
+var ChartsDescriptorFormat module.DescriptorTypeValue = module.DescriptorTypeValue("YAML")
 
 func (oset *OptionsSet) Load(path string) error {
 	file, err := os.Open(path)
@@ -78,9 +68,9 @@ func (oset *OptionsSet) Save(path string) error {
 	return nil
 }
 
-func (feed OptionsSet) Validate() ([]*generic.Step, []error) {
+func (feed OptionsSet) Validate() ([]*module.Step, []error) {
 	var errors []error = make([]error, 0)
-	var steps []*generic.Step = make([]*generic.Step, 0)
+	var steps []*module.Step = make([]*module.Step, 0)
 	for key, value := range feed.Options {
 		stepsX, errorsX := EvaluateSteps(key, value)
 		for _, stepX := range stepsX {
@@ -96,7 +86,7 @@ func (feed OptionsSet) Validate() ([]*generic.Step, []error) {
 type IFeed interface {
 	Load(path string) error
 	Save(path string) error
-	Validate() (*generic.FeedExec, []error)
+	Validate() (*module.FeedExec, []error)
 }
 
 func (feed *Feed) Load(path string) error {
@@ -149,9 +139,9 @@ func (feed *Feed) Save(path string) error {
 	return nil
 }
 
-func (feed Feed) Validate() (*generic.FeedExec, []error) {
+func (feed Feed) Validate() (*module.FeedExec, []error) {
 	var errors []error = make([]error, 0)
-	var steps []*generic.Step = make([]*generic.Step, 0)
+	var steps []*module.Step = make([]*module.Step, 0)
 	for key, value := range feed.Options {
 		stepsX, errorsX := EvaluateSteps(key, value)
 		for _, stepX := range stepsX {
@@ -161,19 +151,18 @@ func (feed Feed) Validate() (*generic.FeedExec, []error) {
 			errors = append(errors, errX)
 		}
 	}
-	return &generic.FeedExec{
+	return &module.FeedExec{
 		Steps: steps,
 	}, errors
 }
 
-func EvaluateSteps(key interface{}, value interface{}) ([]*generic.Step, []error) {
+func EvaluateSteps(key interface{}, value interface{}) ([]*module.Step, []error) {
 	var errorsList []error = make([]error, 0)
-	var steps []*generic.Step = make([]*generic.Step, 0)
+	var steps []*module.Step = make([]*module.Step, 0)
 	var keyType string = fmt.Sprintf("%T", key)
 	var valueType string = fmt.Sprintf("%T", value)
 	var err error
 	if keyType == "string" {
-		//keyStepType, err = cmdtypes.KeyToType(fmt.Sprintf("%v", key))
 		if err != nil {
 			errorsList = append(errorsList, err)
 		} else {
@@ -193,7 +182,7 @@ func EvaluateSteps(key interface{}, value interface{}) ([]*generic.Step, []error
 
 				if strings.ToLower(keyVal) == "import" {
 					if valueType == "[]string" || valueType == "[]interface{}" {
-						var feeds []*generic.FeedExec = make([]*generic.FeedExec, 0)
+						var feeds []*module.FeedExec = make([]*module.FeedExec, 0)
 						var arr []string = make([]string, 0)
 						if valueType == "[]string" {
 							for _, str := range value.([]string) {
@@ -221,14 +210,14 @@ func EvaluateSteps(key interface{}, value interface{}) ([]*generic.Step, []error
 							}
 
 						}
-						steps = append(steps, cmdtypes.NewImportStep(feeds))
+						steps = append(steps, NewImportStep(feeds))
 					} else {
 						errorsList = append(errorsList, errors.New(fmt.Sprintf("Invalid import type %v, expected []string", valueType)))
 					}
 
 				} else if strings.ToLower(keyVal) == "include" {
 					if valueType == "[]string" || valueType == "[]interface{}" {
-						var feeds []*generic.FeedExec = make([]*generic.FeedExec, 0)
+						var feeds []*module.FeedExec = make([]*module.FeedExec, 0)
 						var arr []string = make([]string, 0)
 						if valueType == "[]string" {
 							for _, str := range value.([]string) {
@@ -256,13 +245,13 @@ func EvaluateSteps(key interface{}, value interface{}) ([]*generic.Step, []error
 							}
 
 						}
-						steps = append(steps, cmdtypes.NewImportStep(feeds))
+						steps = append(steps, NewImportStep(feeds))
 					} else {
 						errorsList = append(errorsList, errors.New(fmt.Sprintf("Invalid import type %v, expected []string", valueType)))
 					}
 
 				} else {
-					step, err := cmdtypes.NewStep(keyType, value)
+					step, err := NewStep(keyType, value)
 					if err != nil {
 						errorsList = append(errorsList, err)
 					} else {

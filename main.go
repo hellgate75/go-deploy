@@ -5,7 +5,8 @@ import (
 	"github.com/hellgate75/go-deploy/cmd"
 	"github.com/hellgate75/go-deploy/io"
 	"github.com/hellgate75/go-deploy/log"
-	"github.com/hellgate75/go-deploy/types"
+	"github.com/hellgate75/go-deploy/types/generic"
+	"github.com/hellgate75/go-deploy/types/module"
 	"github.com/hellgate75/go-deploy/utils"
 	"os"
 )
@@ -71,9 +72,9 @@ func main() {
 					Logger.Error(fmt.Sprintf("Error: During config files initialization -> <%v>...", errors))
 					os.Exit(1)
 				}
-				var dc *types.DeployConfig = boostrap.GetDeployConfig()
+				var dc *module.DeployConfig = boostrap.GetDeployConfig()
 				if dc == nil {
-					dc = &types.DeployConfig{}
+					dc = &module.DeployConfig{}
 				}
 				if dc.DeployName != "" {
 					config.DeployName = dc.DeployName
@@ -85,7 +86,7 @@ func main() {
 					Logger.SetVerbosity(log.VerbosityLevelFromString(dc.LogVerbosity))
 					Logger.Info(fmt.Sprintf("Logger Verbosity Setted up to : %v", Logger.GetVerbosity()))
 				}
-				types.RuntimeDeployConfig = dc
+				generic.RuntimeDeployConfig = dc
 				errB = boostrap.Load(dc.ConfigDir, dc.EnvSelector, dc.ConfigLang, Logger)
 				Logger.Info(fmt.Sprintf("Errors during config load: %b", len(errB)))
 				if len(errB) > 0 {
@@ -100,23 +101,23 @@ func main() {
 					Logger.Error(fmt.Sprintf("Error: During config files load -> <%v>...", errors))
 					os.Exit(1)
 				}
-				var dt *types.DeployType = boostrap.GetDeployType()
+				var dt *module.DeployType = boostrap.GetDeployType()
 				if dt == nil {
-					dt = &types.DeployType{}
+					dt = &module.DeployType{}
 				}
 				dt = boostrap.GetDefaultDeployType().Merge(dt)
-				types.RuntimeDeployType = dt
-				var nt *types.NetProtocolType = boostrap.GetNetType()
+				generic.RuntimeDeployType = dt
+				var nt *module.NetProtocolType = boostrap.GetNetType()
 				if nt == nil {
-					nt = &types.NetProtocolType{}
+					nt = &module.NetProtocolType{}
 				}
 				nt = boostrap.GetDefaultNetType().Merge(nt)
-				types.RuntimeNetworkType = nt
+				generic.RuntimeNetworkType = nt
 				Logger.Info(fmt.Sprintf("Configuration Summary: \nDeploy Config: %v\nDeployType: %v\nNetType: %v\n", dc.String(), dt.String(), nt.String()))
-				if dt.DeploymentType == types.FILE_SOURCE {
+				if dt.DeploymentType == module.FILE_SOURCE {
 					var filePath string = dc.WorkDir + io.GetPathSeparator() + target
 					Logger.Warn(fmt.Sprintf("Trying load of Feed: %s\n", filePath))
-					var feed types.IFeed = types.NewFeed("default")
+					var feed generic.IFeed = generic.NewFeed("default")
 					err = feed.Load(filePath)
 					if err != nil {
 						Logger.Error(fmt.Sprintf("Error trying to load Feed for file: $s -> Details: ", filePath, err.Error()))

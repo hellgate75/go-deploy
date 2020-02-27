@@ -3,7 +3,8 @@ package service
 import (
 	"errors"
 	"fmt"
-	"github.com/hellgate75/go-deploy/types/generic"
+	"github.com/hellgate75/go-deploy/modules"
+	"github.com/hellgate75/go-deploy/types/module"
 	"reflect"
 	"strings"
 )
@@ -11,11 +12,11 @@ import (
 type serviceExecutor struct {
 }
 
-func (shell *serviceExecutor) Execute(step generic.Step) error {
+func (shell *serviceExecutor) Execute(step module.Step) error {
 	return nil
 }
 
-var Executor generic.Executor = &serviceExecutor{}
+var Executor modules.Executor = &serviceExecutor{}
 
 var ERROR_TYPE reflect.Type = reflect.TypeOf(errors.New(""))
 
@@ -98,6 +99,6 @@ func (service *serviceCommand) Convert(cmdValues interface{}) (interface{}, erro
 	}, nil
 }
 
-var Converter generic.Converter = &serviceCommand{}
+var Converter modules.Converter = &serviceCommand{}
 
 func main() {}
