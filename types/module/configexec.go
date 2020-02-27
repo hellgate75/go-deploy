@@ -6,6 +6,12 @@ import (
 	"github.com/hellgate75/go-deploy/utils"
 )
 
+var RuntimeDeployConfig *DeployConfig = nil
+var RuntimeDeployType *DeployType = nil
+var RuntimeNetworkType *NetProtocolType = nil
+
+var ChartsDescriptorFormat DescriptorTypeValue = DescriptorTypeValue("YAML")
+
 func (dt *DeployType) Merge(dt2 *DeployType) *DeployType {
 	return &DeployType{
 		DeploymentType: DeploymentTypeValue(bestString(string(dt2.DeploymentType), string(dt.DeploymentType))),

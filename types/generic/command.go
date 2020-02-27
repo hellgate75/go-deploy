@@ -12,12 +12,6 @@ import (
 	"strings"
 )
 
-var RuntimeDeployConfig *module.DeployConfig = nil
-var RuntimeDeployType *module.DeployType = nil
-var RuntimeNetworkType *module.NetProtocolType = nil
-
-var ChartsDescriptorFormat module.DescriptorTypeValue = module.DescriptorTypeValue("YAML")
-
 func (oset *OptionsSet) Load(path string) error {
 	file, err := os.Open(path)
 	if err != nil {
@@ -28,14 +22,14 @@ func (oset *OptionsSet) Load(path string) error {
 	if err != nil {
 		return err
 	}
-	if string(RuntimeDeployConfig.ConfigLang) == "YAML" {
+	if string(module.RuntimeDeployConfig.ConfigLang) == "YAML" {
 		err = yaml.Unmarshal(data, oset)
-	} else if string(RuntimeDeployConfig.ConfigLang) == "XML" {
+	} else if string(module.RuntimeDeployConfig.ConfigLang) == "XML" {
 		err = xml.Unmarshal(data, oset)
-	} else if string(RuntimeDeployConfig.ConfigLang) == "JSON" {
+	} else if string(module.RuntimeDeployConfig.ConfigLang) == "JSON" {
 		err = json.Unmarshal(data, oset)
 	} else {
-		return errors.New("OptionsSet.Load: Unavailable converter for type: " + string(RuntimeDeployConfig.ConfigLang))
+		return errors.New("OptionsSet.Load: Unavailable converter for type: " + string(module.RuntimeDeployConfig.ConfigLang))
 	}
 	if err != nil {
 		return err
@@ -49,14 +43,14 @@ func (oset *OptionsSet) Save(path string) error {
 		os.Remove(path)
 	}
 	var data []byte
-	if string(RuntimeDeployConfig.ConfigLang) == "YAML" {
+	if string(module.RuntimeDeployConfig.ConfigLang) == "YAML" {
 		data, err = yaml.Marshal(oset)
-	} else if string(RuntimeDeployConfig.ConfigLang) == "XML" {
+	} else if string(module.RuntimeDeployConfig.ConfigLang) == "XML" {
 		data, err = xml.Marshal(oset)
-	} else if string(RuntimeDeployConfig.ConfigLang) == "JSON" {
+	} else if string(module.RuntimeDeployConfig.ConfigLang) == "JSON" {
 		data, err = json.Marshal(oset)
 	} else {
-		return errors.New("OptionsSet.Save: Unavailable converter for type: " + string(RuntimeDeployConfig.ConfigLang))
+		return errors.New("OptionsSet.Save: Unavailable converter for type: " + string(module.RuntimeDeployConfig.ConfigLang))
 	}
 	if err != nil {
 		return err
@@ -99,14 +93,14 @@ func (feed *Feed) Load(path string) error {
 	if err != nil {
 		return err
 	}
-	if string(RuntimeDeployConfig.ConfigLang) == "YAML" {
+	if string(module.RuntimeDeployConfig.ConfigLang) == "YAML" {
 		err = yaml.Unmarshal(data, feed)
-	} else if string(RuntimeDeployConfig.ConfigLang) == "XML" {
+	} else if string(module.RuntimeDeployConfig.ConfigLang) == "XML" {
 		err = xml.Unmarshal(data, feed)
-	} else if string(RuntimeDeployConfig.ConfigLang) == "JSON" {
+	} else if string(module.RuntimeDeployConfig.ConfigLang) == "JSON" {
 		err = json.Unmarshal(data, feed)
 	} else {
-		return errors.New("Feed.Load: Unavailable converter for type: " + string(RuntimeDeployConfig.ConfigLang))
+		return errors.New("Feed.Load: Unavailable converter for type: " + string(module.RuntimeDeployConfig.ConfigLang))
 	}
 	if err != nil {
 		return err
@@ -120,14 +114,14 @@ func (feed *Feed) Save(path string) error {
 		os.Remove(path)
 	}
 	var data []byte
-	if string(RuntimeDeployConfig.ConfigLang) == "YAML" {
+	if string(module.RuntimeDeployConfig.ConfigLang) == "YAML" {
 		data, err = yaml.Marshal(feed)
-	} else if string(RuntimeDeployConfig.ConfigLang) == "XML" {
+	} else if string(module.RuntimeDeployConfig.ConfigLang) == "XML" {
 		data, err = xml.Marshal(feed)
-	} else if string(RuntimeDeployConfig.ConfigLang) == "JSON" {
+	} else if string(module.RuntimeDeployConfig.ConfigLang) == "JSON" {
 		data, err = json.Marshal(feed)
 	} else {
-		return errors.New("Feed.Save: Unavailable converter for type: " + string(RuntimeDeployConfig.ConfigLang))
+		return errors.New("Feed.Save: Unavailable converter for type: " + string(module.RuntimeDeployConfig.ConfigLang))
 	}
 	if err != nil {
 		return err

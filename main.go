@@ -86,7 +86,7 @@ func main() {
 					Logger.SetVerbosity(log.VerbosityLevelFromString(dc.LogVerbosity))
 					Logger.Info(fmt.Sprintf("Logger Verbosity Setted up to : %v", Logger.GetVerbosity()))
 				}
-				generic.RuntimeDeployConfig = dc
+				module.RuntimeDeployConfig = dc
 				errB = boostrap.Load(dc.ConfigDir, dc.EnvSelector, dc.ConfigLang, Logger)
 				Logger.Info(fmt.Sprintf("Errors during config load: %b", len(errB)))
 				if len(errB) > 0 {
@@ -106,13 +106,13 @@ func main() {
 					dt = &module.DeployType{}
 				}
 				dt = boostrap.GetDefaultDeployType().Merge(dt)
-				generic.RuntimeDeployType = dt
+				module.RuntimeDeployType = dt
 				var nt *module.NetProtocolType = boostrap.GetNetType()
 				if nt == nil {
 					nt = &module.NetProtocolType{}
 				}
 				nt = boostrap.GetDefaultNetType().Merge(nt)
-				generic.RuntimeNetworkType = nt
+				module.RuntimeNetworkType = nt
 				Logger.Info(fmt.Sprintf("Configuration Summary: \nDeploy Config: %v\nDeployType: %v\nNetType: %v\n", dc.String(), dt.String(), nt.String()))
 				if dt.DeploymentType == module.FILE_SOURCE {
 					var filePath string = dc.WorkDir + io.GetPathSeparator() + target
