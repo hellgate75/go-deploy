@@ -26,6 +26,7 @@ type Bootstrap interface {
 	GetDeployConfig() *types.DeployConfig
 	GetDeployType() *types.DeployType
 	GetNetType() *types.NetProtocolType
+	GetDefaultDeployConfig() *types.DeployConfig
 	GetDefaultDeployType() *types.DeployType
 	GetDefaultNetType() *types.NetProtocolType
 }
@@ -46,6 +47,14 @@ func (bootstrap *bootstrap) GetDeployType() *types.DeployType {
 
 func (bootstrap *bootstrap) GetNetType() *types.NetProtocolType {
 	return bootstrap.netType
+}
+
+func (bootstrap *bootstrap) GetDefaultDeployConfig() *types.DeployConfig {
+	dt, err := ParseArguments()
+	if err != nil {
+		return nil
+	}
+	return dt
 }
 
 func (bootstrap *bootstrap) GetDefaultDeployType() *types.DeployType {

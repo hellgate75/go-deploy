@@ -29,6 +29,7 @@ const (
 	periodicDeployment
 	yamlDescriptorType deployDescriptorTypeValue = iota + 1
 	jsonDescriptorType
+	xmlDescriptorType
 	UNKNOWN                       DeploymentTypeValue  = "UNKNOWN"
 	FILE_SOURCE                   DeploymentTypeValue  = "FILE_SOURCE"
 	HTTP_SOURCE                   DeploymentTypeValue  = "HTTP_SOURCE"
