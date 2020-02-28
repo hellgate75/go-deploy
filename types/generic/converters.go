@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/hellgate75/go-deploy/modules"
+	"github.com/hellgate75/go-deploy/modules/meta"
 )
 
 /*
@@ -18,7 +19,7 @@ func (nilCommand *NilCommandConverter) Convert(cmdValues interface{}) (interface
 
 }
 
-func NewConverter(cmdType string) modules.Converter {
+func NewConverter(cmdType string) meta.Converter {
 	//	switch cmdType {
 	//	case FEED_TYPE_SHELL:
 	//		return &ShellCommand{}

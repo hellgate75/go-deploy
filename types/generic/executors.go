@@ -3,6 +3,7 @@ package generic
 import (
 	"errors"
 	"github.com/hellgate75/go-deploy/modules"
+	"github.com/hellgate75/go-deploy/modules/meta"
 	"github.com/hellgate75/go-deploy/types/module"
 )
 
@@ -18,7 +19,7 @@ func (nilCommand *NilCommandExecutor) Execute(step module.Step) error {
 
 }
 
-func NewExecutor(cmdType string) modules.Executor {
+func NewExecutor(cmdType string) meta.Executor {
 	//	switch cmdType {
 	//	case FEED_TYPE_SHELL:
 	//		return &ShellExecutor{}
