@@ -60,6 +60,7 @@ func (bootstrap *bootstrap) GetDefaultDeployConfig() *module.DeployConfig {
 
 func (bootstrap *bootstrap) Run(feed *module.FeedExec, logger log.Logger) []error {
 	var errList []error = make([]error, 0)
+
 	return errList
 }
 

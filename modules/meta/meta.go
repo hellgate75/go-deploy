@@ -31,7 +31,7 @@ type Converter interface {
 }
 
 type Executor interface {
-	Execute(step module.Step) error
+	Execute(step module.Step, session module.Session) error
 }
 
 type ProxyStub interface {
