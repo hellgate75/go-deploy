@@ -26,6 +26,7 @@ func init() {
 	module.Logger = Logger
 	generic.Logger = Logger
 	modules.Logger = Logger
+	cmd.Logger = Logger
 	Logger.Println(cmd.Banner)
 	Logger.Println("GO DEPLOY " + cmd.Version)
 	Logger.Println("Authors:", cmd.Authors)
@@ -36,15 +37,16 @@ func init() {
 func main() {
 	var start time.Time = time.Now()
 	defer func() {
+		var exitCode int = 0
 		if r := recover(); r != nil {
 			Logger.Error(fmt.Sprintf("Recovery:\n- %v", r))
-			os.Exit(1)
+			exitCode = 1
 		}
 		Logger.Trace(fmt.Sprint("Exit ..."))
 		var end time.Time = time.Now()
 		var duration time.Duration = end.Sub(start)
 		Logger.Warn(fmt.Sprintf("Total elapsed time: %s", duration.String()))
-		os.Exit(0)
+		os.Exit(exitCode)
 	}()
 	if !cmd.RequiresHelp() {
 		Logger.Info(fmt.Sprintf("Logger initial Verbosity : %v", Logger.GetVerbosity()))
@@ -60,9 +62,8 @@ func main() {
 		} else {
 			var target string = cmd.GetTarget()
 			if target == "" {
-				Logger.Error("Error: No target defined")
 				cmd.Usage()
-				os.Exit(1)
+				panic("Error: No target defined")
 			} else {
 				var boostrap cmd.Bootstrap = cmd.NewBootStrap()
 				config.WorkDir = utils.FixFolder(config.WorkDir, io.GetCurrentFolder(), "")
@@ -143,8 +144,7 @@ func main() {
 							}
 							errors += prefix + "- " + errX.Error()
 						}
-						Logger.Error(fmt.Sprintf("Error trying to validate Feed for file: %s -> Details: \n%s", filePath, errors))
-						os.Exit(1)
+						panic(fmt.Sprintf("Error trying to validate Feed for file: %s -> Details: \n%s", filePath, errors))
 					}
 					if len(feedEx.Steps) > 0 {
 						Logger.Warn(fmt.Sprintf("Reading file: %s, discovered %s main steps!!", filePath, strconv.Itoa(len(feedEx.Steps))))
@@ -158,8 +158,7 @@ func main() {
 								}
 								errors += prefix + errX.Error()
 							}
-							Logger.Error(fmt.Sprintf("Error: During deploy execution -> <%v>...", errors))
-							os.Exit(1)
+							panic(fmt.Sprintf("Error: During deploy execution -> <%v>...", errors))
 						}
 					} else {
 						Logger.Warn(fmt.Sprintf("Unable to find any command in the given file: %s", filePath))
@@ -172,6 +171,6 @@ func main() {
 			}
 		}
 	} else {
-		os.Exit(0)
+		panic("Help required")
 	}
 }

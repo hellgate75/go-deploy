@@ -1,6 +1,6 @@
 deployname: My first deployment
 useHosts:
-- env/hosts
+- hosts
 useVars:
 - vars.yaml
 configDir: env
