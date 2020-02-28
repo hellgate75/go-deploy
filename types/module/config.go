@@ -123,6 +123,9 @@ type Session interface {
 	GetVar(name string) (string, error)
 	SetVar(name string, value string) bool
 	GetKeys() []string
+	GetSystemObject(name string) (interface{}, error)
+	SetSystemObject(name string, value interface{}) bool
+	GetSystemKeys() []string
 }
 
 type session struct {
