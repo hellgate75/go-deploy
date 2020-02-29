@@ -97,7 +97,7 @@ func (dt *DeployType) FromJsonCode(jsonCode string) (*DeployType, error) {
 func (npt *NetProtocolType) Merge(npt2 *NetProtocolType) *NetProtocolType {
 	return &NetProtocolType{
 		KeyFile:     bestString(npt2.KeyFile, npt.KeyFile),
-		NetProtocol: NetProtocolTypeValue(bestString(string(npt2.KeyFile), string(npt.KeyFile))),
+		NetProtocol: NetProtocolTypeValue(bestString(string(npt2.NetProtocol), string(npt.NetProtocol))),
 		Passphrase:  bestString(npt2.Passphrase, npt.Passphrase),
 		UserName:    bestString(npt2.UserName, npt.UserName),
 		Password:    bestString(npt2.Password, npt.Password),

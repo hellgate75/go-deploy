@@ -26,11 +26,18 @@ const (
 )
 
 type Logger interface {
+	Tracef(format string, in ...interface{})
 	Trace(in ...interface{})
+	Debugf(format string, in ...interface{})
 	Debug(in ...interface{})
+	Infof(format string, in ...interface{})
 	Info(in ...interface{})
+	Warnf(format string, in ...interface{})
 	Warn(in ...interface{})
+	Errorf(format string, in ...interface{})
 	Error(in ...interface{})
+	Fatalf(format string, in ...interface{})
+	Fatal(in ...interface{})
 	Printf(format string, in ...interface{})
 	Println(in ...interface{})
 	SetVerbosity(verbosity LogLevel)
@@ -42,24 +49,48 @@ type logger struct {
 	logger    *log.Logger
 }
 
+func (logger *logger) Tracef(format string, in ...interface{}) {
+	logger.log(traceLevel, fmt.Sprintf(format, in...))
+}
+
 func (logger *logger) Trace(in ...interface{}) {
 	logger.log(traceLevel, in...)
+}
+
+func (logger *logger) Debugf(format string, in ...interface{}) {
+	logger.log(debugLevel, fmt.Sprintf(format, in...))
 }
 
 func (logger *logger) Debug(in ...interface{}) {
 	logger.log(debugLevel, in...)
 }
 
+func (logger *logger) Infof(format string, in ...interface{}) {
+	logger.log(infoLevel, fmt.Sprintf(format, in...))
+}
+
 func (logger *logger) Info(in ...interface{}) {
 	logger.log(infoLevel, in...)
+}
+
+func (logger *logger) Warnf(format string, in ...interface{}) {
+	logger.log(warningLevel, fmt.Sprintf(format, in...))
 }
 
 func (logger *logger) Warn(in ...interface{}) {
 	logger.log(warningLevel, in...)
 }
 
+func (logger *logger) Errorf(format string, in ...interface{}) {
+	logger.log(errorLevel, fmt.Sprintf(format, in...))
+}
+
 func (logger *logger) Error(in ...interface{}) {
 	logger.log(errorLevel, in...)
+}
+
+func (logger *logger) Fatalf(format string, in ...interface{}) {
+	logger.log(fatalLevel, fmt.Sprintf(format, in...))
 }
 
 func (logger *logger) Fatal(in ...interface{}) {
@@ -67,7 +98,7 @@ func (logger *logger) Fatal(in ...interface{}) {
 }
 
 func (logger *logger) Printf(format string, in ...interface{}) {
-	fmt.Printf(format, in...)
+	logger.logger.Printf(format, in...)
 }
 
 func (logger *logger) Println(in ...interface{}) {
@@ -92,6 +123,13 @@ func NewLogger(verbosity LogLevel) Logger {
 	return &logger{
 		verbosity: toVerbosityLevelValue(verbosity),
 		logger:    log.New(os.Stdout, "[go-deploy] ", log.LstdFlags|log.LUTC),
+	}
+}
+
+func NewAppLogger(appName string, verbosity LogLevel) Logger {
+	return &logger{
+		verbosity: toVerbosityLevelValue(verbosity),
+		logger:    log.New(os.Stdout, "["+appName+"] ", log.LstdFlags|log.LUTC),
 	}
 }
 

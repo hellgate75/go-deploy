@@ -70,7 +70,7 @@ func main() {
 				config.ConfigDir = utils.FixFolder(config.ConfigDir, config.WorkDir, cmd.DEPLOY_CONFIG_FILE_NAME)
 
 				errB := boostrap.Init(config.ConfigDir, config.EnvSelector, config.ConfigLang, Logger)
-				Logger.Info(fmt.Sprintf("Errors during config init: %b", len(errB)))
+				Logger.Info(fmt.Sprintf("Errors during config init: %v", len(errB)))
 				if len(errB) > 0 {
 					var errors string = ""
 					for _, errX := range errB {
@@ -99,7 +99,7 @@ func main() {
 				}
 				module.RuntimeDeployConfig = dc
 				errB = boostrap.Load(dc.ConfigDir, dc.EnvSelector, dc.ConfigLang, Logger)
-				Logger.Info(fmt.Sprintf("Errors during config load: %b", len(errB)))
+				Logger.Info(fmt.Sprintf("Errors during config load: %v", len(errB)))
 				if len(errB) > 0 {
 					var errors string = ""
 					for _, errX := range errB {

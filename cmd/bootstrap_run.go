@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"github.com/hellgate75/go-deploy/io"
 	"github.com/hellgate75/go-deploy/log"
+	"github.com/hellgate75/go-deploy/net"
+	"github.com/hellgate75/go-deploy/net/generic"
 	"github.com/hellgate75/go-deploy/types/module"
 )
 
@@ -34,10 +36,21 @@ func (bootstrap *bootstrap) Run(feed *module.FeedExec, logger log.Logger) []erro
 	var sessionsMap map[string]module.Session = make(map[string]module.Session)
 	for _, host := range hosts {
 		sessionsMap[host.Name] = module.NewSession(module.NewSessionId())
-		Logger.Info(fmt.Sprintf("Create session for host: %s -> Session Id: %s", host.Name, sessionsMap[host.Name].GetSessionId()))
+		Logger.Error(fmt.Sprintf("Create session for host: %s -> Session Id: %s", host.Name, sessionsMap[host.Name].GetSessionId()))
 		for _, variable := range vars {
 			sessionsMap[host.Name].SetVar(variable.Name, variable.Value)
 		}
 	}
+	Logger.Error("Connection Protocol: " + string(module.RuntimeNetworkType.NetProtocol))
+	var connectionHandler generic.ConnectionHandler = nil
+	if string(module.RuntimeNetworkType.NetProtocol) == string(module.NET_PROTOCOL_SSH) {
+		connectionHandler = net.NewSshConnectionHandler()
+	} else if string(module.RuntimeNetworkType.NetProtocol) == string(module.NET_PROTOCOL_GO_DEPLOY_CLIENT) {
+
+	} else {
+		Logger.Error("Unable to determine the Connection Handler for: " + string(module.RuntimeNetworkType.NetProtocol))
+		panic("Unable to determine the Connection Handler")
+	}
+	Logger.Warn(fmt.Sprintf("Connection Handler: %v", connectionHandler))
 	return errList
 }
