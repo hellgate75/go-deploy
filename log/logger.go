@@ -2,9 +2,14 @@ package log
 
 import (
 	"fmt"
+	"github.com/gookit/color"
+	"io"
 	"log"
 	"os"
+	"runtime"
 	"strings"
+	"sync"
+	"time"
 )
 
 type LogLevel string
@@ -42,11 +47,22 @@ type Logger interface {
 	Println(in ...interface{})
 	SetVerbosity(verbosity LogLevel)
 	GetVerbosity() LogLevel
+	Successf(format string, in ...interface{})
+	Success(in ...interface{})
+	Failuref(format string, in ...interface{})
+	Failure(in ...interface{})
 }
 
 type logger struct {
 	verbosity LogLevelValue
 	logger    *log.Logger
+	onScreen  bool
+	mu        sync.Mutex // ensures atomic writes; protects the following fields
+	prefix    string     // prefix on each line to identify the logger (but see Lmsgprefix)
+	flag      int        // properties
+	out       io.Writer  // destination for output
+	buf       []byte     // for accumulating text to write
+
 }
 
 func (logger *logger) Tracef(format string, in ...interface{}) {
@@ -112,24 +128,153 @@ func (logger *logger) GetVerbosity() LogLevel {
 	return toVerbosityLevel(logger.verbosity)
 }
 
+func (logger *logger) Successf(format string, in ...interface{}) {
+	var itfs string = " SUCCESS " + fmt.Sprintf(format, in...) + "\n"
+	logger.output(color.Green, 2, itfs)
+}
+
+func (logger *logger) Success(in ...interface{}) {
+	var itfs string = " SUCCESS " + fmt.Sprint(in...) + "\n"
+	logger.output(color.Green, 2, itfs)
+}
+
+func (logger *logger) Failuref(format string, in ...interface{}) {
+	var itfs string = " FAILURE " + fmt.Sprintf(format, in...) + "\n"
+	logger.output(color.Red, 2, itfs)
+}
+
+func (logger *logger) Failure(in ...interface{}) {
+	var itfs string = " FAILURE " + fmt.Sprint(in...) + "\n"
+	logger.output(color.Red, 2, itfs)
+}
+
 func (logger *logger) log(level LogLevelValue, in ...interface{}) {
 	if level >= logger.verbosity {
-		var itfs string = " " + string(toVerbosityLevel(level)) + " " + fmt.Sprint(in...)
-		logger.logger.Println(itfs)
+		var itfs string = " " + string(toVerbosityLevel(level)) + " " + fmt.Sprint(in...) + "\n"
+		switch string(toVerbosityLevel(level)) {
+		case "DEBUG":
+		case "TRACE":
+			logger.output(color.LightYellow, 2, itfs)
+			break
+		case "WARN":
+			logger.output(color.Yellow, 2, itfs)
+			break
+		case "INFO":
+			logger.output(color.White, 2, itfs)
+			break
+		case "ERROR":
+			logger.output(color.Red, 2, itfs)
+			break
+		case "FATAL":
+			logger.output(color.Red, 2, itfs)
+			break
+		default:
+			logger.output(color.Green, 2, itfs)
+		}
+	}
+}
+
+func (l *logger) formatHeader(buf *[]byte, t time.Time, file string, line int) {
+	if l.flag&log.Lmsgprefix == 0 {
+		*buf = append(*buf, l.prefix...)
+	}
+	if l.flag&(log.Ldate|log.Ltime|log.Lmicroseconds) != 0 {
+		if l.flag&log.LUTC != 0 {
+			t = t.UTC()
+		}
+		if l.flag&log.Ldate != 0 {
+			year, month, day := t.Date()
+			itoa(buf, year, 4)
+			*buf = append(*buf, '/')
+			itoa(buf, int(month), 2)
+			*buf = append(*buf, '/')
+			itoa(buf, day, 2)
+			*buf = append(*buf, ' ')
+		}
+		if l.flag&(log.Ltime|log.Lmicroseconds) != 0 {
+			hour, min, sec := t.Clock()
+			itoa(buf, hour, 2)
+			*buf = append(*buf, ':')
+			itoa(buf, min, 2)
+			*buf = append(*buf, ':')
+			itoa(buf, sec, 2)
+			if l.flag&log.Lmicroseconds != 0 {
+				*buf = append(*buf, '.')
+				itoa(buf, t.Nanosecond()/1e3, 6)
+			}
+			*buf = append(*buf, ' ')
+		}
+	}
+	if l.flag&(log.Lshortfile|log.Llongfile) != 0 {
+		if l.flag&log.Lshortfile != 0 {
+			short := file
+			for i := len(file) - 1; i > 0; i-- {
+				if file[i] == '/' {
+					short = file[i+1:]
+					break
+				}
+			}
+			file = short
+		}
+		*buf = append(*buf, file...)
+		*buf = append(*buf, ':')
+		itoa(buf, line, -1)
+		*buf = append(*buf, ": "...)
+	}
+	if l.flag&log.Lmsgprefix != 0 {
+		*buf = append(*buf, l.prefix...)
+	}
+}
+
+func (logger *logger) output(color color.Color, calldepth int, s string) error {
+	now := time.Now() // get this early.
+	var file string
+	var line int
+	logger.mu.Lock()
+	defer logger.mu.Unlock()
+	if logger.flag&(log.Lshortfile|log.Llongfile) != 0 {
+		// Release lock while getting caller info - it's expensive.
+		logger.mu.Unlock()
+		var ok bool
+		_, file, line, ok = runtime.Caller(calldepth)
+		if !ok {
+			file = "???"
+			line = 0
+		}
+		logger.mu.Lock()
+	}
+	logger.buf = logger.buf[:0]
+	logger.formatHeader(&logger.buf, now, file, line)
+	logger.buf = append(logger.buf, s...)
+	if len(s) == 0 || s[len(s)-1] != '\n' {
+		logger.buf = append(logger.buf, '\n')
+	}
+	if logger.onScreen {
+		color.Printf(string(logger.buf))
+		return nil
+	} else {
+		_, err := logger.out.Write(logger.buf)
+		return err
 	}
 }
 
 func NewLogger(verbosity LogLevel) Logger {
 	return &logger{
 		verbosity: toVerbosityLevelValue(verbosity),
-		logger:    log.New(os.Stdout, "[go-deploy] ", log.LstdFlags|log.LUTC),
+		onScreen:  true,
+		out:       os.Stdout,
+		prefix:    "[go-deploy] ",
+		flag:      log.LstdFlags | log.LUTC,
 	}
 }
 
 func NewAppLogger(appName string, verbosity LogLevel) Logger {
 	return &logger{
 		verbosity: toVerbosityLevelValue(verbosity),
-		logger:    log.New(os.Stdout, "["+appName+"] ", log.LstdFlags|log.LUTC),
+		onScreen:  true,
+		out:       os.Stdout,
+		prefix:    "[" + appName + "] ",
+		flag:      log.LstdFlags | log.LUTC,
 	}
 }
 
@@ -185,4 +330,20 @@ func toVerbosityLevel(verbosity LogLevelValue) LogLevel {
 		return FATAL
 	}
 	return INFO
+}
+
+func itoa(buf *[]byte, i int, wid int) {
+	// Assemble decimal in reverse order.
+	var b [20]byte
+	bp := len(b) - 1
+	for i >= 10 || wid > 1 {
+		wid--
+		q := i / 10
+		b[bp] = byte('0' + i - q*10)
+		bp--
+		i = q
+	}
+	// i < 10
+	b[bp] = byte('0' + i)
+	*buf = append(*buf, b[bp:]...)
 }
