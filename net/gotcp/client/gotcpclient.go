@@ -7,11 +7,12 @@ import (
 	"fmt"
 	depio "github.com/hellgate75/go-deploy/io"
 	"github.com/hellgate75/go-deploy/net/generic"
-	"github.com/hellgate75/go-tcp-server/client/worker"
+	//	"github.com/hellgate75/go-tcp-server/client/worker"
 	"github.com/hellgate75/go-tcp-server/common"
+	"golang.org/x/crypto/ssh"
 	"io"
 	"io/ioutil"
-	"net"
+	//	"net"
 	"os"
 )
 
@@ -28,7 +29,7 @@ const (
 )
 
 type goTcpTranfer struct {
-	client *common.TCPClient
+	client common.TCPClient
 	stdout io.Writer
 	stderr io.Writer
 }
@@ -45,23 +46,23 @@ func (ts *goTcpTranfer) MkDir(path string) error {
 
 func (ts *goTcpTranfer) MkDirAs(path string, mode os.FileMode) error {
 	var globalError error = nil
-	session, err := ts.client.NewSession()
-	if err != nil {
-		return errors.New("FileTransfer.MkDir: " + err.Error())
-	}
-	writer, _ := session.StdinPipe()
-	defer func() {
-		if r := recover(); r != nil {
-			globalError = errors.New("FileTransfer.MkDir: " + fmt.Sprintf("%v", r))
-		}
-		if writer != nil {
-			writer.Close()
-		}
-		if session != nil {
-			session.Close()
-		}
-	}()
-	mkDir(path, writer, mode)
+	//	session, err := ts.client.NewSession()
+	//	if err != nil {
+	//		return errors.New("FileTransfer.MkDir: " + err.Error())
+	//	}
+	//	//	writer, _ := session.StdinPipe()
+	//	defer func() {
+	//		if r := recover(); r != nil {
+	//			globalError = errors.New("FileTransfer.MkDir: " + fmt.Sprintf("%v", r))
+	//		}
+	//		if writer != nil {
+	//			//			writer.Close()
+	//		}
+	//		if session != nil {
+	//			//			session.Close()
+	//		}
+	//	}()
+	//	mkDir(path, writer, mode)
 	return globalError
 }
 
@@ -71,31 +72,31 @@ func (ts *goTcpTranfer) TransferFile(path string, remotePath string) error {
 
 func (ts *goTcpTranfer) TransferFileAs(path string, remotePath string, mode os.FileMode) error {
 	var globalError error = nil
-	session, err := ts.client.NewSession()
-	if err != nil {
-		return errors.New("FileTransfer.TransferFile: " + err.Error())
-	}
-	writer, _ := session.StdinPipe()
-	defer func() {
-		if r := recover(); r != nil {
-			globalError = errors.New("FileTransfer.TransferFile" + fmt.Sprintf("%v", r))
-		}
-		if writer != nil {
-			writer.Close()
-		}
-		if session != nil {
-			session.Close()
-		}
-	}()
-	file, errF := os.Open(path)
-	if errF != nil {
-		return errors.New("FileTransfer.TransferFile::OpenFile: " + errF.Error())
-	}
-	content, errR := ioutil.ReadAll(file)
-	if errR != nil {
-		return errors.New("FileTransfer.TransferFile::ReadFile: " + errR.Error())
-	}
-	copyFile(content, remotePath, writer, mode)
+	//	session, err := ts.client.NewSession()
+	//	if err != nil {
+	//		return errors.New("FileTransfer.TransferFile: " + err.Error())
+	//	}
+	//	writer, _ := session.StdinPipe()
+	//	defer func() {
+	//		if r := recover(); r != nil {
+	//			globalError = errors.New("FileTransfer.TransferFile" + fmt.Sprintf("%v", r))
+	//		}
+	//		if writer != nil {
+	//			writer.Close()
+	//		}
+	//		if session != nil {
+	//			session.Close()
+	//		}
+	//	}()
+	//	file, errF := os.Open(path)
+	//	if errF != nil {
+	//		return errors.New("FileTransfer.TransferFile::OpenFile: " + errF.Error())
+	//	}
+	//	content, errR := ioutil.ReadAll(file)
+	//	if errR != nil {
+	//		return errors.New("FileTransfer.TransferFile::ReadFile: " + errR.Error())
+	//	}
+	//	copyFile(content, remotePath, writer, mode)
 	return globalError
 }
 
@@ -105,30 +106,30 @@ func (ts *goTcpTranfer) TransferFolder(path string, remotePath string) error {
 
 func (ts *goTcpTranfer) TransferFolderAs(path string, remotePath string, mode os.FileMode) error {
 	var globalError error = nil
-	session, err := ts.client.NewSession()
-	if err != nil {
-		return errors.New("FileTransfer.TransferFolder: " + err.Error())
-	}
-	writer, _ := session.StdinPipe()
-	defer func() {
-		if r := recover(); r != nil {
-			globalError = errors.New("FileTransfer.TransferFolder" + fmt.Sprintf("%v", r))
-		}
-		if writer != nil {
-			writer.Close()
-		}
-		if session != nil {
-			session.Close()
-		}
-	}()
-	stat, errS := os.Stat(path)
-	if errS != nil {
-		return errors.New("FileTransfer.TransferFolder::StatFile: " + errS.Error())
-	}
-	if !stat.IsDir() {
-		return ts.TransferFileAs(path, remotePath, mode)
-	}
-	executeFunc(path, remotePath, writer, mode)
+	//	session, err := ts.client.NewSession()
+	//	if err != nil {
+	//		return errors.New("FileTransfer.TransferFolder: " + err.Error())
+	//	}
+	//	writer, _ := session.StdinPipe()
+	//	defer func() {
+	//		if r := recover(); r != nil {
+	//			globalError = errors.New("FileTransfer.TransferFolder" + fmt.Sprintf("%v", r))
+	//		}
+	//		if writer != nil {
+	//			writer.Close()
+	//		}
+	//		if session != nil {
+	//			session.Close()
+	//		}
+	//	}()
+	//	stat, errS := os.Stat(path)
+	//	if errS != nil {
+	//		return errors.New("FileTransfer.TransferFolder::StatFile: " + errS.Error())
+	//	}
+	//	if !stat.IsDir() {
+	//		return ts.TransferFileAs(path, remotePath, mode)
+	//	}
+	//	executeFunc(path, remotePath, writer, mode)
 	return globalError
 }
 
@@ -173,7 +174,7 @@ func copyFile(content []byte, path string, writer io.WriteCloser, mode os.FileMo
 }
 
 type goTcpScript struct {
-	client     *common.TCPClient
+	client     common.TCPClient
 	_type      goTcpScriptType
 	script     *bytes.Buffer
 	scriptFile string
@@ -248,18 +249,18 @@ func (rs *goTcpScript) SetStdio(stdout, stderr io.Writer) generic.CommandsScript
 }
 
 func (rs *goTcpScript) runCmd(cmd string) error {
-	session, err := rs.client.NewSession()
-	if err != nil {
-		return errors.New("SSHScript.runCmd: " + err.Error())
-	}
-	defer session.Close()
-
-	session.Stdout = rs.stdout
-	session.Stderr = rs.stderr
-
-	if err := session.Run(cmd); err != nil {
-		return errors.New("SSHScript.runCmd: " + err.Error())
-	}
+	//	session, err := rs.client.NewSession()
+	//	if err != nil {
+	//		return errors.New("SSHScript.runCmd: " + err.Error())
+	//	}
+	//	defer session.Close()
+	//
+	//	session.Stdout = rs.stdout
+	//	session.Stderr = rs.stderr
+	//
+	//	if err := session.Run(cmd); err != nil {
+	//		return errors.New("SSHScript.runCmd: " + err.Error())
+	//	}
 	return nil
 }
 
@@ -282,22 +283,22 @@ func (rs *goTcpScript) runCmds() error {
 }
 
 func (rs *goTcpScript) runScript() error {
-	session, err := rs.client.NewSession()
-	if err != nil {
-		return err
-	}
-
-	session.Stdin = rs.script
-	session.Stdout = rs.stdout
-	session.Stderr = rs.stderr
-
-	if err := session.Shell(); err != nil {
-		return errors.New("SSHScript.runScript: " + err.Error())
-	}
-	if err := session.Wait(); err != nil {
-		return errors.New("SSHScript.runScript: " + err.Error())
-	}
-
+	//	session, err := rs.client.NewSession()
+	//	if err != nil {
+	//		return err
+	//	}
+	//
+	//	session.Stdin = rs.script
+	//	session.Stdout = rs.stdout
+	//	session.Stderr = rs.stderr
+	//
+	//	if err := session.Shell(); err != nil {
+	//		return errors.New("SSHScript.runScript: " + err.Error())
+	//	}
+	//	if err := session.Wait(); err != nil {
+	//		return errors.New("SSHScript.runScript: " + err.Error())
+	//	}
+	//
 	return nil
 }
 
@@ -322,7 +323,7 @@ func (rs *goTcpScript) runScriptFile() error {
 }
 
 type goTcpShell struct {
-	client         *common.TCPClient
+	client         common.TCPClient
 	requestPty     bool
 	terminalConfig *generic.TerminalConfig
 
@@ -339,59 +340,59 @@ func (rs *goTcpShell) SetStdio(stdin io.Reader, stdout, stderr io.Writer) generi
 }
 
 func (rs *goTcpShell) Start() error {
-	session, err := rs.client.NewSession()
-	if err != nil {
-		return err
-	}
-	defer session.Close()
-
-	if rs.stdin == nil {
-		session.Stdin = os.Stdin
-	} else {
-		session.Stdin = rs.stdin
-	}
-	if rs.stdout == nil {
-		session.Stdout = os.Stdout
-	} else {
-		session.Stdout = rs.stdout
-	}
-	if rs.stderr == nil {
-		session.Stderr = os.Stderr
-	} else {
-		session.Stderr = rs.stderr
-	}
-
-	if rs.requestPty {
-		tc := rs.terminalConfig
-		if tc == nil {
-			//			tc = &generic.TerminalConfig{
-			//				Term:   "xterm",
-			//				Height: 40,
-			//				Weight: 80,
-			//				Modes: ssh.TerminalModes{
-			//					ssh.ECHO:  0, // Disable echoing
-			//					ssh.IGNCR: 1, // Ignore CR on input.
-			//				},
-			//			}
-		}
-		//		if err := session.RequestPty(tc.Term, tc.Height, tc.Weight, tc.Modes); err != nil {
-		//			return errors.New("SSHShell.Start: " + err.Error())
-		//		}
-	}
-
-	if err := session.Shell(); err != nil {
-		return errors.New("SSHShell.Start: " + err.Error())
-	}
-
-	if err := session.Wait(); err != nil {
-		return errors.New("SSHShell.Start: " + err.Error())
-	}
+	//	session, err := rs.client.NewSession()
+	//	if err != nil {
+	//		return err
+	//	}
+	//	defer session.Close()
+	//
+	//	if rs.stdin == nil {
+	//		session.Stdin = os.Stdin
+	//	} else {
+	//		session.Stdin = rs.stdin
+	//	}
+	//	if rs.stdout == nil {
+	//		session.Stdout = os.Stdout
+	//	} else {
+	//		session.Stdout = rs.stdout
+	//	}
+	//	if rs.stderr == nil {
+	//		session.Stderr = os.Stderr
+	//	} else {
+	//		session.Stderr = rs.stderr
+	//	}
+	//
+	//	if rs.requestPty {
+	//		tc := rs.terminalConfig
+	//		if tc == nil {
+	//			//			tc = &generic.TerminalConfig{
+	//			//				Term:   "xterm",
+	//			//				Height: 40,
+	//			//				Weight: 80,
+	//			//				Modes: ssh.TerminalModes{
+	//			//					ssh.ECHO:  0, // Disable echoing
+	//			//					ssh.IGNCR: 1, // Ignore CR on input.
+	//			//				},
+	//			//			}
+	//		}
+	//		//		if err := session.RequestPty(tc.Term, tc.Height, tc.Weight, tc.Modes); err != nil {
+	//		//			return errors.New("SSHShell.Start: " + err.Error())
+	//		//		}
+	//	}
+	//
+	//	if err := session.Shell(); err != nil {
+	//		return errors.New("SSHShell.Start: " + err.Error())
+	//	}
+	//
+	//	if err := session.Wait(); err != nil {
+	//		return errors.New("SSHShell.Start: " + err.Error())
+	//	}
 
 	return nil
 }
 
 type goTcpClient struct {
-	client *ssh.Client
+	client common.TCPClient
 }
 
 func (c *goTcpClient) Close() error {
