@@ -1,7 +1,7 @@
 package generic
 
 import (
-	"github.com/hellgate75/go-tcp-server/common"
+	"github.com/hellgate75/go-tcp-client/common"
 	"golang.org/x/crypto/ssh"
 	"io"
 	"os"

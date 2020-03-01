@@ -7,7 +7,7 @@ import (
 	"fmt"
 	depio "github.com/hellgate75/go-deploy/io"
 	"github.com/hellgate75/go-deploy/net/generic"
-	"github.com/hellgate75/go-tcp-server/common"
+	"github.com/hellgate75/go-tcp-client/common"
 	"golang.org/x/crypto/ssh"
 	"io"
 	"io/ioutil"
