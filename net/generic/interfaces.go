@@ -1,6 +1,7 @@
 package generic
 
 import (
+	"github.com/hellgate75/go-tcp-server/common"
 	"golang.org/x/crypto/ssh"
 	"io"
 	"os"
@@ -57,6 +58,10 @@ type TerminalConfig struct {
 
 // Manages the interaction on client side with the Remote Shell
 type RemoteShell interface {
+
+	// Close: Cloeses the reote connection
+	Close() error
+
 	// Start: start a remote shell on client
 	Start() error
 
@@ -111,4 +116,7 @@ type ConnectionHandler interface {
 
 	// Connect: Connect the SSH server using given network, address and configuration
 	Connect(network, addr string, config *ssh.ClientConfig) error
+
+	// Connect: Connect the PEM certificate and client key using given address and port
+	ConnectWithCertificate(addr string, port string, certificate common.CertificateKeyPair) error
 }

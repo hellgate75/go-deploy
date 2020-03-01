@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/gookit/color"
 	"io"
-	"log"
 	"os"
 	"runtime"
 	"strings"
@@ -55,7 +54,6 @@ type Logger interface {
 
 type logger struct {
 	verbosity LogLevelValue
-	logger    *log.Logger
 	onScreen  bool
 	mu        sync.Mutex // ensures atomic writes; protects the following fields
 	prefix    string     // prefix on each line to identify the logger (but see Lmsgprefix)
@@ -114,11 +112,21 @@ func (logger *logger) Fatal(in ...interface{}) {
 }
 
 func (logger *logger) Printf(format string, in ...interface{}) {
-	logger.logger.Printf(format, in...)
+	var buf []byte = []byte(fmt.Sprintf(format, in...))
+	if logger.onScreen {
+		color.White.Printf(string(buf))
+	} else {
+		logger.out.Write(buf)
+	}
 }
 
 func (logger *logger) Println(in ...interface{}) {
-	fmt.Println(in...)
+	var buf []byte = []byte(fmt.Sprint(in...) + "\n")
+	if logger.onScreen {
+		color.White.Printf(string(buf))
+	} else {
+		logger.out.Write(buf)
+	}
 }
 
 func (logger *logger) SetVerbosity(verbosity LogLevel) {
@@ -174,15 +182,27 @@ func (logger *logger) log(level LogLevelValue, in ...interface{}) {
 	}
 }
 
+const (
+	Ldate         = 1 << iota     // the date in the local time zone: 2009/01/23
+	Ltime                         // the time in the local time zone: 01:23:23
+	Lmicroseconds                 // microsecond resolution: 01:23:23.123123.  assumes Ltime.
+	Llongfile                     // full file name and line number: /a/b/c/d.go:23
+	Lshortfile                    // final file name element and line number: d.go:23. overrides Llongfile
+	LUTC                          // if Ldate or Ltime is set, use UTC rather than the local time zone
+	LstdFlags     = Ldate | Ltime // initial values for the standard logger
+)
+
+// formatHeader writes log header to buf in following order:
+//   * l.prefix (if it's not blank),
+//   * date and/or time (if corresponding flags are provided),
+//   * file and line number (if corresponding flags are provided).
 func (l *logger) formatHeader(buf *[]byte, t time.Time, file string, line int) {
-	if l.flag&log.Lmsgprefix == 0 {
-		*buf = append(*buf, l.prefix...)
-	}
-	if l.flag&(log.Ldate|log.Ltime|log.Lmicroseconds) != 0 {
-		if l.flag&log.LUTC != 0 {
+	*buf = append(*buf, l.prefix...)
+	if l.flag&(Ldate|Ltime|Lmicroseconds) != 0 {
+		if l.flag&LUTC != 0 {
 			t = t.UTC()
 		}
-		if l.flag&log.Ldate != 0 {
+		if l.flag&Ldate != 0 {
 			year, month, day := t.Date()
 			itoa(buf, year, 4)
 			*buf = append(*buf, '/')
@@ -191,22 +211,22 @@ func (l *logger) formatHeader(buf *[]byte, t time.Time, file string, line int) {
 			itoa(buf, day, 2)
 			*buf = append(*buf, ' ')
 		}
-		if l.flag&(log.Ltime|log.Lmicroseconds) != 0 {
+		if l.flag&(Ltime|Lmicroseconds) != 0 {
 			hour, min, sec := t.Clock()
 			itoa(buf, hour, 2)
 			*buf = append(*buf, ':')
 			itoa(buf, min, 2)
 			*buf = append(*buf, ':')
 			itoa(buf, sec, 2)
-			if l.flag&log.Lmicroseconds != 0 {
+			if l.flag&Lmicroseconds != 0 {
 				*buf = append(*buf, '.')
 				itoa(buf, t.Nanosecond()/1e3, 6)
 			}
 			*buf = append(*buf, ' ')
 		}
 	}
-	if l.flag&(log.Lshortfile|log.Llongfile) != 0 {
-		if l.flag&log.Lshortfile != 0 {
+	if l.flag&(Lshortfile|Llongfile) != 0 {
+		if l.flag&Lshortfile != 0 {
 			short := file
 			for i := len(file) - 1; i > 0; i-- {
 				if file[i] == '/' {
@@ -221,9 +241,6 @@ func (l *logger) formatHeader(buf *[]byte, t time.Time, file string, line int) {
 		itoa(buf, line, -1)
 		*buf = append(*buf, ": "...)
 	}
-	if l.flag&log.Lmsgprefix != 0 {
-		*buf = append(*buf, l.prefix...)
-	}
 }
 
 func (logger *logger) output(color color.Color, calldepth int, s string) error {
@@ -232,7 +249,7 @@ func (logger *logger) output(color color.Color, calldepth int, s string) error {
 	var line int
 	logger.mu.Lock()
 	defer logger.mu.Unlock()
-	if logger.flag&(log.Lshortfile|log.Llongfile) != 0 {
+	if logger.flag&(Lshortfile|Llongfile) != 0 {
 		// Release lock while getting caller info - it's expensive.
 		logger.mu.Unlock()
 		var ok bool
@@ -264,7 +281,7 @@ func NewLogger(verbosity LogLevel) Logger {
 		onScreen:  true,
 		out:       os.Stdout,
 		prefix:    "[go-deploy] ",
-		flag:      log.LstdFlags | log.LUTC,
+		flag:      LstdFlags | LUTC,
 	}
 }
 
@@ -274,7 +291,7 @@ func NewAppLogger(appName string, verbosity LogLevel) Logger {
 		onScreen:  true,
 		out:       os.Stdout,
 		prefix:    "[" + appName + "] ",
-		flag:      log.LstdFlags | log.LUTC,
+		flag:      LstdFlags | LUTC,
 	}
 }
 

@@ -7,13 +7,13 @@ import (
 	"fmt"
 	depio "github.com/hellgate75/go-deploy/io"
 	"github.com/hellgate75/go-deploy/net/generic"
-	//	"github.com/hellgate75/go-tcp-server/client/worker"
+	"github.com/hellgate75/go-tcp-server/client/worker"
 	"github.com/hellgate75/go-tcp-server/common"
 	"golang.org/x/crypto/ssh"
 	"io"
 	"io/ioutil"
-	//	"net"
 	"os"
+	"time"
 )
 
 type goTcpScriptType byte
@@ -45,25 +45,8 @@ func (ts *goTcpTranfer) MkDir(path string) error {
 }
 
 func (ts *goTcpTranfer) MkDirAs(path string, mode os.FileMode) error {
-	var globalError error = nil
-	//	session, err := ts.client.NewSession()
-	//	if err != nil {
-	//		return errors.New("FileTransfer.MkDir: " + err.Error())
-	//	}
-	//	//	writer, _ := session.StdinPipe()
-	//	defer func() {
-	//		if r := recover(); r != nil {
-	//			globalError = errors.New("FileTransfer.MkDir: " + fmt.Sprintf("%v", r))
-	//		}
-	//		if writer != nil {
-	//			//			writer.Close()
-	//		}
-	//		if session != nil {
-	//			//			session.Close()
-	//		}
-	//	}()
-	//	mkDir(path, writer, mode)
-	return globalError
+	err := mkDir(path, ts.client, mode, ts.stdout, ts.stderr)
+	return err
 }
 
 func (ts *goTcpTranfer) TransferFile(path string, remotePath string) error {
@@ -71,33 +54,18 @@ func (ts *goTcpTranfer) TransferFile(path string, remotePath string) error {
 }
 
 func (ts *goTcpTranfer) TransferFileAs(path string, remotePath string, mode os.FileMode) error {
-	var globalError error = nil
-	//	session, err := ts.client.NewSession()
-	//	if err != nil {
-	//		return errors.New("FileTransfer.TransferFile: " + err.Error())
-	//	}
-	//	writer, _ := session.StdinPipe()
-	//	defer func() {
-	//		if r := recover(); r != nil {
-	//			globalError = errors.New("FileTransfer.TransferFile" + fmt.Sprintf("%v", r))
-	//		}
-	//		if writer != nil {
-	//			writer.Close()
-	//		}
-	//		if session != nil {
-	//			session.Close()
-	//		}
-	//	}()
-	//	file, errF := os.Open(path)
-	//	if errF != nil {
-	//		return errors.New("FileTransfer.TransferFile::OpenFile: " + errF.Error())
-	//	}
-	//	content, errR := ioutil.ReadAll(file)
-	//	if errR != nil {
-	//		return errors.New("FileTransfer.TransferFile::ReadFile: " + errR.Error())
-	//	}
-	//	copyFile(content, remotePath, writer, mode)
-	return globalError
+	stat, errS := os.Stat(path)
+	if errS != nil {
+		return errors.New("GoTcpTransfer.TransferFileAs::StatFile: " + errS.Error())
+	}
+	if stat.IsDir() {
+		return ts.TransferFolderAs(path, remotePath, mode)
+	}
+	err := copyFile(path, remotePath, ts.client, mode, ts.stdout, ts.stderr)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (ts *goTcpTranfer) TransferFolder(path string, remotePath string) error {
@@ -105,72 +73,156 @@ func (ts *goTcpTranfer) TransferFolder(path string, remotePath string) error {
 }
 
 func (ts *goTcpTranfer) TransferFolderAs(path string, remotePath string, mode os.FileMode) error {
-	var globalError error = nil
-	//	session, err := ts.client.NewSession()
-	//	if err != nil {
-	//		return errors.New("FileTransfer.TransferFolder: " + err.Error())
-	//	}
-	//	writer, _ := session.StdinPipe()
-	//	defer func() {
-	//		if r := recover(); r != nil {
-	//			globalError = errors.New("FileTransfer.TransferFolder" + fmt.Sprintf("%v", r))
-	//		}
-	//		if writer != nil {
-	//			writer.Close()
-	//		}
-	//		if session != nil {
-	//			session.Close()
-	//		}
-	//	}()
-	//	stat, errS := os.Stat(path)
-	//	if errS != nil {
-	//		return errors.New("FileTransfer.TransferFolder::StatFile: " + errS.Error())
-	//	}
-	//	if !stat.IsDir() {
-	//		return ts.TransferFileAs(path, remotePath, mode)
-	//	}
-	//	executeFunc(path, remotePath, writer, mode)
-	return globalError
-}
-
-func executeFunc(path string, remotePath string, writer io.WriteCloser, mode os.FileMode) {
 	stat, errS := os.Stat(path)
 	if errS != nil {
-		panic(errS)
+		return errors.New("GoTcpTransfer.TransferFolder::StatFile: " + errS.Error())
+	}
+	if !stat.IsDir() {
+		return ts.TransferFileAs(path, remotePath, mode)
+	}
+	err := executeFunc(path, remotePath, ts.client, mode, ts.stdout, ts.stderr)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func executeFunc(path string, remotePath string, client common.TCPClient, mode os.FileMode, stdout io.Writer, stderr io.Writer) error {
+	stat, errS := os.Stat(path)
+	if errS != nil {
+		return errS
 	}
 	if stat.IsDir() {
-		mkDir(remotePath, writer, mode)
-		files, err := ioutil.ReadDir(".")
+		mkDir(remotePath, client, mode, stdout, stderr)
+		files, err := ioutil.ReadDir(path)
 		if err != nil {
-			panic(err)
+			return err
 		}
 		for _, f := range files {
 			var fName = path + depio.GetPathSeparator() + f.Name()
 			var fRemoteName = remotePath + "/" + f.Name()
-			executeFunc(fName, fRemoteName, writer, f.Mode())
+			err := executeFunc(fName, fRemoteName, client, f.Mode(), stdout, stderr)
+			if err != nil {
+				return err
+			}
 		}
 	} else {
-		file, errF := os.Open(path)
-		if errF != nil {
-			panic(errF.Error())
+		err := copyFile(path, remotePath, client, mode, stdout, stderr)
+		if err != nil {
+			return err
 		}
-		content, errR := ioutil.ReadAll(file)
-		if errR != nil {
-			panic(errR.Error())
-		}
-		copyFile(content, remotePath, writer, mode)
 	}
-
+	return nil
 }
 
-func mkDir(path string, writer io.WriteCloser, mode os.FileMode) {
-	fmt.Fprintln(writer, "D"+mode.String(), 0, path) // mkdir
+func mkDir(remotePath string, client common.TCPClient, mode os.FileMode, stdout io.Writer, stderr io.Writer) error {
+	defer func() {
+		client.SendText("exit")
+		client.Close()
+	}()
+	err := client.Open(false)
+	if err != nil {
+		return err
+	}
+	err = client.ApplyCommand("transfer-file", "folder", remotePath, mode.String())
+	if err != nil {
+		return err
+	}
+	time.Sleep(2 * time.Second)
+	resp, errR := client.ReadAnswer()
+	if errR != nil {
+		return errR
+	}
+	if len(resp) >= 2 {
+		if resp[0:2] == "ko" {
+			if len(resp) > 3 {
+				if stderr != nil {
+					stderr.Write([]byte(resp[3:]))
+				}
+				return errors.New("TCPScript.runCmd: " + resp[3:])
+			} else {
+				if stderr != nil {
+					stderr.Write([]byte(resp))
+				}
+				return errors.New("TCPScript.runCmd: Undefined error from server")
+			}
+		} else if resp[0:2] == "ok" {
+			if stdout != nil {
+				stdout.Write([]byte(resp))
+			}
+		} else {
+			if len(resp) > 3 {
+				if stdout != nil {
+					stdout.Write([]byte(resp[3:]))
+				}
+			} else {
+				if stdout != nil {
+					stdout.Write([]byte(resp))
+				}
+			}
+
+		}
+	} else {
+		if stdout != nil {
+			stdout.Write([]byte(resp))
+		}
+	}
+	return nil
 }
 
-func copyFile(content []byte, path string, writer io.WriteCloser, mode os.FileMode) {
-	fmt.Fprintln(writer, "C"+mode.String(), len(content), path) // copyfile
-	writer.Write(content)
-	fmt.Fprint(writer, "\x00")
+func copyFile(localPath string, remotePath string, client common.TCPClient, mode os.FileMode, stdout io.Writer, stderr io.Writer) error {
+	defer func() {
+		client.SendText("exit")
+		client.Close()
+	}()
+	err := client.Open(false)
+	if err != nil {
+		return err
+	}
+	err = client.ApplyCommand("transfer-file", localPath, remotePath, mode.String())
+	if err != nil {
+		return err
+	}
+	time.Sleep(2 * time.Second)
+	resp, errR := client.ReadAnswer()
+	if errR != nil {
+		return errR
+	}
+	if len(resp) >= 2 {
+		if resp[0:2] == "ko" {
+			if len(resp) > 3 {
+				if stderr != nil {
+					stderr.Write([]byte(resp[3:]))
+				}
+				return errors.New("TCPScript.runCmd: " + resp[3:])
+			} else {
+				if stderr != nil {
+					stderr.Write([]byte(resp))
+				}
+				return errors.New("TCPScript.runCmd: Undefined error from server")
+			}
+		} else if resp[0:2] == "ok" {
+			if stdout != nil {
+				stdout.Write([]byte(resp))
+			}
+		} else {
+			if len(resp) > 3 {
+				if stdout != nil {
+					stdout.Write([]byte(resp[3:]))
+				}
+			} else {
+				if stdout != nil {
+					stdout.Write([]byte(resp))
+				}
+			}
+
+		}
+	} else {
+		if stdout != nil {
+			stdout.Write([]byte(resp))
+		}
+	}
+	return nil
 }
 
 type goTcpScript struct {
@@ -187,7 +239,7 @@ type goTcpScript struct {
 // Execute
 func (rs *goTcpScript) execute() error {
 	if rs.err != nil {
-		return errors.New("SSHScript.execute: " + rs.err.Error())
+		return errors.New("GoTCPScript.execute: " + rs.err.Error())
 	}
 	if rs._type == cmdLine {
 		return rs.runCmds()
@@ -196,29 +248,29 @@ func (rs *goTcpScript) execute() error {
 	} else if rs._type == scriptFile {
 		return rs.runScriptFile()
 	} else {
-		return errors.New(fmt.Sprintf("SSHScript.execute: Not supported execution type: %v", rs._type))
+		return errors.New(fmt.Sprintf("GoTCPScript.execute: Not supported execution type: %v", rs._type))
 	}
 }
 
 func (rs *goTcpScript) ExecuteWithOutput() ([]byte, error) {
 	if rs.stdout != nil {
-		return nil, errors.New("SSHScript.ExecuteWithOutput: Stdout already set")
+		return nil, errors.New("GoTCPScript.ExecuteWithOutput: Stdout already set")
 	}
 	var out bytes.Buffer
 	rs.stdout = &out
 	err := rs.execute()
 	if err != nil {
-		err = errors.New("SSHScript.ExecuteWithFullOutput: " + err.Error())
+		err = errors.New("GoTCPScript.ExecuteWithFullOutput: " + err.Error())
 	}
 	return out.Bytes(), err
 }
 
 func (rs *goTcpScript) ExecuteWithFullOutput() ([]byte, error) {
 	if rs.stdout != nil {
-		return nil, errors.New("SSHScript.ExecuteWithFullOutput: Stdout already set")
+		return nil, errors.New("GoTCPScript.ExecuteWithFullOutput: Stdout already set")
 	}
 	if rs.stderr != nil {
-		return nil, errors.New("SSHScript.ExecuteWithFullOutput: Stderr already set")
+		return nil, errors.New("GoTCPScript.ExecuteWithFullOutput: Stderr already set")
 	}
 
 	var (
@@ -229,7 +281,7 @@ func (rs *goTcpScript) ExecuteWithFullOutput() ([]byte, error) {
 	rs.stderr = &stderr
 	err := rs.execute()
 	if err != nil {
-		return stderr.Bytes(), errors.New("SSHScript.ExecuteWithFullOutput: " + err.Error())
+		return stderr.Bytes(), errors.New("GoTCPScript.ExecuteWithFullOutput: " + err.Error())
 	}
 	return stdout.Bytes(), err
 }
@@ -237,7 +289,7 @@ func (rs *goTcpScript) ExecuteWithFullOutput() ([]byte, error) {
 func (rs *goTcpScript) NewCmd(cmd string) generic.CommandsScript {
 	_, err := rs.script.WriteString(cmd + "\n")
 	if err != nil {
-		rs.err = errors.New("SSHScript.NewCmd: " + err.Error())
+		rs.err = errors.New("GoTCPScript.NewCmd: " + err.Error())
 	}
 	return rs
 }
@@ -249,18 +301,56 @@ func (rs *goTcpScript) SetStdio(stdout, stderr io.Writer) generic.CommandsScript
 }
 
 func (rs *goTcpScript) runCmd(cmd string) error {
-	//	session, err := rs.client.NewSession()
-	//	if err != nil {
-	//		return errors.New("SSHScript.runCmd: " + err.Error())
-	//	}
-	//	defer session.Close()
-	//
-	//	session.Stdout = rs.stdout
-	//	session.Stderr = rs.stderr
-	//
-	//	if err := session.Run(cmd); err != nil {
-	//		return errors.New("SSHScript.runCmd: " + err.Error())
-	//	}
+	defer func() {
+		rs.client.Close()
+	}()
+	err := rs.client.Open(false)
+	if err != nil {
+		return err
+	}
+	err = rs.client.ApplyCommand("shell", "false", cmd)
+	if err != nil {
+		return err
+	}
+	time.Sleep(2 * time.Second)
+	resp, errR := rs.client.ReadAnswer()
+	if errR != nil {
+		return errR
+	}
+	if len(resp) >= 2 {
+		if resp[0:2] == "ko" {
+			if len(resp) > 3 {
+				if rs.stderr != nil {
+					rs.stderr.Write([]byte(resp[3:]))
+				}
+				return errors.New("GoTCPScript.runCmd: " + resp[3:])
+			} else {
+				if rs.stderr != nil {
+					rs.stderr.Write([]byte(resp))
+				}
+				return errors.New("GoTCPScript.runCmd: Undefined error from server")
+			}
+		} else if resp[0:2] == "ok" {
+			if rs.stdout != nil {
+				rs.stdout.Write([]byte(resp))
+			}
+		} else {
+			if len(resp) > 3 {
+				if rs.stdout != nil {
+					rs.stdout.Write([]byte(resp[3:]))
+				}
+			} else {
+				if rs.stdout != nil {
+					rs.stdout.Write([]byte(resp))
+				}
+			}
+
+		}
+	} else {
+		if rs.stdout != nil {
+			rs.stdout.Write([]byte(resp))
+		}
+	}
 	return nil
 }
 
@@ -271,11 +361,11 @@ func (rs *goTcpScript) runCmds() error {
 			break
 		}
 		if err != nil {
-			return errors.New("SSHScript.runCmds: " + err.Error())
+			return errors.New("GoTCPScript.runCmds: " + err.Error())
 		}
 
 		if err := rs.runCmd(statment); err != nil {
-			return errors.New("SSHScript.runCmds: " + err.Error())
+			return errors.New("GoTCPScript.runCmds: " + err.Error())
 		}
 	}
 
@@ -283,41 +373,109 @@ func (rs *goTcpScript) runCmds() error {
 }
 
 func (rs *goTcpScript) runScript() error {
-	//	session, err := rs.client.NewSession()
-	//	if err != nil {
-	//		return err
-	//	}
-	//
-	//	session.Stdin = rs.script
-	//	session.Stdout = rs.stdout
-	//	session.Stderr = rs.stderr
-	//
-	//	if err := session.Shell(); err != nil {
-	//		return errors.New("SSHScript.runScript: " + err.Error())
-	//	}
-	//	if err := session.Wait(); err != nil {
-	//		return errors.New("SSHScript.runScript: " + err.Error())
-	//	}
-	//
+	defer func() {
+		rs.client.Close()
+	}()
+	err := rs.client.Open(false)
+	if err != nil {
+		return err
+	}
+	err = rs.client.ApplyCommand("shell", "false", string(rs.script.Bytes()))
+	if err != nil {
+		return err
+	}
+	time.Sleep(2 * time.Second)
+	resp, errR := rs.client.ReadAnswer()
+	if errR != nil {
+		return errR
+	}
+	if len(resp) >= 2 {
+		if resp[0:2] == "ko" {
+			if len(resp) > 3 {
+				if rs.stderr != nil {
+					rs.stderr.Write([]byte(resp[3:]))
+				}
+				return errors.New("GoTCPScript.runScript: " + resp[3:])
+			} else {
+				if rs.stderr != nil {
+					rs.stderr.Write([]byte(resp))
+				}
+				return errors.New("GoTCPScript.runScript: Undefined error from server")
+			}
+		} else if resp[0:2] == "ok" {
+			if rs.stdout != nil {
+				rs.stdout.Write([]byte(resp))
+			}
+		} else {
+			if len(resp) > 3 {
+				if rs.stdout != nil {
+					rs.stdout.Write([]byte(resp[3:]))
+				}
+			} else {
+				if rs.stdout != nil {
+					rs.stdout.Write([]byte(resp))
+				}
+			}
+
+		}
+	} else {
+		if rs.stdout != nil {
+			rs.stdout.Write([]byte(resp))
+		}
+	}
 	return nil
 }
 
 func (rs *goTcpScript) runScriptFile() error {
-	var buffer bytes.Buffer
-	file, err := os.Open(rs.scriptFile)
+	defer func() {
+		rs.client.Close()
+	}()
+	err := rs.client.Open(false)
 	if err != nil {
 		return err
 	}
-	_, err = io.Copy(&buffer, file)
+	err = rs.client.ApplyCommand("shell", "false", rs.scriptFile)
 	if err != nil {
-		return errors.New("SSHScript.runScriptFile: " + err.Error())
+		return err
 	}
+	time.Sleep(2 * time.Second)
+	resp, errR := rs.client.ReadAnswer()
+	if errR != nil {
+		return errR
+	}
+	if len(resp) >= 2 {
+		if resp[0:2] == "ko" {
+			if len(resp) > 3 {
+				if rs.stderr != nil {
+					rs.stderr.Write([]byte(resp[3:]))
+				}
+				return errors.New("GoTCPScript.runScript: " + resp[3:])
+			} else {
+				if rs.stderr != nil {
+					rs.stderr.Write([]byte(resp))
+				}
+				return errors.New("GoTCPScript.runScript: Undefined error from server")
+			}
+		} else if resp[0:2] == "ok" {
+			if rs.stdout != nil {
+				rs.stdout.Write([]byte(resp))
+			}
+		} else {
+			if len(resp) > 3 {
+				if rs.stdout != nil {
+					rs.stdout.Write([]byte(resp[3:]))
+				}
+			} else {
+				if rs.stdout != nil {
+					rs.stdout.Write([]byte(resp))
+				}
+			}
 
-	rs.script = &buffer
-	err = rs.runScript()
-	rs.script = bytes.NewBufferString("")
-	if err != nil {
-		errors.New("SSHScript.runScriptFile: " + err.Error())
+		}
+	} else {
+		if rs.stdout != nil {
+			rs.stdout.Write([]byte(resp))
+		}
 	}
 	return nil
 }
@@ -339,55 +497,23 @@ func (rs *goTcpShell) SetStdio(stdin io.Reader, stdout, stderr io.Writer) generi
 	return rs
 }
 
-func (rs *goTcpShell) Start() error {
-	//	session, err := rs.client.NewSession()
-	//	if err != nil {
-	//		return err
-	//	}
-	//	defer session.Close()
-	//
-	//	if rs.stdin == nil {
-	//		session.Stdin = os.Stdin
-	//	} else {
-	//		session.Stdin = rs.stdin
-	//	}
-	//	if rs.stdout == nil {
-	//		session.Stdout = os.Stdout
-	//	} else {
-	//		session.Stdout = rs.stdout
-	//	}
-	//	if rs.stderr == nil {
-	//		session.Stderr = os.Stderr
-	//	} else {
-	//		session.Stderr = rs.stderr
-	//	}
-	//
-	//	if rs.requestPty {
-	//		tc := rs.terminalConfig
-	//		if tc == nil {
-	//			//			tc = &generic.TerminalConfig{
-	//			//				Term:   "xterm",
-	//			//				Height: 40,
-	//			//				Weight: 80,
-	//			//				Modes: ssh.TerminalModes{
-	//			//					ssh.ECHO:  0, // Disable echoing
-	//			//					ssh.IGNCR: 1, // Ignore CR on input.
-	//			//				},
-	//			//			}
-	//		}
-	//		//		if err := session.RequestPty(tc.Term, tc.Height, tc.Weight, tc.Modes); err != nil {
-	//		//			return errors.New("SSHShell.Start: " + err.Error())
-	//		//		}
-	//	}
-	//
-	//	if err := session.Shell(); err != nil {
-	//		return errors.New("SSHShell.Start: " + err.Error())
-	//	}
-	//
-	//	if err := session.Wait(); err != nil {
-	//		return errors.New("SSHShell.Start: " + err.Error())
-	//	}
+func (rs *goTcpShell) Close() error {
+	if rs.stdin == nil || rs.stdout == nil || rs.stderr == nil {
+		return errors.New("GoTcpShell:Close() -> Shell not open for miss of stdout, stderr, stdin")
+	}
+	rs.stdout.Write([]byte("exit\n"))
 
+	return nil
+}
+
+func (rs *goTcpShell) Start() error {
+	if rs.stdin == nil || rs.stdout == nil || rs.stderr == nil {
+		return errors.New("GoTcpShell:Start() -> Please provide stdout, stderr, stdin for the shell execution")
+	}
+	err := rs.client.ApplyCommand("shell", "true", "", rs.stdin, rs.stdout, rs.stderr)
+	if err != nil {
+		return errors.New("GoTcpShell:Start() -> Details: " + err.Error())
+	}
 	return nil
 }
 
@@ -401,7 +527,7 @@ func (c *goTcpClient) Close() error {
 
 func (c *goTcpClient) Terminal(config *generic.TerminalConfig) generic.RemoteShell {
 	return &goTcpShell{
-		client:         c.client,
+		client:         c.client.Clone(),
 		terminalConfig: config,
 		requestPty:     true,
 	}
@@ -410,7 +536,7 @@ func (c *goTcpClient) Terminal(config *generic.TerminalConfig) generic.RemoteShe
 func (c *goTcpClient) NewCmd(cmd string) generic.CommandsScript {
 	return &goTcpScript{
 		_type:  cmdLine,
-		client: c.client,
+		client: c.client.Clone(),
 		script: bytes.NewBufferString(cmd + "\n"),
 	}
 }
@@ -418,7 +544,7 @@ func (c *goTcpClient) NewCmd(cmd string) generic.CommandsScript {
 func (c *goTcpClient) Script(script string) generic.CommandsScript {
 	return &goTcpScript{
 		_type:  rawScript,
-		client: c.client,
+		client: c.client.Clone(),
 		script: bytes.NewBufferString(script + "\n"),
 	}
 }
@@ -426,20 +552,20 @@ func (c *goTcpClient) Script(script string) generic.CommandsScript {
 func (c *goTcpClient) ScriptFile(fname string) generic.CommandsScript {
 	return &goTcpScript{
 		_type:      scriptFile,
-		client:     c.client,
+		client:     c.client.Clone(),
 		scriptFile: fname,
 	}
 }
 
 func (c *goTcpClient) FileTranfer() generic.FileTransfer {
 	return &goTcpTranfer{
-		client: c.client,
+		client: c.client.Clone(),
 	}
 }
 
 func (c *goTcpClient) Shell() generic.RemoteShell {
 	return &goTcpShell{
-		client:     c.client,
+		client:     c.client.Clone(),
 		requestPty: false,
 	}
 }
@@ -468,72 +594,25 @@ func (conn *goTcpConnection) Close() error {
 }
 
 func (conn *goTcpConnection) ConnectWithPasswd(addr string, user string, passwd string) error {
-	//	config := &ssh.ClientConfig{
-	//		User: user,
-	//		Auth: []ssh.AuthMethod{
-	//			ssh.Password(passwd),
-	//		},
-	//		HostKeyCallback: ssh.HostKeyCallback(func(hostname string, remote net.Addr, key ssh.PublicKey) error { return nil }),
-	//	}
-	//
-	//	return conn.Connect("tcp", addr, config)
-	return nil
+	return errors.New("User/password connection not allowed to Go TCP Server")
 }
 
 func (conn *goTcpConnection) ConnectWithKey(addr string, user string, keyfile string) error {
-	//	key, err := ioutil.ReadFile(keyfile)
-	//	if err != nil {
-	//		return errors.New("SSHConnectionHandler.ConnectWithKey: " + err.Error())
-	//	}
-	//
-	//	signer, err := ssh.ParsePrivateKey(key)
-	//	if err != nil {
-	//		return errors.New("SSHConnectionHandler.ConnectWithKey: " + err.Error())
-	//	}
-
-	//	config := &ssh.ClientConfig{
-	//		User: user,
-	//		Auth: []ssh.AuthMethod{
-	//			ssh.PublicKeys(signer),
-	//		},
-	//		HostKeyCallback: ssh.HostKeyCallback(func(hostname string, remote net.Addr, key ssh.PublicKey) error { return nil }),
-	//	}
-
-	//	return conn.Connect("tcp", addr, config)
-	return nil
+	return errors.New("User/rsa key connection not allowed to Go TCP Server")
 }
 
 func (conn *goTcpConnection) ConnectWithKeyAndPassphrase(addr string, user, keyfile string, passphrase string) error {
-	//	key, err := ioutil.ReadFile(keyfile)
-	//	if err != nil {
-	//		return errors.New("SSHConnectionHandler.ConnectWithKeyAndPassphrase: " + err.Error())
-	//	}
-	//
-	//	signer, err := ssh.ParsePrivateKeyWithPassphrase(key, []byte(passphrase))
-	//	if err != nil {
-	//		return errors.New("SSHConnectionHandler.ConnectWithKeyAndPassphrase: " + err.Error())
-	//	}
-
-	//	config := &ssh.ClientConfig{
-	//		User: user,
-	//		Auth: []ssh.AuthMethod{
-	//			ssh.PublicKeys(signer),
-	//		},
-	//		HostKeyCallback: ssh.HostKeyCallback(func(hostname string, remote net.Addr, key ssh.PublicKey) error { return nil }),
-	//	}
-	//
-	//	return conn.Connect("tcp", addr, config)
-	return nil
+	return errors.New("User/rsa key connection not allowed to Go TCP Server")
 }
 
 func (conn *goTcpConnection) Connect(network, addr string, config *ssh.ClientConfig) error {
-	//	client, err := ssh.Dial(network, addr, config)
-	//	if err != nil {
-	//		return errors.New("SSHConnectionHandler.Connect: " + err.Error())
-	//	}
-	//	conn._client = &goTcpClient{
-	//		client: client,
-	//	}
+	return errors.New("User/rsa key connection not allowed to Go TCP Server")
+}
+
+func (conn *goTcpConnection) ConnectWithCertificate(addr string, port string, certificate common.CertificateKeyPair) error {
+	conn._client = &goTcpClient{
+		client: worker.NewClient(certificate, addr, port),
+	}
 	return nil
 }
 

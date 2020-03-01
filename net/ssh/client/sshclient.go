@@ -7,6 +7,7 @@ import (
 	"fmt"
 	depio "github.com/hellgate75/go-deploy/io"
 	"github.com/hellgate75/go-deploy/net/generic"
+	"github.com/hellgate75/go-tcp-server/common"
 	"golang.org/x/crypto/ssh"
 	"io"
 	"io/ioutil"
@@ -337,6 +338,10 @@ func (rs *sshShell) SetStdio(stdin io.Reader, stdout, stderr io.Writer) generic.
 	return rs
 }
 
+func (rs *sshShell) Close() error {
+	return nil
+}
+
 func (rs *sshShell) Start() error {
 	session, err := rs.client.NewSession()
 	if err != nil {
@@ -530,6 +535,10 @@ func (conn *sshConnection) Connect(network, addr string, config *ssh.ClientConfi
 		client: client,
 	}
 	return nil
+}
+
+func (conn *sshConnection) ConnectWithCertificate(addr string, port string, certificate common.CertificateKeyPair) error {
+	return errors.New("Authentication with PEM client certificte and key not allowed in SSH")
 }
 
 // NewSSHConnection: Creates a new SSH connection handler
