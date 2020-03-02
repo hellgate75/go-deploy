@@ -1,0 +1,3 @@
+protocol: GO_DEPLOY
+certificate: ./certs/client.pem
+keyFile:  ./certs/client.key

@@ -1,0 +1,6 @@
+deploymentType: FILE_SOURCE
+descriptorType: YAML
+strategyType: ONE_SHOT_DEPLOYMENT
+scheduled: 
+restMethod: 
+postBody: 

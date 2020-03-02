@@ -11,7 +11,7 @@ import (
 
 const (
 	DEPLOY_CONFIG_FILE_NAME string = "deploy-config"
-	DEPLOY_DATA_FILE_NAME   string = "deploy-data"
+	DEPLOY_DATA_FILE_NAME   string = "deploy-type"
 	DEPLOY_NET_FILE_NAME    string = "deploy-net"
 	DEPLOY_ENVS_FILE_NAME   string = "deploy-envs"
 	DEFAULT_CONFIG_FOLDER   string = "env"
