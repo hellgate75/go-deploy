@@ -1,6 +1,6 @@
 deployname: My first deployment
 useHosts:
-- hosts
+- hosts-sit
 useVars:
 - vars.yaml
 configDir: env
@@ -10,3 +10,5 @@ systemDir:
 configLang: YAML
 env: dev
 verbosity: INFO
+parallel: true
+maxThreads: 10

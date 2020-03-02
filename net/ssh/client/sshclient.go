@@ -402,6 +402,12 @@ func (c *sshClient) Close() error {
 	return c.client.Close()
 }
 
+func (c *sshClient) Clone() generic.NetworkClient {
+	return &sshClient{
+		client: c.client,
+	}
+}
+
 func (c *sshClient) Terminal(config *generic.TerminalConfig) generic.RemoteShell {
 	return &sshShell{
 		client:         c.client,
@@ -457,6 +463,12 @@ func (conn *sshConnection) GetClient() generic.NetworkClient {
 
 func (conn *sshConnection) IsConnected() bool {
 	return conn._client != nil
+}
+
+func (conn *sshConnection) Clone() generic.ConnectionHandler {
+	return &sshConnection{
+		_client: conn._client.Clone(),
+	}
 }
 
 func (conn *sshConnection) Close() error {

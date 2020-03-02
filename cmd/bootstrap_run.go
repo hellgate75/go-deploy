@@ -8,14 +8,15 @@ import (
 	"github.com/hellgate75/go-deploy/net"
 	"github.com/hellgate75/go-deploy/net/generic"
 	"github.com/hellgate75/go-deploy/types/module"
+	"github.com/hellgate75/go-deploy/worker"
 )
 
 func (bootstrap *bootstrap) Run(feed *module.FeedExec, logger log.Logger) []error {
 	var errList []error = make([]error, 0)
 	hosts, errH := loadHostsFiles()
-	if errH != nil {
-		Logger.Warn("Unable to load hosts...")
-		Logger.Warn("Reason:", errH)
+	if errH != nil || len(hosts) == 0 {
+		Logger.Error("Unable to load hosts...")
+		Logger.Error("Reason:", errH)
 		panic("Exit the procedure!!")
 	}
 	envs, errE := loadEnvsFile()
@@ -34,34 +35,82 @@ func (bootstrap *bootstrap) Run(feed *module.FeedExec, logger log.Logger) []erro
 	hostsYaml, _ := io.ToYaml(hosts)
 	varsYaml, _ := io.ToYaml(vars)
 	Logger.Info(fmt.Sprintf("Loaded:\nEnvironments: %s\nHosts: %s\nVariables: %s", envsYaml, hostsYaml, varsYaml))
-	var sessionsMap map[string]module.Session = make(map[string]module.Session)
-	for _, host := range hosts {
-		sessionsMap[host.Name] = module.NewSession(module.NewSessionId())
-		Logger.Info(fmt.Sprintf("Create session for host: %s -> Session Id: %s", color.Yellow.Render(host.Name), color.Yellow.Render(sessionsMap[host.Name].GetSessionId())))
-		for _, variable := range vars {
-			sessionsMap[host.Name].SetVar(variable.Name, variable.Value)
-		}
-	}
+
 	Logger.Info("Connection Protocol: " + color.Yellow.Render(string(module.RuntimeNetworkType.NetProtocol)))
-	var connectionHandler generic.ConnectionHandler = nil
+	var handler generic.ConnectionHandler = nil
 	var isGoTCPClient bool = false
 	if string(module.RuntimeNetworkType.NetProtocol) == string(module.NET_PROTOCOL_SSH) {
-		connectionHandler = net.NewSshConnectionHandler()
+		handler = net.NewSshConnectionHandler()
 	} else if string(module.RuntimeNetworkType.NetProtocol) == string(module.NET_PROTOCOL_GO_DEPLOY_CLIENT) {
-		connectionHandler = net.NewGoTCPConnectionHandler()
+		handler = net.NewGoTCPConnectionHandler()
 		isGoTCPClient = true
 	} else {
 		Logger.Error("Unable to determine the Connection Handler for: " + string(module.RuntimeNetworkType.NetProtocol))
 		panic("Unable to determine the Connection Handler")
 	}
-	if connectionHandler == nil {
+	if handler == nil {
 		var message string = fmt.Sprintf("Unable to create ConnectionHandler for type: %s", string(module.RuntimeNetworkType.NetProtocol))
 		Logger.Error(message)
 		panic(message)
 	}
-	Logger.Infof("Connection Handler loaded: %s", color.Yellow.Render(fmt.Sprintf("%v", (connectionHandler != nil))))
+	Logger.Infof("Connection Handler loaded: %s", color.Yellow.Render(fmt.Sprintf("%v", (handler != nil))))
 	if isGoTCPClient {
 		Logger.Warn("Using experimental GoTcp protocol instead of SSH ...")
+		var missCertificate bool = module.RuntimeNetworkType == nil || module.RuntimeNetworkType.Certificate == ""
+		var missKey bool = module.RuntimeNetworkType == nil || module.RuntimeNetworkType.KeyFile == ""
+		if missCertificate || missKey {
+			var message string = "Missing mandatory authentication TLS client key or certificate"
+			Logger.Error(message)
+			panic(message)
+		}
+	} else {
+		Logger.Warn("Using SSH protocol ...")
+		var missKey bool = module.RuntimeNetworkType == nil || module.RuntimeNetworkType.KeyFile == ""
+		//		var missPassPhrase bool = module.RuntimeNetworkType == nil || module.RuntimeNetworkType.Passphrase == ""
+		var missUser bool = module.RuntimeNetworkType == nil || module.RuntimeNetworkType.UserName == ""
+		var missPassword bool = module.RuntimeNetworkType == nil || module.RuntimeNetworkType.Password == ""
+		if missUser {
+			var message string = "Missing mandatory authentication SSH username"
+			Logger.Error(message)
+			panic(message)
+		} else if missPassword && missKey {
+			var message string = "Missing mandatory authentication SSH passoword and rsa public key file"
+			Logger.Error(message)
+			panic(message)
+		}
+	}
+
+	var sessionsMap map[string]module.Session = make(map[string]module.Session)
+
+	for _, hg := range hosts {
+		for _, host := range hg.Hosts {
+			for _, hostValue := range host.Hosts {
+				var hostSessionMapKey string = hg.Name + "-" + hostValue.Name
+				sessionsMap[hostSessionMapKey] = module.NewSession(module.NewSessionId())
+				Logger.Info(fmt.Sprintf("Create session for host: %s -> Session Id: %s", color.Yellow.Render(hostValue.Name), color.Yellow.Render(sessionsMap[hostSessionMapKey].GetSessionId())))
+				for _, variable := range vars {
+					sessionsMap[hostSessionMapKey].SetVar(variable.Name, variable.Value)
+				}
+				sessionsMap[hostSessionMapKey].SetSystemObject("connection-handler", handler.Clone())
+				sessionsMap[hostSessionMapKey].SetSystemObject("rutime-config", module.RuntimeDeployConfig)
+				sessionsMap[hostSessionMapKey].SetSystemObject("runtime-type", module.RuntimeDeployType)
+				sessionsMap[hostSessionMapKey].SetSystemObject("runtime-net", module.RuntimeNetworkType)
+				sessionsMap[hostSessionMapKey].SetSystemObject("host-groups", hosts)
+				sessionsMap[hostSessionMapKey].SetSystemObject("system-logger", logger)
+			}
+		}
+	}
+	Logger.Info("Starting Feed execution ...")
+	execErrList := worker.ExecuteFeed(worker.ConfigPattern{
+		Config:     module.RuntimeDeployConfig,
+		Type:       module.RuntimeDeployType,
+		Net:        module.RuntimeNetworkType,
+		Envs:       envs,
+		HostGroups: hosts,
+		Vars:       vars,
+	}, feed, logger)
+	if len(execErrList) > 0 {
+		errList = append(errList, execErrList...)
 	}
 	return errList
 }

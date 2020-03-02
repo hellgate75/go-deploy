@@ -183,19 +183,6 @@ func (envs *Environments) FromJsonCode(jsonCode string) (*Environments, error) {
 	return envsObj, nil
 }
 
-type HostValue struct {
-	Name      string   `yaml:"name" json:"name" xml:"name,chardata"`
-	IpAddress string   `yaml:"ipAddress,omitempty" json:"ipAddress,omitempty" xml:"ip-address,chardata,omitempty"`
-	HostName  string   `yaml:"hostName,omitempty" json:"hostName,omitempty" xml:"host-name,chardata,omitempty"`
-	Port      string   `yaml:"port,omitempty" json:"port,omitempty" xml:"port,chardata,omitempty"`
-	Roles     []string `yaml:"roles,omitempty" json:"roles,omitempty" xml:"roles,chardata,omitempty"`
-}
-
-func (hv *HostValue) String() string {
-	return fmt.Sprintf("HostValue{Name: \"%s\", IpAddress: \"%s\", HostName: \"%s\", Roles: %v}",
-		hv.Name, hv.IpAddress, hv.HostName, hv.Roles)
-}
-
 type Hosts struct {
 	Hosts []HostValue `yaml:"hosts,omitempty" json:"hosts,omitempty" xml:"hosts,chardata,omitempty"`
 }
@@ -214,68 +201,109 @@ func (hosts *Hosts) String() string {
 		hostsVal)
 }
 
-func (hosts *Hosts) Yaml() (string, error) {
-	return io.ToYaml(hosts)
+type HostGroups struct {
+	Name  string  `yaml:"name" json:"name" xml:"name,chardata"`
+	Hosts []Hosts `yaml:"hosts" json:"hosts" xml:"hosts,chardata"`
 }
 
-func (hosts *Hosts) FromYamlFile(path string) (*Hosts, error) {
-	itf, err := io.FromYamlFile(path, hosts)
+func (hg *HostGroups) String() string {
+	return fmt.Sprintf("HostValue{Name: \"%s\", Hosts: \"%v\"}",
+		hg.Name, hg.Hosts)
+}
+
+type HostValue struct {
+	Name      string   `yaml:"name" json:"name" xml:"name,chardata"`
+	IpAddress string   `yaml:"ipAddress,omitempty" json:"ipAddress,omitempty" xml:"ip-address,chardata,omitempty"`
+	HostName  string   `yaml:"hostName,omitempty" json:"hostName,omitempty" xml:"host-name,chardata,omitempty"`
+	Port      string   `yaml:"port,omitempty" json:"port,omitempty" xml:"port,chardata,omitempty"`
+	Roles     []string `yaml:"roles,omitempty" json:"roles,omitempty" xml:"roles,chardata,omitempty"`
+}
+
+func (hv *HostValue) String() string {
+	return fmt.Sprintf("HostValue{Name: \"%s\", IpAddress: \"%s\", HostName: \"%s\", Roles: %v}",
+		hv.Name, hv.IpAddress, hv.HostName, hv.Roles)
+}
+
+type HostGroupsConfig struct {
+	HostGroups []HostGroups `yaml:"groups" json:"groups" xml:"groups,chardata"`
+}
+
+func (hgc *HostGroupsConfig) String() string {
+	var hostsVal string = "["
+	for _, host := range hgc.HostGroups {
+		prefix := ", "
+		if len(hostsVal) == 0 {
+			prefix = ""
+		}
+		hostsVal += prefix + host.String()
+	}
+	hostsVal += "]"
+	return fmt.Sprintf("HostGroupsConfig{HostGroups: %s}",
+		hostsVal)
+}
+
+func (hgc *HostGroupsConfig) Yaml() (string, error) {
+	return io.ToYaml(hgc)
+}
+
+func (hgc *HostGroupsConfig) FromYamlFile(path string) (*HostGroupsConfig, error) {
+	itf, err := io.FromYamlFile(path, hgc)
 	if err != nil {
 		return nil, err
 	}
-	var hostsObj *Hosts = itf.(*Hosts)
+	var hostsObj *HostGroupsConfig = itf.(*HostGroupsConfig)
 	return hostsObj, nil
 }
 
-func (hosts *Hosts) FromYamlCode(yamlCode string) (*Hosts, error) {
-	itf, err := io.FromYamlCode(yamlCode, hosts)
+func (hgc *HostGroupsConfig) FromYamlCode(yamlCode string) (*HostGroupsConfig, error) {
+	itf, err := io.FromYamlCode(yamlCode, hgc)
 	if err != nil {
 		return nil, err
 	}
-	var hostsObj *Hosts = itf.(*Hosts)
+	var hostsObj *HostGroupsConfig = itf.(*HostGroupsConfig)
 	return hostsObj, nil
 }
 
-func (hosts *Hosts) Xml() (string, error) {
-	return io.ToXml(hosts)
+func (hgc *HostGroupsConfig) Xml() (string, error) {
+	return io.ToXml(hgc)
 }
 
-func (hosts *Hosts) FromXmlFile(path string) (*Hosts, error) {
-	itf, err := io.FromXmlFile(path, hosts)
+func (hgc *HostGroupsConfig) FromXmlFile(path string) (*HostGroupsConfig, error) {
+	itf, err := io.FromXmlFile(path, hgc)
 	if err != nil {
 		return nil, err
 	}
-	var hostsObj *Hosts = itf.(*Hosts)
+	var hostsObj *HostGroupsConfig = itf.(*HostGroupsConfig)
 	return hostsObj, nil
 }
 
-func (hosts *Hosts) FromXmlCode(xmlCode string) (*Hosts, error) {
-	itf, err := io.FromXmlCode(xmlCode, hosts)
+func (hgc *HostGroupsConfig) FromXmlCode(xmlCode string) (*HostGroupsConfig, error) {
+	itf, err := io.FromXmlCode(xmlCode, hgc)
 	if err != nil {
 		return nil, err
 	}
-	var hostsObj *Hosts = itf.(*Hosts)
+	var hostsObj *HostGroupsConfig = itf.(*HostGroupsConfig)
 	return hostsObj, nil
 }
 
-func (hosts *Hosts) Json() (string, error) {
-	return io.ToJson(hosts)
+func (hgc *HostGroupsConfig) Json() (string, error) {
+	return io.ToJson(hgc)
 }
 
-func (hosts *Hosts) FromJsonFile(path string) (*Hosts, error) {
-	itf, err := io.FromJsonFile(path, hosts)
+func (hgc *HostGroupsConfig) FromJsonFile(path string) (*HostGroupsConfig, error) {
+	itf, err := io.FromJsonFile(path, hgc)
 	if err != nil {
 		return nil, err
 	}
-	var hostsObj *Hosts = itf.(*Hosts)
+	var hostsObj *HostGroupsConfig = itf.(*HostGroupsConfig)
 	return hostsObj, nil
 }
 
-func (hosts *Hosts) FromJsonCode(jsonCode string) (*Hosts, error) {
-	itf, err := io.FromJsonCode(jsonCode, hosts)
+func (hgc *HostGroupsConfig) FromJsonCode(jsonCode string) (*HostGroupsConfig, error) {
+	itf, err := io.FromJsonCode(jsonCode, hgc)
 	if err != nil {
 		return nil, err
 	}
-	var hostsObj *Hosts = itf.(*Hosts)
+	var hostsObj *HostGroupsConfig = itf.(*HostGroupsConfig)
 	return hostsObj, nil
 }

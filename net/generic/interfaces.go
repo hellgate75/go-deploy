@@ -75,6 +75,9 @@ type NetworkClient interface {
 	// Close: Cloeses the reote connection
 	Close() error
 
+	// Clone: Create clone of current Network Client, within all state
+	Clone() NetworkClient
+
 	// Terminal: Creates an interactive shell on client.
 	Terminal(config *TerminalConfig) RemoteShell
 
@@ -101,6 +104,9 @@ type ConnectionHandler interface {
 
 	// IsConnected: Gives state about connection success
 	IsConnected() bool
+
+	// Clone: Create clone of current Connection Handler, within all state
+	Clone() ConnectionHandler
 
 	// Close: Closes the remote connection
 	Close() error

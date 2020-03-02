@@ -50,8 +50,8 @@ func loadVarsFiles() ([]defaults.NameValue, error) {
 	return varList, nil
 }
 
-func loadHostsFiles() ([]defaults.HostValue, error) {
-	var hostsList []defaults.HostValue = make([]defaults.HostValue, 0)
+func loadHostsFiles() ([]defaults.HostGroups, error) {
+	var hostsList []defaults.HostGroups = make([]defaults.HostGroups, 0)
 	var configDir string = module.RuntimeDeployConfig.ConfigDir
 	var hostsfiles []string = module.RuntimeDeployConfig.UseHosts
 	for _, hostsFile := range hostsfiles {
@@ -69,7 +69,7 @@ func loadHostsFiles() ([]defaults.HostValue, error) {
 		}
 		var hostsFileFullPath = configDir + io.GetPathSeparator() + hostsFile
 		Logger.Info("Loading hosts file: " + hostsFileFullPath)
-		var hostsFileObj *defaults.Hosts = &defaults.Hosts{}
+		var hostsFileObj *defaults.HostGroupsConfig = &defaults.HostGroupsConfig{}
 		var err error
 		if ext == "yml" || ext == "yaml" {
 			hostsFileObj, err = hostsFileObj.FromYamlFile(hostsFileFullPath)
@@ -87,7 +87,7 @@ func loadHostsFiles() ([]defaults.HostValue, error) {
 				return hostsList, errors.New("bootstrap.loadHostsFiles -> Cause:" + err.Error())
 			}
 		}
-		hostsList = append(hostsList, hostsFileObj.Hosts...)
+		hostsList = append(hostsList, hostsFileObj.HostGroups...)
 	}
 	return hostsList, nil
 }

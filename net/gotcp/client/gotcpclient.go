@@ -521,6 +521,12 @@ type goTcpClient struct {
 	client common.TCPClient
 }
 
+func (conn *goTcpClient) Clone() generic.NetworkClient {
+	return &goTcpClient{
+		client: conn.client.Clone(),
+	}
+}
+
 func (c *goTcpClient) Close() error {
 	return c.client.Close()
 }
@@ -580,6 +586,12 @@ func (conn *goTcpConnection) GetClient() generic.NetworkClient {
 
 func (conn *goTcpConnection) IsConnected() bool {
 	return conn._client != nil
+}
+
+func (conn *goTcpConnection) Clone() generic.ConnectionHandler {
+	return &goTcpConnection{
+		_client: conn._client.Clone(),
+	}
 }
 
 func (conn *goTcpConnection) Close() error {

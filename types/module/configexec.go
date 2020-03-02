@@ -179,23 +179,25 @@ func (dc *DeployConfig) Merge(dc2 *DeployConfig) *DeployConfig {
 	var useHosts []string = utils.StringSliceTrim(utils.StringSliceUnique(utils.StringSliceAppend(dc.UseHosts, dc2.UseHosts)))
 	var useVars []string = utils.StringSliceTrim(utils.StringSliceUnique(utils.StringSliceAppend(dc.UseVars, dc2.UseVars)))
 	return &DeployConfig{
-		ModulesDir:   bestString(dc2.ModulesDir, dc.ModulesDir),
-		ConfigDir:    bestString(dc2.ConfigDir, dc.ConfigDir),
-		ChartsDir:    bestString(dc2.ChartsDir, dc.ChartsDir),
-		SystemDir:    bestString(dc2.SystemDir, dc.SystemDir),
-		WorkDir:      bestString(dc2.WorkDir, dc.WorkDir),
-		LogVerbosity: bestString(dc2.LogVerbosity, dc.LogVerbosity),
-		ConfigLang:   DescriptorTypeValue(bestString(string(dc2.ConfigLang), string(dc.ConfigLang))),
-		DeployName:   bestString(dc2.DeployName, dc.DeployName),
-		EnvSelector:  bestString(dc2.EnvSelector, dc.EnvSelector),
-		UseHosts:     useHosts,
-		UseVars:      useVars,
+		ModulesDir:         bestString(dc2.ModulesDir, dc.ModulesDir),
+		ConfigDir:          bestString(dc2.ConfigDir, dc.ConfigDir),
+		ChartsDir:          bestString(dc2.ChartsDir, dc.ChartsDir),
+		SystemDir:          bestString(dc2.SystemDir, dc.SystemDir),
+		WorkDir:            bestString(dc2.WorkDir, dc.WorkDir),
+		LogVerbosity:       bestString(dc2.LogVerbosity, dc.LogVerbosity),
+		ConfigLang:         DescriptorTypeValue(bestString(string(dc2.ConfigLang), string(dc.ConfigLang))),
+		DeployName:         bestString(dc2.DeployName, dc.DeployName),
+		EnvSelector:        bestString(dc2.EnvSelector, dc.EnvSelector),
+		ParallelExecutions: dc2.ParallelExecutions || dc.ParallelExecutions,
+		MaxThreads:         maxInt64(dc2.MaxThreads, dc.MaxThreads),
+		UseHosts:           useHosts,
+		UseVars:            useVars,
 	}
 }
 
 func (dc *DeployConfig) String() string {
-	return fmt.Sprintf("DeployConfig{DeployName: \"%s\", UseHosts: %v, UseVars: %v, WorkDir: \"%s\", ConfigDir: \"%s\", ChartsDir: \"%s\", SystemDir: \"%s\", ModulesDir: \"%s\", ConfigLang: \"%v\", LogVerbosity: \"%v\", EnvSelector: \"%s\"}",
-		dc.DeployName, dc.UseHosts, dc.UseVars, dc.WorkDir, dc.ConfigDir, dc.ChartsDir, dc.SystemDir, dc.ModulesDir, dc.ConfigLang, dc.LogVerbosity, dc.EnvSelector)
+	return fmt.Sprintf("DeployConfig{DeployName: \"%s\", UseHosts: %v, UseVars: %v, WorkDir: \"%s\", ConfigDir: \"%s\", ChartsDir: \"%s\", SystemDir: \"%s\", ModulesDir: \"%s\", ConfigLang: \"%v\", LogVerbosity: \"%v\", EnvSelector: \"%s\", ParallelExecutions: %v}",
+		dc.DeployName, dc.UseHosts, dc.UseVars, dc.WorkDir, dc.ConfigDir, dc.ChartsDir, dc.SystemDir, dc.ModulesDir, dc.ConfigLang, dc.LogVerbosity, dc.EnvSelector, dc.ParallelExecutions)
 }
 
 func (dc *DeployConfig) Yaml() (string, error) {
@@ -269,4 +271,11 @@ func bestString(str1 string, str2 string) string {
 		return str1
 	}
 	return str2
+}
+
+func maxInt64(a int64, b int64) int64 {
+	if a > b {
+		return a
+	}
+	return b
 }

@@ -75,17 +75,19 @@ type NetProtocolType struct {
 }
 
 type DeployConfig struct {
-	DeployName   string              `yaml:"deployName,omitempty" json:"deployName,omitempty" xml:"deploy-name,chardata,omitempty"`
-	LogVerbosity string              `yaml:"verbosity,omitempty" json:"verbosity,omitempty" xml:"verbosity,chardata,omitempty"`
-	UseHosts     []string            `yaml:"useHosts,omitempty" json:"useHosts,omitempty" xml:"use-hosts,chardata,omitempty"`
-	UseVars      []string            `yaml:"useVars,omitempty" json:"useVars,omitempty" xml:"use-vars,chardata,omitempty"`
-	WorkDir      string              `yaml:"workDir,omitempty" json:"workDir,omitempty" xml:"work-dir,chardata,omitempty"`
-	ModulesDir   string              `yaml:"modulesDir,omitempty" json:"modulesDir,omitempty" xml:"modules-dir,chardata,omitempty"`
-	ConfigDir    string              `yaml:"configDir,omitempty" json:"configDir,omitempty" xml:"config-dir,chardata,omitempty"`
-	ChartsDir    string              `yaml:"chartsDir,omitempty" json:"chartsDir,omitempty" xml:"charts-dir,chardata,omitempty"`
-	SystemDir    string              `yaml:"systemDir,omitempty" json:"systemDir,omitempty" xml:"system-dir,chardata,omitempty"`
-	ConfigLang   DescriptorTypeValue `yaml:"configLang,omitempty" json:"configLang,omitempty" xml:"config-lang,chardata,omitempty"`
-	EnvSelector  string              `yaml:"env,omitempty" json:"env,omitempty" xml:"env,chardata,omitempty"`
+	DeployName         string              `yaml:"deployName,omitempty" json:"deployName,omitempty" xml:"deploy-name,chardata,omitempty"`
+	LogVerbosity       string              `yaml:"verbosity,omitempty" json:"verbosity,omitempty" xml:"verbosity,chardata,omitempty"`
+	UseHosts           []string            `yaml:"useHosts,omitempty" json:"useHosts,omitempty" xml:"use-hosts,chardata,omitempty"`
+	UseVars            []string            `yaml:"useVars,omitempty" json:"useVars,omitempty" xml:"use-vars,chardata,omitempty"`
+	WorkDir            string              `yaml:"workDir,omitempty" json:"workDir,omitempty" xml:"work-dir,chardata,omitempty"`
+	ModulesDir         string              `yaml:"modulesDir,omitempty" json:"modulesDir,omitempty" xml:"modules-dir,chardata,omitempty"`
+	ConfigDir          string              `yaml:"configDir,omitempty" json:"configDir,omitempty" xml:"config-dir,chardata,omitempty"`
+	ChartsDir          string              `yaml:"chartsDir,omitempty" json:"chartsDir,omitempty" xml:"charts-dir,chardata,omitempty"`
+	SystemDir          string              `yaml:"systemDir,omitempty" json:"systemDir,omitempty" xml:"system-dir,chardata,omitempty"`
+	ConfigLang         DescriptorTypeValue `yaml:"configLang,omitempty" json:"configLang,omitempty" xml:"config-lang,chardata,omitempty"`
+	EnvSelector        string              `yaml:"env,omitempty" json:"env,omitempty" xml:"env,chardata,omitempty"`
+	ParallelExecutions bool                `yaml:"parallel,omitempty" json:"parallel,omitempty" xml:"parallel,chardata,omitempty"`
+	MaxThreads         int64               `yaml:"maxThreads,omitempty" json:"maxThreads,omitempty" xml:"max-threads,chardata,omitempty"`
 }
 
 /*
