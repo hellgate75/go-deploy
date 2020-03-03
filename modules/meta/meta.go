@@ -2,6 +2,7 @@ package meta
 
 import (
 	"github.com/hellgate75/go-deploy/types/module"
+	"github.com/hellgate75/go-deploy/types/threads"
 )
 
 type Symbol interface{}
@@ -27,13 +28,9 @@ type Converter interface {
 	* (interface{}) Qualified structure <BR/>
 	* (error) Error occured during any conversion <BR/>
 	 */
-	Convert(cmdValues interface{}) (interface{}, error)
-}
-
-type Executor interface {
-	Execute(step module.Step, session module.Session) error
+	Convert(cmdValues interface{}) (threads.StepRunnable, error)
 }
 
 type ProxyStub interface {
-	Discover(module string, component string) (interface{}, error)
+	Discover(module string) (Converter, error)
 }

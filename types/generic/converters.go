@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/hellgate75/go-deploy/modules"
 	"github.com/hellgate75/go-deploy/modules/meta"
+	"github.com/hellgate75/go-deploy/types/threads"
 )
 
 /*
@@ -14,20 +15,12 @@ type NilCommandConverter struct {
 	CmdType string
 }
 
-func (nilCommand *NilCommandConverter) Convert(cmdValues interface{}) (interface{}, error) {
+func (nilCommand *NilCommandConverter) Convert(cmdValues interface{}) (threads.StepRunnable, error) {
 	return nil, errors.New("NilCommandConverter -> Not implemented type: " + nilCommand.CmdType)
 
 }
 
 func NewConverter(cmdType string) meta.Converter {
-	//	switch cmdType {
-	//	case FEED_TYPE_SHELL:
-	//		return &ShellCommand{}
-	//	case FEED_TYPE_SERVICE:
-	//		return &ServiceCommand{}
-	//	case FEED_TYPE_COPY:
-	//		return &CopyCommand{}
-	//	}
 	Logger.Warn(fmt.Sprintf("NewConverter -> cmdType: %s", cmdType))
 	converter, err := modules.LoadConverterForModule(cmdType)
 	if err != nil {

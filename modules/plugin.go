@@ -26,7 +26,7 @@ type SeekRequest struct {
 
 var proxyVia proxy.Proxy = proxy.NewProxy()
 
-func seek(module string, symbol string) (interface{}, error) {
+func seek(module string) (meta.Converter, error) {
 	var acceptance chan bool = make(chan bool)
 	var featureAcceptance chan bool = make(chan bool)
 	var response chan interface{} = make(chan interface{})
@@ -47,8 +47,8 @@ func seek(module string, symbol string) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	var itf interface{}
-	itf, err = mod.GetComponent(symbol)
+	var itf meta.Converter
+	itf, err = mod.GetComponent()
 	Logger.Warn(fmt.Sprintf("Module Component: %v", itf))
 	if err != nil {
 		return nil, err
@@ -100,26 +100,6 @@ func seek(module string, symbol string) (interface{}, error) {
 	//	return outcome, err
 }
 
-func LoadExecutorForModule(module string) (meta.Executor, error) {
-	//	var path string = io.GetCurrentFolder() + io.GetPathSeparator() + ModulesFolder + io.GetPathSeparator() + module + io.GetPathSeparator() + module + utils.GetShareLibExt()
-	//	var exists bool = io.ExistsFile(path)
-	//	Logger.Warn(fmt.Sprintf("modules.LoadExecutorForModule -> Current Path: %s, exists: %s", path, strconv.FormatBool(exists)))
-	//	if !exists {
-	//		return nil, errors.New(fmt.Sprintf("plugin.LoadExecutorForModule -> File %s doesn't exist", path))
-	//	}
-	symCollector, err := seek(module, "Executor")
-	if err != nil {
-		return nil, errors.New(fmt.Sprintf("Errors fetching plugin module : \"%s\". Details: %s", module, err.Error()))
-	}
-	var executor meta.Executor
-	executor, ok := symCollector.(meta.Executor)
-	Logger.Warn(fmt.Sprintf("modules.LoadExecutorForModule -> On Module: %s, found Executor: %v", module, executor))
-	if !ok {
-		return nil, errors.New(fmt.Sprintf("Uanble to parse Executor for module: %s", module))
-	}
-	return executor, nil
-}
-
 func LoadConverterForModule(module string) (meta.Converter, error) {
 	//	var path string = io.GetCurrentFolder() + io.GetPathSeparator() + ModulesFolder + io.GetPathSeparator() + module + io.GetPathSeparator() + module + utils.GetShareLibExt()
 	//	var exists bool = io.ExistsFile(path)
@@ -127,16 +107,10 @@ func LoadConverterForModule(module string) (meta.Converter, error) {
 	//	if !exists {
 	//		return nil, errors.New(fmt.Sprintf("plugin.LoadConverterForModule -> File %s doesn't exist", path))
 	//	}
-	symCollector, err := seek(module, "Converter")
-	Logger.Warn(fmt.Sprintf("modules.LoadConverterForModule -> symCollector: %v", symCollector))
+	converter, err := seek(module)
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("Errors fetching plugin module : \"%s\". Details: %s", module, err.Error()))
 	}
-	var converter meta.Converter
-	converter, ok := symCollector.(meta.Converter)
 	Logger.Warn(fmt.Sprintf("modules.LoadConverterForModule -> On Module: %s, found Converters: %v", module, converter))
-	if !ok {
-		return nil, errors.New(fmt.Sprintf("Uanble to parse Converter for module: %s", module))
-	}
 	return converter, nil
 }

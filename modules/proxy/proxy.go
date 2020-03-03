@@ -8,7 +8,7 @@ import (
 )
 
 type Module interface {
-	GetComponent(name string) (interface{}, error)
+	GetComponent() (meta.Converter, error)
 }
 
 type module struct {
@@ -16,8 +16,8 @@ type module struct {
 	stub   meta.ProxyStub
 }
 
-func (m *module) GetComponent(name string) (interface{}, error) {
-	return m.stub.Discover(m.module, name)
+func (m *module) GetComponent() (meta.Converter, error) {
+	return m.stub.Discover(m.module)
 }
 
 type Proxy interface {
