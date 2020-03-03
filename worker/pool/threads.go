@@ -63,7 +63,7 @@ type ThreadPool interface {
 }
 
 type ThreadErrorHandler interface {
-	HandleError(e error)
+	HandleError(uuid string, e error)
 }
 
 //runtime.GOMAXPROCS(runtime.NumCPU())
@@ -285,14 +285,14 @@ func (tp *threadPool) run() {
 									if r := recover(); r != nil {
 										err := errors.New(fmt.Sprintf("%v", r))
 										if err != nil && tp.errHandler != nil {
-											tp.errHandler.HandleError(err)
+											tp.errHandler.HandleError(t.UUID(), err)
 											t.Kill()
 										}
 									}
 								}()
 								err := t.Run()
 								if err != nil && tp.errHandler != nil {
-									tp.errHandler.HandleError(err)
+									tp.errHandler.HandleError(t.UUID(), err)
 									t.Kill()
 								}
 							}()
@@ -318,7 +318,7 @@ func (tp *threadPool) run() {
 								go func() {
 									err := t.Run()
 									if err != nil && tp.errHandler != nil {
-										tp.errHandler.HandleError(err)
+										tp.errHandler.HandleError(t.UUID(), err)
 										t.Kill()
 									}
 								}()
@@ -358,7 +358,7 @@ func (tp *threadPool) run() {
 								if r := recover(); r != nil {
 									err := errors.New(fmt.Sprintf("%v", r))
 									if err != nil && tp.errHandler != nil {
-										tp.errHandler.HandleError(err)
+										tp.errHandler.HandleError(t.UUID(), err)
 										t.Kill()
 									}
 								}
@@ -366,7 +366,7 @@ func (tp *threadPool) run() {
 							}()
 							err := t.Run()
 							if err != nil && tp.errHandler != nil {
-								tp.errHandler.HandleError(err)
+								tp.errHandler.HandleError(t.UUID(), err)
 								t.Kill()
 							}
 						}()
