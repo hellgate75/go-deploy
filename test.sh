@@ -1,3 +1,4 @@
 #!/bin/sh
-go run . -workDir .\\sample sample.yaml
+cmd="go run . -env dev -workDir .\\\\sample $@ sample.yaml"
+sh -c "$cmd"
 

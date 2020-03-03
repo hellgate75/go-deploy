@@ -466,8 +466,14 @@ func (conn *sshConnection) IsConnected() bool {
 }
 
 func (conn *sshConnection) Clone() generic.ConnectionHandler {
-	return &sshConnection{
-		_client: conn._client.Clone(),
+	if conn._client != nil {
+		return &sshConnection{
+			_client: conn._client.Clone(),
+		}
+	} else {
+		return &sshConnection{
+			_client: nil,
+		}
 	}
 }
 

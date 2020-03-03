@@ -101,6 +101,7 @@ func (npt *NetProtocolType) Merge(npt2 *NetProtocolType) *NetProtocolType {
 		Passphrase:  bestString(npt2.Passphrase, npt.Passphrase),
 		UserName:    bestString(npt2.UserName, npt.UserName),
 		Password:    bestString(npt2.Password, npt.Password),
+		Certificate: bestString(npt2.Certificate, npt.Certificate),
 	}
 }
 

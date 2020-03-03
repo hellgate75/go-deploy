@@ -34,7 +34,11 @@ func (bootstrap *bootstrap) Run(feed *module.FeedExec, logger log.Logger) []erro
 	envsYaml, _ := io.ToYaml(envs)
 	hostsYaml, _ := io.ToYaml(hosts)
 	varsYaml, _ := io.ToYaml(vars)
-	Logger.Info(fmt.Sprintf("Loaded:\nEnvironments: %s\nHosts: %s\nVariables: %s", envsYaml, hostsYaml, varsYaml))
+	configYaml, _ := module.RuntimeDeployConfig.Yaml()
+	typeYaml, _ := module.RuntimeDeployType.Yaml()
+	netYaml, _ := module.RuntimeNetworkType.Yaml()
+	Logger.Debugf("Loaded:\nEnvironments: %s\nHosts: %s\nVariables: %s", envsYaml, hostsYaml, varsYaml)
+	Logger.Debugf("\nConfig: %s\nType: %s\nNet: %s", configYaml, typeYaml, netYaml)
 
 	Logger.Info("Connection Protocol: " + color.Yellow.Render(string(module.RuntimeNetworkType.NetProtocol)))
 	var handler generic.ConnectionHandler = nil
@@ -83,21 +87,20 @@ func (bootstrap *bootstrap) Run(feed *module.FeedExec, logger log.Logger) []erro
 	var sessionsMap map[string]module.Session = make(map[string]module.Session)
 
 	for _, hg := range hosts {
-		for _, host := range hg.Hosts {
-			for _, hostValue := range host.Hosts {
-				var hostSessionMapKey string = hg.Name + "-" + hostValue.Name
-				sessionsMap[hostSessionMapKey] = module.NewSession(module.NewSessionId())
-				Logger.Info(fmt.Sprintf("Create session for host: %s -> Session Id: %s", color.Yellow.Render(hostValue.Name), color.Yellow.Render(sessionsMap[hostSessionMapKey].GetSessionId())))
-				for _, variable := range vars {
-					sessionsMap[hostSessionMapKey].SetVar(variable.Name, variable.Value)
-				}
-				sessionsMap[hostSessionMapKey].SetSystemObject("connection-handler", handler.Clone())
-				sessionsMap[hostSessionMapKey].SetSystemObject("rutime-config", module.RuntimeDeployConfig)
-				sessionsMap[hostSessionMapKey].SetSystemObject("runtime-type", module.RuntimeDeployType)
-				sessionsMap[hostSessionMapKey].SetSystemObject("runtime-net", module.RuntimeNetworkType)
-				sessionsMap[hostSessionMapKey].SetSystemObject("host-groups", hosts)
-				sessionsMap[hostSessionMapKey].SetSystemObject("system-logger", logger)
+		for _, hostValue := range hg.Hosts {
+			var hostSessionMapKey string = hg.Name + "-" + hostValue.Name
+			sessionsMap[hostSessionMapKey] = module.NewSession(module.NewSessionId())
+			Logger.Debugf("Create session for host: %s -> Session Id: %s", color.Yellow.Render(hostValue.Name), color.Yellow.Render(sessionsMap[hostSessionMapKey].GetSessionId()))
+			for _, variable := range vars {
+				Logger.Debugf("Create session variable for host: %s -> Name: %s  Value: %s", color.Yellow.Render(hostValue.Name), variable.Name, variable.Value)
+				sessionsMap[hostSessionMapKey].SetVar(variable.Name, variable.Value)
 			}
+			sessionsMap[hostSessionMapKey].SetSystemObject("connection-handler", handler.Clone())
+			sessionsMap[hostSessionMapKey].SetSystemObject("rutime-config", module.RuntimeDeployConfig)
+			sessionsMap[hostSessionMapKey].SetSystemObject("runtime-type", module.RuntimeDeployType)
+			sessionsMap[hostSessionMapKey].SetSystemObject("runtime-net", module.RuntimeNetworkType)
+			sessionsMap[hostSessionMapKey].SetSystemObject("host-groups", hosts)
+			sessionsMap[hostSessionMapKey].SetSystemObject("system-logger", logger)
 		}
 	}
 	Logger.Info("Starting Feed execution ...")

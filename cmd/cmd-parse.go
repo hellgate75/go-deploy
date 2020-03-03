@@ -53,7 +53,7 @@ func init() {
 	fs.StringVar(&useHosts, "hosts", "", "Required Hosts files (comma separated file path list)")
 	fs.StringVar(&useVars, "vars", "", "Required Vars files (comma separated file path list)")
 	fs.StringVar(&format, "language", "YAML", "Config File Language (YAML, XML or JSON)")
-	fs.StringVar(&env, "suffix", "", "configuration file suffix (no default)")
+	fs.StringVar(&env, "env", "", "configuration file env suffix (no default)")
 }
 
 func RequiresHelp() bool {

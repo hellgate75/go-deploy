@@ -522,16 +522,29 @@ type goTcpClient struct {
 }
 
 func (conn *goTcpClient) Clone() generic.NetworkClient {
-	return &goTcpClient{
-		client: conn.client.Clone(),
+	if conn.client != nil {
+		return &goTcpClient{
+			client: conn.client.Clone(),
+		}
+	} else {
+		return &goTcpClient{
+			client: nil,
+		}
 	}
 }
 
 func (c *goTcpClient) Close() error {
-	return c.client.Close()
+	if c.client != nil {
+		return c.client.Close()
+	} else {
+		return errors.New("Unable to clone empty client, please open client first ...")
+	}
 }
 
 func (c *goTcpClient) Terminal(config *generic.TerminalConfig) generic.RemoteShell {
+	if c.client == nil {
+		return nil
+	}
 	return &goTcpShell{
 		client:         c.client.Clone(),
 		terminalConfig: config,
@@ -540,6 +553,9 @@ func (c *goTcpClient) Terminal(config *generic.TerminalConfig) generic.RemoteShe
 }
 
 func (c *goTcpClient) NewCmd(cmd string) generic.CommandsScript {
+	if c.client == nil {
+		return nil
+	}
 	return &goTcpScript{
 		_type:  cmdLine,
 		client: c.client.Clone(),
@@ -548,6 +564,9 @@ func (c *goTcpClient) NewCmd(cmd string) generic.CommandsScript {
 }
 
 func (c *goTcpClient) Script(script string) generic.CommandsScript {
+	if c.client == nil {
+		return nil
+	}
 	return &goTcpScript{
 		_type:  rawScript,
 		client: c.client.Clone(),
@@ -556,6 +575,9 @@ func (c *goTcpClient) Script(script string) generic.CommandsScript {
 }
 
 func (c *goTcpClient) ScriptFile(fname string) generic.CommandsScript {
+	if c.client == nil {
+		return nil
+	}
 	return &goTcpScript{
 		_type:      scriptFile,
 		client:     c.client.Clone(),
@@ -564,12 +586,18 @@ func (c *goTcpClient) ScriptFile(fname string) generic.CommandsScript {
 }
 
 func (c *goTcpClient) FileTranfer() generic.FileTransfer {
+	if c.client == nil {
+		return nil
+	}
 	return &goTcpTranfer{
 		client: c.client.Clone(),
 	}
 }
 
 func (c *goTcpClient) Shell() generic.RemoteShell {
+	if c.client == nil {
+		return nil
+	}
 	return &goTcpShell{
 		client:     c.client.Clone(),
 		requestPty: false,
@@ -589,8 +617,14 @@ func (conn *goTcpConnection) IsConnected() bool {
 }
 
 func (conn *goTcpConnection) Clone() generic.ConnectionHandler {
-	return &goTcpConnection{
-		_client: conn._client.Clone(),
+	if conn._client != nil {
+		return &goTcpConnection{
+			_client: conn._client.Clone(),
+		}
+	} else {
+		return &goTcpConnection{
+			_client: nil,
+		}
 	}
 }
 

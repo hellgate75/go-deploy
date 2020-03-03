@@ -183,13 +183,14 @@ func (envs *Environments) FromJsonCode(jsonCode string) (*Environments, error) {
 	return envsObj, nil
 }
 
-type Hosts struct {
-	Hosts []HostValue `yaml:"hosts,omitempty" json:"hosts,omitempty" xml:"hosts,chardata,omitempty"`
+type HostGroups struct {
+	Name  string      `yaml:"name" json:"name" xml:"name,chardata"`
+	Hosts []HostValue `yaml:"hosts" json:"hosts" xml:"hosts,chardata"`
 }
 
-func (hosts *Hosts) String() string {
+func (hg *HostGroups) String() string {
 	var hostsVal string = "["
-	for _, host := range hosts.Hosts {
+	for _, host := range hg.Hosts {
 		prefix := ", "
 		if len(hostsVal) == 0 {
 			prefix = ""
@@ -197,18 +198,8 @@ func (hosts *Hosts) String() string {
 		hostsVal += prefix + host.String()
 	}
 	hostsVal += "]"
-	return fmt.Sprintf("Hosts{Hosts: %s}",
-		hostsVal)
-}
-
-type HostGroups struct {
-	Name  string  `yaml:"name" json:"name" xml:"name,chardata"`
-	Hosts []Hosts `yaml:"hosts" json:"hosts" xml:"hosts,chardata"`
-}
-
-func (hg *HostGroups) String() string {
 	return fmt.Sprintf("HostValue{Name: \"%s\", Hosts: \"%v\"}",
-		hg.Name, hg.Hosts)
+		hg.Name, hostsVal)
 }
 
 type HostValue struct {
