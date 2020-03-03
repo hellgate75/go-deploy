@@ -20,13 +20,23 @@ func (nilCommand *NilCommandConverter) Convert(cmdValues interface{}) (threads.S
 
 }
 
+var convertersMap map[string]meta.Converter = make(map[string]meta.Converter)
+
 func NewConverter(cmdType string) meta.Converter {
 	Logger.Warn(fmt.Sprintf("NewConverter -> cmdType: %s", cmdType))
+	//Verify local coverters cache
+	if _, ok := convertersMap[cmdType]; ok {
+		return convertersMap[cmdType]
+	}
 	converter, err := modules.LoadConverterForModule(cmdType)
 	if err != nil {
 		return &NilCommandConverter{
 			CmdType: cmdType,
 		}
+	}
+	if _, ok := convertersMap[cmdType]; !ok && converter != nil {
+		//Store in local coverters cache
+		convertersMap[cmdType] = converter
 	}
 	return converter
 
