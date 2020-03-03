@@ -1,20 +1,9 @@
 package worker
 
 import (
-	"github.com/hellgate75/go-deploy/types/defaults"
-	"github.com/hellgate75/go-deploy/types/module"
 	"os"
 	"runtime"
 )
-
-type ConfigPattern struct {
-	Config     *module.DeployConfig
-	Type       *module.DeployType
-	Net        *module.NetProtocolType
-	Envs       []defaults.NameValue
-	Vars       []defaults.NameValue
-	HostGroups []defaults.HostGroups
-}
 
 func userHomeDir() string {
 	if runtime.GOOS == "windows" {
@@ -32,7 +21,7 @@ func userHomeDir() string {
 	return os.Getenv("HOME")
 }
 
-func exxecutionDir() string {
+func executionDir() string {
 	dir, err := os.Getwd()
 	if err != nil {
 		return "."

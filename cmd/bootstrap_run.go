@@ -7,6 +7,7 @@ import (
 	"github.com/hellgate75/go-deploy/log"
 	"github.com/hellgate75/go-deploy/net"
 	"github.com/hellgate75/go-deploy/net/generic"
+	"github.com/hellgate75/go-deploy/types/defaults"
 	"github.com/hellgate75/go-deploy/types/module"
 	"github.com/hellgate75/go-deploy/worker"
 )
@@ -100,11 +101,13 @@ func (bootstrap *bootstrap) Run(feed *module.FeedExec, logger log.Logger) []erro
 			sessionsMap[hostSessionMapKey].SetSystemObject("runtime-type", module.RuntimeDeployType)
 			sessionsMap[hostSessionMapKey].SetSystemObject("runtime-net", module.RuntimeNetworkType)
 			sessionsMap[hostSessionMapKey].SetSystemObject("host-groups", hosts)
+			sessionsMap[hostSessionMapKey].SetSystemObject("envs", envs)
+			sessionsMap[hostSessionMapKey].SetSystemObject("vars", vars)
 			sessionsMap[hostSessionMapKey].SetSystemObject("system-logger", logger)
 		}
 	}
 	Logger.Info("Starting Feed execution ...")
-	execErrList := worker.ExecuteFeed(worker.ConfigPattern{
+	execErrList := worker.ExecuteFeed(defaults.ConfigPattern{
 		Config:     module.RuntimeDeployConfig,
 		Type:       module.RuntimeDeployType,
 		Net:        module.RuntimeNetworkType,

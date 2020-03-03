@@ -3,7 +3,17 @@ package defaults
 import (
 	"fmt"
 	"github.com/hellgate75/go-deploy/io"
+	"github.com/hellgate75/go-deploy/types/module"
 )
+
+type ConfigPattern struct {
+	Config     *module.DeployConfig
+	Type       *module.DeployType
+	Net        *module.NetProtocolType
+	Envs       []NameValue
+	Vars       []NameValue
+	HostGroups []HostGroups
+}
 
 type NameValue struct {
 	Name  string `yaml:"name" json:"name" xml:"name,chardata"`
