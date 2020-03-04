@@ -114,7 +114,7 @@ func (logger *logger) Fatal(in ...interface{}) {
 func (logger *logger) Printf(format string, in ...interface{}) {
 	var buf []byte = []byte(fmt.Sprintf(format, in...))
 	if logger.onScreen {
-		color.White.Printf(string(buf))
+		color.LightWhite.Printf(string(buf))
 	} else {
 		logger.out.Write(buf)
 	}
@@ -123,7 +123,7 @@ func (logger *logger) Printf(format string, in ...interface{}) {
 func (logger *logger) Println(in ...interface{}) {
 	var buf []byte = []byte(fmt.Sprint(in...) + "\n")
 	if logger.onScreen {
-		color.White.Printf(string(buf))
+		color.LightWhite.Printf(string(buf))
 	} else {
 		logger.out.Write(buf)
 	}

@@ -114,7 +114,7 @@ func (bootstrap *bootstrap) Run(feed *module.FeedExec, logger log.Logger) []erro
 		Envs:       envs,
 		HostGroups: hosts,
 		Vars:       vars,
-	}, feed, logger)
+	}, feed, sessionsMap, logger)
 	if len(execErrList) > 0 {
 		errList = append(errList, execErrList...)
 	}

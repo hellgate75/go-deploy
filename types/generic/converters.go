@@ -2,7 +2,6 @@ package generic
 
 import (
 	"errors"
-	"fmt"
 	"github.com/hellgate75/go-deploy/modules"
 	"github.com/hellgate75/go-deploy/modules/meta"
 	"github.com/hellgate75/go-deploy/types/threads"
@@ -23,7 +22,7 @@ func (nilCommand *NilCommandConverter) Convert(cmdValues interface{}) (threads.S
 var convertersMap map[string]meta.Converter = make(map[string]meta.Converter)
 
 func NewConverter(cmdType string) meta.Converter {
-	Logger.Warn(fmt.Sprintf("NewConverter -> cmdType: %s", cmdType))
+	Logger.Debugf("NewConverter -> cmdType: %s", cmdType)
 	//Verify local coverters cache
 	if _, ok := convertersMap[cmdType]; ok {
 		return convertersMap[cmdType]

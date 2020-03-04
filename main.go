@@ -22,7 +22,7 @@ var Logger log.Logger = log.NewLogger(log.INFO)
 func init() {
 	defer func() {
 		if r := recover(); r != nil {
-			Logger.Error(fmt.Sprintf("Init - Recovery:\n- %v", r))
+			Logger.Errorf("Init - Recovery:\n- %v", r)
 			os.Exit(1)
 		}
 	}()
@@ -32,9 +32,9 @@ func init() {
 	cmd.Logger = Logger
 	ngen.Logger = Logger
 	modproxy.Logger = Logger
-	Logger.Println(cmd.Banner)
-	Logger.Println("GO DEPLOY " + cmd.Version)
-	Logger.Println("Author: ", cmd.Authors)
+	Logger.Println(color.LightGreen.Render(cmd.Banner))
+	Logger.Println(color.LightYellow.Render("GO DEPLOY " + cmd.Version))
+	Logger.Println("Author: ", color.LightYellow.Render(cmd.Authors))
 	Logger.Println(cmd.Disclaimer + "\n")
 	Logger.Trace("Init ...")
 }
@@ -52,20 +52,20 @@ func main() {
 		if !help {
 			var end time.Time = time.Now()
 			var duration time.Duration = end.Sub(start)
-			Logger.Warn(fmt.Sprintf("Total elapsed time: %s", duration.String()))
+			Logger.Warnf("Total elapsed time: %s", duration.String())
 		}
 		os.Exit(exitCode)
 	}()
 	if !cmd.RequiresHelp() {
-		Logger.Info(fmt.Sprintf("Logger initial Verbosity : %v", Logger.GetVerbosity()))
-		Logger.Trace(fmt.Sprint("Main ..."))
+		Logger.Infof("Logger initial Verbosity : %v", Logger.GetVerbosity())
+		Logger.Trace("Main ...")
 		config, err := cmd.ParseArguments()
 		if config.LogVerbosity != "" && config.LogVerbosity != string(Logger.GetVerbosity()) {
 			Logger.SetVerbosity(log.VerbosityLevelFromString(config.LogVerbosity))
-			Logger.Info(fmt.Sprintf("Logger Verbosity Setted up to : %v", Logger.GetVerbosity()))
+			Logger.Infof("Logger Verbosity Setted up to : %v", Logger.GetVerbosity())
 		}
 		if err != nil {
-			Logger.Error(fmt.Sprintf("Error: %v", err))
+			Logger.Errorf("Error: %v", err)
 			cmd.Usage()
 		} else {
 			var target string = cmd.GetTarget()
@@ -135,7 +135,7 @@ func main() {
 				Logger.Debugf("Configuration Summary: \nDeploy Config: %v\nDeployType: %v\nNetType: %v\n", dc.String(), dt.String(), nt.String())
 				if dt.DeploymentType == module.FILE_SOURCE {
 					var filePath string = dc.WorkDir + io.GetPathSeparator() + target
-					Logger.Warn(fmt.Sprintf("Trying load of Feed: %s\n", filePath))
+					Logger.Warnf("Loaging Main Feed at path: %s\n", filePath)
 					var feed generic.IFeed = generic.NewFeed("default")
 					err = feed.Load(filePath)
 					if err != nil {
@@ -155,7 +155,7 @@ func main() {
 						panic(fmt.Sprintf("Error trying to validate Feed for file: %s -> Details: \n%s", filePath, errors))
 					}
 					if len(feedEx.Steps) > 0 {
-						Logger.Warnf("Reading file: %s, discovered %s main steps!!", filePath, strconv.Itoa(len(feedEx.Steps)))
+						Logger.Debugf("Reading file: %s, discovered %s main steps!!", filePath, strconv.Itoa(len(feedEx.Steps)))
 						errExList := boostrap.Run(feedEx, Logger)
 						if len(errExList) > 0 {
 							var errors string = ""

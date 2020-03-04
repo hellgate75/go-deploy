@@ -156,7 +156,7 @@ func (session *session) GetDeployConfig() *DeployConfig {
 func (session *session) GetVar(name string) (string, error) {
 	defer func() {
 		if r := recover(); r != nil {
-			Logger.Error(fmt.Sprintf("Session.GetVar : %v", r))
+			Logger.Errorf("Session.GetVar : %v", r)
 		}
 		session.RUnlock()
 	}()
@@ -171,7 +171,7 @@ func (session *session) SetVar(name string, value string) bool {
 	var out bool = true
 	defer func() {
 		if r := recover(); r != nil {
-			Logger.Error(fmt.Sprintf("Session.GetVar : %v", r))
+			Logger.Errorf("Session.GetVar : %v", r)
 		}
 		out = false
 		session.Unlock()
@@ -183,7 +183,7 @@ func (session *session) SetVar(name string, value string) bool {
 func (session *session) GetKeys() []string {
 	defer func() {
 		if r := recover(); r != nil {
-			Logger.Error(fmt.Sprintf("Session.GetVar : %v", r))
+			Logger.Errorf("Session.GetVar : %v", r)
 		}
 		session.RUnlock()
 	}()
@@ -197,7 +197,7 @@ func (session *session) GetKeys() []string {
 func (session *session) GetSystemObject(name string) (interface{}, error) {
 	defer func() {
 		if r := recover(); r != nil {
-			Logger.Error(fmt.Sprintf("Session.GetVar : %v", r))
+			Logger.Errorf("Session.GetVar : %v", r)
 		}
 		session.RUnlock()
 	}()
@@ -212,7 +212,7 @@ func (session *session) SetSystemObject(name string, value interface{}) bool {
 	var out bool = true
 	defer func() {
 		if r := recover(); r != nil {
-			Logger.Error(fmt.Sprintf("Session.GetVar : %v", r))
+			Logger.Errorf("Session.GetVar : %v", r)
 		}
 		out = false
 		session.Unlock()
@@ -224,7 +224,7 @@ func (session *session) SetSystemObject(name string, value interface{}) bool {
 func (session *session) GetSystemKeys() []string {
 	defer func() {
 		if r := recover(); r != nil {
-			Logger.Error(fmt.Sprintf("Session.GetVar : %v", r))
+			Logger.Errorf("Session.GetVar : %v", r)
 		}
 		session.RUnlock()
 	}()
@@ -239,7 +239,7 @@ func (session *session) GetSystemKeys() []string {
 func NewSessionId() string {
 	uuid, err := uuid.NewUUID()
 	if err != nil {
-		Logger.Error(fmt.Sprintf("NewSessionId unable to create google.UUID -> Reason: %s", err.Error()))
+		Logger.Errorf("NewSessionId unable to create google.UUID -> Reason: %s", err.Error())
 		block1 := strconv.FormatInt(rand.Int63(), 16)
 		block2 := strconv.FormatInt(rand.Int63(), 16)
 		block3 := strconv.FormatInt(rand.Int63(), 16)

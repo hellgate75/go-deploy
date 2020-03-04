@@ -13,7 +13,7 @@ import (
 
 var Logger log.Logger = nil
 
-func ConnectHandlerViaConfig(handler ConnectionHandler, host defaults.HostValue, netConfig module.NetProtocolType, depConfig module.DeployConfig) (NetworkClient, error) {
+func ConnectHandlerViaConfig(handler ConnectionHandler, host defaults.HostValue, netConfig *module.NetProtocolType, depConfig *module.DeployConfig) (NetworkClient, error) {
 	var globalError error
 	if string(module.RuntimeNetworkType.NetProtocol) == string(module.NET_PROTOCOL_SSH) {
 		var missPassword bool = netConfig.Password == ""

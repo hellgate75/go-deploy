@@ -192,7 +192,7 @@ func EvaluateSteps(name string, key interface{}, value interface{}) ([]*module.S
 		} else {
 			//New Step
 			var keyVal string = fmt.Sprintf("%v", key)
-			Logger.Warn(fmt.Sprintf("valueType: %v", valueType))
+			Logger.Tracef("valueType: %v", valueType)
 			if strings.Index(valueType, "map[") == 0 {
 
 				if strings.ToLower(keyVal) == "import" {

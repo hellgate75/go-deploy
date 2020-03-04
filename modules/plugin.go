@@ -6,9 +6,6 @@ import (
 	"github.com/hellgate75/go-deploy/log"
 	"github.com/hellgate75/go-deploy/modules/meta"
 	"github.com/hellgate75/go-deploy/modules/proxy"
-	//	"github.com/hellgate75/go-deploy/types/module"
-	//	"strconv"
-	//	"time"
 )
 
 var Logger log.Logger = nil
@@ -32,24 +29,22 @@ func seek(module string) (meta.Converter, error) {
 	var response chan interface{} = make(chan interface{})
 	defer func() {
 		if r := recover(); r != nil {
-			Logger.Error(fmt.Sprintf("modules.seek -> Error: %v", r))
+			Logger.Errorf("modules.seek -> Error: %v", r)
 		}
 		close(acceptance)
 		close(featureAcceptance)
 		close(response)
 	}()
-	Logger.Warn("Before Call ...")
 	var mod proxy.Module
 	var err error
 	mod, err = proxyVia.DiscoverModule(module)
-	Logger.Warn("After Call ...")
-	Logger.Warn(fmt.Sprintf("Module: %v", mod))
+	Logger.Debugf("Module is present: %v", (mod != nil))
 	if err != nil {
 		return nil, err
 	}
 	var itf meta.Converter
 	itf, err = mod.GetComponent()
-	Logger.Warn(fmt.Sprintf("Module Component: %v", itf))
+	Logger.Debugf("Module Component: %v", itf)
 	if err != nil {
 		return nil, err
 	}
@@ -111,6 +106,6 @@ func LoadConverterForModule(module string) (meta.Converter, error) {
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("Errors fetching plugin module : \"%s\". Details: %s", module, err.Error()))
 	}
-	Logger.Warn(fmt.Sprintf("modules.LoadConverterForModule -> On Module: %s, found Converters: %v", module, converter))
+	Logger.Debugf("modules.LoadConverterForModule -> On Module: %s, found Converters: %v", module, converter)
 	return converter, nil
 }

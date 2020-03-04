@@ -3,6 +3,7 @@ package pool
 import (
 	"errors"
 	"fmt"
+	"github.com/hellgate75/go-deploy/log"
 	"runtime"
 	"sync"
 	"time"
@@ -60,6 +61,8 @@ type ThreadPool interface {
 	SetErrorHandler(h ThreadErrorHandler)
 	// Prints state of running processes and number of elements in the Queue
 	State() string
+	// Sets the logger
+	SetLogger(l log.Logger)
 }
 
 type ThreadErrorHandler interface {
@@ -76,6 +79,7 @@ type threadPool struct {
 	errHandler ThreadErrorHandler
 	_size      int64
 	_paused    bool
+	_logger    log.Logger
 }
 
 func format(format string, value interface{}, length int) string {
@@ -93,6 +97,10 @@ var (
 	typeLen int = 15
 	uuidLen int = 15
 )
+
+func (tp *threadPool) SetLogger(l log.Logger) {
+	tp._logger = l
+}
 
 func (tp *threadPool) State() string {
 	var out string = "Thread Pool Manager state:\n"
@@ -124,6 +132,63 @@ func (tp *threadPool) State() string {
 	out += fmt.Sprintf(" total elements: %v, complete: %v, running: %v, paused: %v, waiting: %v\n", tp._size, complete, running, paused, waiting)
 	out += fmt.Sprintf(" ready: %v, complete: %v, parallel: %v, max threads: %v\n", tp.running, tp.IsComplete(), tp.parallel, tp.maxThreads)
 	return out
+}
+
+func (tp *threadPool) debugToOut(in ...interface{}) {
+	if tp._logger != nil {
+		tp._logger.Debug(in)
+	} else {
+		var itfArr []interface{} = make([]interface{}, 0)
+		itfArr = append(itfArr, "[debug]")
+		itfArr = append(itfArr, in...)
+		fmt.Println(itfArr...)
+	}
+}
+
+func (tp *threadPool) debugfToOut(format string, in ...interface{}) {
+	if tp._logger != nil {
+		tp._logger.Debugf(format, in...)
+	} else {
+		fmt.Printf(fmt.Sprintf("%s %s", "[debug]", format), in...)
+	}
+}
+
+func (tp *threadPool) infoToOut(in ...interface{}) {
+	if tp._logger != nil {
+		tp._logger.Info(in...)
+	} else {
+		var itfArr []interface{} = make([]interface{}, 0)
+		itfArr = append(itfArr, "[info]")
+		itfArr = append(itfArr, in...)
+		fmt.Println(itfArr...)
+	}
+}
+
+func (tp *threadPool) infofToOut(format string, in ...interface{}) {
+	if tp._logger != nil {
+		tp._logger.Infof(format, in...)
+	} else {
+		fmt.Printf(fmt.Sprintf("%s %s", "[info]", format), in...)
+	}
+}
+
+func (tp *threadPool) errorToOut(in ...interface{}) {
+	if tp._logger != nil {
+		tp._logger.Error(in...)
+	} else {
+		var itfArr []interface{} = make([]interface{}, 0)
+		itfArr = append(itfArr, "[error]")
+		itfArr = append(itfArr, in...)
+		fmt.Println(itfArr...)
+	}
+}
+
+func (tp *threadPool) errorfToOut(format string, in ...interface{}) {
+	if tp._logger != nil {
+		tp._logger.Errorf(format, in...)
+	} else {
+		fmt.Printf(fmt.Sprintf("%s %s", "[error]", format), in...)
+	}
 }
 
 func (tp *threadPool) IsPaused() bool {
@@ -160,6 +225,11 @@ func (tp *threadPool) SetErrorHandler(h ThreadErrorHandler) {
 	tp.errHandler = h
 }
 
+const (
+	WAIT_FOR_TIMEOUT      time.Duration = 10 * time.Second
+	THREAED_UP_GRACE_TIME time.Duration = 3 * time.Second
+)
+
 func (tp *threadPool) WaitFor() error {
 	var err error
 	defer func() {
@@ -167,9 +237,12 @@ func (tp *threadPool) WaitFor() error {
 			err = errors.New(fmt.Sprintf("%v", r))
 		}
 	}()
-	for !tp.IsComplete() {
-		time.Sleep(10 * time.Second)
+	tp.debugfToOut("TheadPool.WaitFor [Before] - Complete: %v\n", tp.IsComplete())
+	for tp.running && !tp.IsComplete() {
+		tp.debugfToOut("TheadPool.WaitFor [During] - Complete: %v\n", tp.IsComplete())
+		time.Sleep(WAIT_FOR_TIMEOUT)
 	}
+	tp.debugfToOut("TheadPool.WaitFor [After] - Complete: %v\n", tp.IsComplete())
 	return err
 }
 
@@ -183,9 +256,10 @@ func (tp *threadPool) IsComplete() bool {
 	}()
 	tp.RLock()
 	for _, r := range tp.threads {
+		tp.debugfToOut("Thread Id: %s, running: %v, complete: %v\n", r.UUID(), r.IsRunning(), r.IsComplete())
 		if r.IsRunning() || !r.IsComplete() {
 			result = false
-			break
+			return result
 		}
 	}
 	return result
@@ -209,6 +283,7 @@ func (tp *threadPool) Reset() error {
 
 func (tp *threadPool) Stop() error {
 	tp.running = false
+	tp._paused = false
 	return nil
 }
 
@@ -223,14 +298,16 @@ func (tp *threadPool) clean() {
 	var isLocked bool = false
 	defer func() {
 		if r := recover(); r != nil {
-			fmt.Printf("worker.ThreadPool Failure cleaning pool -> Details: %v", r)
+			tp.errorfToOut("worker.ThreadPool Failure cleaning pool -> Details: %v", r)
 		}
 		if isLocked {
 			tp.Unlock()
 		}
 	}()
 	for idx, t := range tp.threads {
+		tp.debugfToOut("Checking thread position #%v, running: %v, complete: %v\n", idx, t.IsRunning(), t.IsComplete())
 		if !t.IsRunning() || t.IsComplete() {
+			tp.debugfToOut("Cleaning thread position #%v\n", idx)
 			t.Kill()
 			isLocked = true
 			tp.Lock()
@@ -238,13 +315,21 @@ func (tp *threadPool) clean() {
 				//Removing first item of the list
 				if len(tp.threads) > 1 {
 					tp.threads = tp.threads[1:]
+					tp.Unlock()
+					isLocked = false
+					tp.clean()
+					return
 				} else {
 					tp.threads = make([]Runnable, 0)
 				}
 			} else if idx == len(tp.threads)-1 {
 				//Removing last item of the list
 				if len(tp.threads) > 1 {
-					tp.threads = tp.threads[:len(tp.threads)-1]
+					tp.threads = tp.threads[:len(tp.threads)-2]
+					tp.Unlock()
+					isLocked = false
+					tp.clean()
+					return
 				} else {
 					tp.threads = make([]Runnable, 0)
 				}
@@ -254,19 +339,24 @@ func (tp *threadPool) clean() {
 				upper := tp.threads[idx+1:]
 				tp.threads = lower
 				tp.threads = append(tp.threads, upper...)
+				tp.Unlock()
+				isLocked = false
+				tp.clean()
+				return
 			}
 			tp.Unlock()
 			isLocked = false
+			runtime.GC()
 		}
-		runtime.GC()
 	}
+	tp.debugfToOut("Number of threads : %v\n", len(tp.threads))
 }
 
 func (tp *threadPool) run() {
 	var isLocked bool = false
 	defer func() {
 		if r := recover(); r != nil {
-			fmt.Printf("worker.ThreadPool Failure running pool -> Details: %v", r)
+			tp.errorfToOut("worker.ThreadPool Failure running pool -> Details: %v", r)
 		}
 		if isLocked {
 			tp.Unlock()
@@ -275,7 +365,7 @@ func (tp *threadPool) run() {
 	if tp.parallel {
 		if tp.maxThreads == 0 {
 			//threads all together
-			for !tp.IsComplete() {
+			for tp.running && !tp.IsComplete() {
 				var makedForClean bool = false
 				for _, t := range tp.threads {
 					if !t.IsRunning() {
@@ -296,19 +386,20 @@ func (tp *threadPool) run() {
 									t.Kill()
 								}
 							}()
+							time.Sleep(THREAED_UP_GRACE_TIME)
 						} else {
 							makedForClean = true
 						}
 					}
 				}
 				if makedForClean {
-					go tp.clean()
+					tp.debugfToOut("Make clean: %v ...\n", len(tp.threads))
+					tp.clean()
 				}
-				time.Sleep(5 * time.Second)
 			}
 		} else {
 			//run max thread together and remove completed
-			for !tp.IsComplete() {
+			for tp.running && !tp.IsComplete() {
 				var makedForClean bool = false
 				var numActive int64 = 0
 				for _, t := range tp.threads {
@@ -316,12 +407,23 @@ func (tp *threadPool) run() {
 						if !t.IsRunning() {
 							if !t.IsComplete() {
 								go func() {
+									defer func() {
+										if r := recover(); r != nil {
+											err := errors.New(fmt.Sprintf("%v", r))
+											if err != nil && tp.errHandler != nil {
+												tp.errHandler.HandleError(t.UUID(), err)
+												t.Kill()
+											}
+										}
+									}()
+									tp.debugfToOut("Runnnig process id: %s ...\n", t.UUID())
 									err := t.Run()
 									if err != nil && tp.errHandler != nil {
 										tp.errHandler.HandleError(t.UUID(), err)
 										t.Kill()
 									}
 								}()
+								time.Sleep(THREAED_UP_GRACE_TIME)
 							} else {
 								makedForClean = true
 							}
@@ -331,14 +433,15 @@ func (tp *threadPool) run() {
 					}
 				}
 				if makedForClean {
-					go tp.clean()
+					tp.debugfToOut("Make clean: %v ...\n", len(tp.threads))
+					tp.clean()
 				}
-				time.Sleep(5 * time.Second)
 			}
 
 		}
 	} else {
-		for !tp.IsComplete() {
+		for tp.running && !tp.IsComplete() {
+			var makedForClean bool = false
 			if len(tp.threads) > 0 {
 				if tp.threads[0] == nil {
 					if len(tp.threads) > 1 {
@@ -370,22 +473,22 @@ func (tp *threadPool) run() {
 								t.Kill()
 							}
 						}()
+						time.Sleep(THREAED_UP_GRACE_TIME)
 					} else {
-						if len(tp.threads) > 1 {
-							isLocked = true
-							tp.Lock()
-							tp.threads = tp.threads[1:]
-						} else {
-							tp.threads = make([]Runnable, 0)
-						}
+						tp.debugfToOut("Make clean: %v ...\n", len(tp.threads))
+						makedForClean = true
 					}
 				}
 			} else {
 				tp.running = false
+				tp._paused = false
 			}
-			runtime.GC()
-			time.Sleep(5 * time.Second)
+			if makedForClean {
+				tp.debugfToOut("Make clean: %v ...\n", len(tp.threads))
+				tp.clean()
+			}
 		}
+		tp.clean()
 	}
 }
 
