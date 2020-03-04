@@ -31,7 +31,7 @@ func ConnectHandlerViaConfig(handler ConnectionHandler, host defaults.HostValue,
 			if strings.Index(keyFilePath, ":") < 0 &&
 				strings.Index(keyFilePath, "/") != 0 &&
 				strings.Index(keyFilePath, "\\") != 0 {
-				keyFilePath = depConfig.ConfigDir + string(os.PathSeparator) + keyFilePath
+				keyFilePath = depConfig.WorkDir + string(os.PathSeparator) + keyFilePath
 			}
 			globalError = handler.ConnectWithKeyAndPassphrase(addr, netConfig.UserName, keyFilePath, netConfig.Passphrase)
 		} else if !missKeyFile {
@@ -39,7 +39,7 @@ func ConnectHandlerViaConfig(handler ConnectionHandler, host defaults.HostValue,
 			if strings.Index(keyFilePath, ":") < 0 &&
 				strings.Index(keyFilePath, "/") != 0 &&
 				strings.Index(keyFilePath, "\\") != 0 {
-				keyFilePath = depConfig.ConfigDir + string(os.PathSeparator) + keyFilePath
+				keyFilePath = depConfig.WorkDir + string(os.PathSeparator) + keyFilePath
 			}
 			globalError = handler.ConnectWithKey(addr, netConfig.UserName, keyFilePath)
 		} else {
@@ -61,12 +61,12 @@ func ConnectHandlerViaConfig(handler ConnectionHandler, host defaults.HostValue,
 		if strings.Index(keyFilePath, ":") < 0 &&
 			strings.Index(keyFilePath, "/") != 0 &&
 			strings.Index(keyFilePath, "\\") != 0 {
-			keyFilePath = depConfig.ConfigDir + string(os.PathSeparator) + keyFilePath
+			keyFilePath = depConfig.WorkDir + string(os.PathSeparator) + keyFilePath
 		}
 		if strings.Index(certFilePath, ":") < 0 &&
 			strings.Index(certFilePath, "/") != 0 &&
 			strings.Index(certFilePath, "\\") != 0 {
-			certFilePath = depConfig.ConfigDir + string(os.PathSeparator) + certFilePath
+			certFilePath = depConfig.WorkDir + string(os.PathSeparator) + certFilePath
 		}
 		certificate := common.CertificateKeyPair{
 			Key:  keyFilePath,

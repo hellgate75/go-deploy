@@ -1,4 +1,3 @@
-// sshclient implements an ssh client
 package client
 
 import (
@@ -260,7 +259,7 @@ func (rs *goTcpScript) ExecuteWithOutput() ([]byte, error) {
 	rs.stdout = &out
 	err := rs.execute()
 	if err != nil {
-		err = errors.New("GoTCPScript.ExecuteWithFullOutput: " + err.Error())
+		err = errors.New("GoTCPScript.ExecuteWithOutput: " + err.Error())
 	}
 	return out.Bytes(), err
 }
@@ -274,16 +273,16 @@ func (rs *goTcpScript) ExecuteWithFullOutput() ([]byte, error) {
 	}
 
 	var (
-		stdout bytes.Buffer
-		stderr bytes.Buffer
+		stdout *bytes.Buffer = bytes.NewBuffer([]byte{})
+		stderr *bytes.Buffer = bytes.NewBuffer([]byte{})
 	)
-	rs.stdout = &stdout
-	rs.stderr = &stderr
+	rs.stdout = stdout
+	rs.stderr = stderr
 	err := rs.execute()
 	if err != nil {
 		return stderr.Bytes(), errors.New("GoTCPScript.ExecuteWithFullOutput: " + err.Error())
 	}
-	return stdout.Bytes(), err
+	return stdout.Bytes(), nil
 }
 
 func (rs *goTcpScript) NewCmd(cmd string) generic.CommandsScript {
