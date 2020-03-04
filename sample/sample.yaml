@@ -1,4 +1,5 @@
 name: Deploy sample commands
+group: default
 steps:
 - name: Run shell command and save it in a folder
   shell: 

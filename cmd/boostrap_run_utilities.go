@@ -26,7 +26,7 @@ func loadVarsFiles() ([]defaults.NameValue, error) {
 			return varList, errors.New("bootstrap.loadVarsFiles -> Unable to parser for extension:" + ext)
 		}
 		var varFileFullPath = configDir + io.GetPathSeparator() + varFile
-		Logger.Info("Loading vars file: " + varFileFullPath)
+		Logger.Debug("Loading vars file: " + varFileFullPath)
 		var varsFileObj *defaults.Vars = &defaults.Vars{}
 		var err error
 		if ext == "yml" || ext == "yaml" {
@@ -68,7 +68,7 @@ func loadHostsFiles() ([]defaults.HostGroups, error) {
 			return hostsList, errors.New("bootstrap.loadHostsFiles -> Unable to parser for extension:" + ext)
 		}
 		var hostsFileFullPath = configDir + io.GetPathSeparator() + hostsFile
-		Logger.Info("Loading hosts file: " + hostsFileFullPath)
+		Logger.Debug("Loading hosts file: " + hostsFileFullPath)
 		var hostsFileObj *defaults.HostGroupsConfig = &defaults.HostGroupsConfig{}
 		var err error
 		if ext == "yml" || ext == "yaml" {
@@ -98,7 +98,7 @@ func loadEnvsFile() ([]defaults.NameValue, error) {
 	var envFile = DEPLOY_ENVS_FILE_NAME
 	var ext string = strings.ToLower(string(module.RuntimeDeployConfig.ConfigLang))
 	var envsFileFullPath = configDir + io.GetPathSeparator() + envFile + "." + ext
-	Logger.Info("Loading environment file: " + envsFileFullPath)
+	Logger.Debug("Loading environment file: " + envsFileFullPath)
 	var envsFileObj *defaults.Environments = &defaults.Environments{}
 	var err error
 	if ext == "yml" || ext == "yaml" {

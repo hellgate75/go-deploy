@@ -148,7 +148,10 @@ func (feed *Feed) Save(path string) error {
 }
 
 func (feed Feed) Validate() (*module.FeedExec, []error) {
-	var errors []error = make([]error, 0)
+	var errorList []error = make([]error, 0)
+	if feed.HostGroup == "" {
+		errorList = append(errorList, errors.New("Uanble to validate a feed without hosts 'group'"))
+	}
 	var steps []*module.Step = make([]*module.Step, 0)
 	for _, command := range feed.Steps {
 		var commandMap = map[interface{}]interface{}(command)
@@ -165,14 +168,16 @@ func (feed Feed) Validate() (*module.FeedExec, []error) {
 					steps = append(steps, stepX)
 				}
 				for _, errX := range errorsX {
-					errors = append(errors, errX)
+					errorList = append(errorList, errX)
 				}
 			}
 		}
 	}
 	return &module.FeedExec{
-		Steps: steps,
-	}, errors
+		Name:      feed.Name,
+		HostGroup: feed.HostGroup,
+		Steps:     steps,
+	}, errorList
 }
 
 func EvaluateSteps(name string, key interface{}, value interface{}) ([]*module.Step, []error) {

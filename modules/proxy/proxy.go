@@ -4,8 +4,11 @@ import (
 	"errors"
 	"fmt"
 	mods "github.com/hellgate75/go-deploy-modules/modules"
+	"github.com/hellgate75/go-deploy/log"
 	"github.com/hellgate75/go-deploy/modules/meta"
 )
+
+var Logger log.Logger = nil
 
 type Module interface {
 	GetComponent() (meta.Converter, error)
@@ -29,9 +32,9 @@ type proxy struct {
 }
 
 func (p *proxy) DiscoverModule(name string) (Module, error) {
-	fmt.Println(fmt.Sprintf("module map: %v", p.modules))
+	Logger.Debugf("module map: %v", p.modules)
 	for k, s := range p.modules {
-		fmt.Println(fmt.Sprintf("module map entry: %s", k))
+		Logger.Debugf("module map entry: %s", k)
 		if k == name {
 			return &module{
 				module: k,

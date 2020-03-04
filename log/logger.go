@@ -161,25 +161,25 @@ func (logger *logger) log(level LogLevelValue, in ...interface{}) {
 		var itfs string = " " + string(toVerbosityLevel(level)) + " " + fmt.Sprint(in...) + "\n"
 		switch string(toVerbosityLevel(level)) {
 		case "DEBUG":
-			logger.output(color.LightYellow, 2, itfs)
-			break
-		case "TRACE":
-			logger.output(color.LightYellow, 2, itfs)
-			break
-		case "WARN":
 			logger.output(color.Yellow, 2, itfs)
 			break
+		case "TRACE":
+			logger.output(color.Yellow, 2, itfs)
+			break
+		case "WARN":
+			logger.output(color.LightYellow, 2, itfs)
+			break
 		case "INFO":
-			logger.output(color.White, 2, itfs)
+			logger.output(color.LightWhite, 2, itfs)
 			break
 		case "ERROR":
-			logger.output(color.Red, 2, itfs)
+			logger.output(color.LightRed, 2, itfs)
 			break
 		case "FATAL":
 			logger.output(color.Red, 2, itfs)
 			break
 		default:
-			logger.output(color.Green, 2, itfs)
+			logger.output(color.White, 2, itfs)
 		}
 	}
 }
