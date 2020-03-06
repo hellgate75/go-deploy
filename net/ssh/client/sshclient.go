@@ -555,7 +555,7 @@ func (conn *sshConnection) Connect(network, addr string, config *ssh.ClientConfi
 	return nil
 }
 
-func (conn *sshConnection) ConnectWithCertificate(addr string, port string, certificate common.CertificateKeyPair) error {
+func (conn *sshConnection) ConnectWithCertificate(addr string, port string, certificate common.CertificateKeyPair, caCert string) error {
 	return errors.New("Authentication with PEM client certificte and key not allowed in SSH")
 }
 

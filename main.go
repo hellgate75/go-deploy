@@ -12,6 +12,8 @@ import (
 	"github.com/hellgate75/go-deploy/types/generic"
 	"github.com/hellgate75/go-deploy/types/module"
 	"github.com/hellgate75/go-deploy/utils"
+	"github.com/hellgate75/go-tcp-client/client/worker"
+	clientlog "github.com/hellgate75/go-tcp-client/log"
 	"os"
 	"strconv"
 	"time"
@@ -62,6 +64,7 @@ func main() {
 		config, err := cmd.ParseArguments()
 		if config.LogVerbosity != "" && config.LogVerbosity != string(Logger.GetVerbosity()) {
 			Logger.SetVerbosity(log.VerbosityLevelFromString(config.LogVerbosity))
+			worker.Logger.SetVerbosity(clientlog.VerbosityLevelFromString(config.LogVerbosity))
 			Logger.Infof("Logger Verbosity Setted up to : %v", Logger.GetVerbosity())
 		}
 		if err != nil {
@@ -103,6 +106,7 @@ func main() {
 				dc.ConfigDir = utils.FixFolder(dc.ConfigDir, dc.WorkDir, cmd.DEPLOY_CONFIG_FILE_NAME)
 				if dc.LogVerbosity != "" && dc.LogVerbosity != string(Logger.GetVerbosity()) {
 					Logger.SetVerbosity(log.VerbosityLevelFromString(dc.LogVerbosity))
+					worker.Logger.SetVerbosity(clientlog.VerbosityLevelFromString(dc.LogVerbosity))
 					Logger.Debugf("Logger Verbosity Setted up to : %v", Logger.GetVerbosity())
 				}
 				module.RuntimeDeployConfig = dc

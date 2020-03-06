@@ -124,5 +124,5 @@ type ConnectionHandler interface {
 	Connect(network, addr string, config *ssh.ClientConfig) error
 
 	// Connect: Connect the PEM certificate and client key using given address and port
-	ConnectWithCertificate(addr string, port string, certificate common.CertificateKeyPair) error
+	ConnectWithCertificate(addr string, port string, certificate common.CertificateKeyPair, caCert string) error
 }

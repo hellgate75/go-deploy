@@ -96,6 +96,7 @@ func (dt *DeployType) FromJsonCode(jsonCode string) (*DeployType, error) {
 
 func (npt *NetProtocolType) Merge(npt2 *NetProtocolType) *NetProtocolType {
 	return &NetProtocolType{
+		CaCert:      bestString(npt2.CaCert, npt.CaCert),
 		KeyFile:     bestString(npt2.KeyFile, npt.KeyFile),
 		NetProtocol: NetProtocolTypeValue(bestString(string(npt2.NetProtocol), string(npt.NetProtocol))),
 		Passphrase:  bestString(npt2.Passphrase, npt.Passphrase),
@@ -106,8 +107,8 @@ func (npt *NetProtocolType) Merge(npt2 *NetProtocolType) *NetProtocolType {
 }
 
 func (npt *NetProtocolType) String() string {
-	return fmt.Sprintf("NetProtocolType{NetProtocol: \"%v\", UserName: \"%s\", Password: \"%s\", KeyFile: \"%s\", Passphrase: \"%s\"}",
-		npt.NetProtocol, npt.UserName, npt.Password, npt.KeyFile, npt.Passphrase)
+	return fmt.Sprintf("NetProtocolType{NetProtocol: \"%v\", UserName: \"%s\", Password: \"%s\", KeyFile: \"%s\", CaCert: \"%s\", Passphrase: \"%s\"}",
+		npt.NetProtocol, npt.UserName, npt.Password, npt.KeyFile, npt.CaCert, npt.Passphrase)
 }
 
 func (npt *NetProtocolType) Yaml() (string, error) {
