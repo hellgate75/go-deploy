@@ -7,6 +7,6 @@ steps:
     saveState: list_folder
 - name: Print list_folder variable
   shell:
-    exec: "echo -e '{{ list_folder }}'"
+    exec: "echo {{ list_folder }}"
     withVars:
     - list_folder
