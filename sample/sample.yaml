@@ -1,12 +1,12 @@
 name: Deploy sample commands
 group: default
 steps:
-- name: Run shell command and save it in a folder
+- name: Run shell command and save in os_name variable
   shell: 
     exec: "uname -a"
-    saveState: list_folder
+    saveState: os_name
 - name: Print list_folder variable
   shell:
-    exec: "echo {{ list_folder }}"
+    exec: "echo {{ os_name }}"
     withVars:
-    - list_folder
+    - os_name

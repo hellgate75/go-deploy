@@ -64,9 +64,9 @@ func ExecuteSteps(prefix string, steps []*module.Step,
 							}
 						}
 						if item.UUID != "" && item.Error != nil {
-							logger.Failuref("- ko: Host: %s, Process Id: %s, Error: %s", host.Name, threadX.UUID(), item.Error.Error())
+							logger.Failuref("- [Host: %s, Process Id: %s, status: ko]\n Error: %s", host.Name, threadX.UUID(), item.Error.Error())
 						} else {
-							logger.Successf("- ok: Host: %s, Process Id: %s", host.Name, threadX.UUID())
+							logger.Successf("- [Host: %s, Process Id: %s, status: ok]", host.Name, threadX.UUID())
 						}
 					} else {
 						errList = append(errList, errors.New("Thread Map not present for group: "+selectedHostGroup.Name+" and host: "+host.Name))
@@ -77,7 +77,7 @@ func ExecuteSteps(prefix string, steps []*module.Step,
 				for _, host := range selectedHostGroup.Hosts {
 					sessMapId := fmt.Sprintf("%s-%s", selectedHostGroup.Name, host.Name)
 					if threadX, ok := threadsMap[sessMapId]; ok {
-						logger.Successf("- ok: Host: %s, Process Id: %s", host.Name, threadX.UUID())
+						logger.Successf("- [Host: %s, Process Id: %s, status: ok]", host.Name, threadX.UUID())
 					} else {
 						errList = append(errList, errors.New("Thread Map not present for group: "+selectedHostGroup.Name+" and host: "+host.Name))
 						return errList
