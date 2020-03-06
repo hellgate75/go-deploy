@@ -68,11 +68,18 @@ func ConnectHandlerViaConfig(handler ConnectionHandler, host defaults.HostValue,
 			strings.Index(certFilePath, "\\") != 0 {
 			certFilePath = depConfig.WorkDir + string(os.PathSeparator) + certFilePath
 		}
+		var caCertPath string = netConfig.CaCert
+		if strings.Index(caCertPath, ":") < 0 &&
+			strings.Index(caCertPath, "/") != 0 &&
+			strings.Index(caCertPath, "\\") != 0 {
+			caCertPath = depConfig.WorkDir + string(os.PathSeparator) + caCertPath
+		}
+
 		certificate := common.CertificateKeyPair{
 			Key:  keyFilePath,
 			Cert: certFilePath,
 		}
-		globalError = handler.ConnectWithCertificate(hostRef, host.Port, certificate)
+		globalError = handler.ConnectWithCertificate(hostRef, host.Port, certificate, caCertPath)
 		if globalError != nil {
 			return nil, globalError
 		}

@@ -70,6 +70,7 @@ type NetProtocolType struct {
 	UserName    string               `yaml:"userName,omitempty" json:"userName,omitempty" xml:"username,chardata,omitempty"`
 	Password    string               `yaml:"password,omitempty" json:"password,omitempty" xml:"password,chardata,omitempty"`
 	KeyFile     string               `yaml:"keyFile,omitempty" json:"keyFile,omitempty" xml:"key-file,chardata,omitempty"`
+	CaCert      string               `yaml:"caCert,omitempty" json:"caCert,omitempty" xml:"ca-cert,chardata,omitempty"`
 	Passphrase  string               `yaml:"passphrase,omitempty" json:"passphrase,omitempty" xml:"passphrase,chardata,omitempty"`
 	Certificate string               `yaml:"certificate,omitempty" json:"certificate,omitempty" xml:"certificate,chardata,omitempty"`
 }

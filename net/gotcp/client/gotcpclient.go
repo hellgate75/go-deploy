@@ -654,9 +654,9 @@ func (conn *goTcpConnection) Connect(network, addr string, config *ssh.ClientCon
 	return errors.New("User/rsa key connection not allowed to Go TCP Server")
 }
 
-func (conn *goTcpConnection) ConnectWithCertificate(addr string, port string, certificate common.CertificateKeyPair) error {
+func (conn *goTcpConnection) ConnectWithCertificate(addr string, port string, certificate common.CertificateKeyPair, caCert string) error {
 	conn._client = &goTcpClient{
-		client: worker.NewClient(certificate, addr, port),
+		client: worker.NewClient(certificate, caCert, addr, port),
 	}
 	return nil
 }
