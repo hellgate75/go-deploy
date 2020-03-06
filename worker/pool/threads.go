@@ -134,6 +134,26 @@ func (tp *threadPool) State() string {
 	return out
 }
 
+func (tp *threadPool) traceToOut(in ...interface{}) {
+	if tp._logger != nil {
+		tp._logger.Trace(in)
+	} else {
+		var itfArr []interface{} = make([]interface{}, 0)
+		itfArr = append(itfArr, "[trace]")
+		itfArr = append(itfArr, in...)
+		fmt.Println(itfArr...)
+	}
+}
+
+func (tp *threadPool) tracefToOut(format string, in ...interface{}) {
+	if tp._logger != nil {
+		tp._logger.Tracef(format, in...)
+	} else {
+		fmt.Printf(fmt.Sprintf("%s %s", "[trace]", format), in...)
+	}
+}
+
+
 func (tp *threadPool) debugToOut(in ...interface{}) {
 	if tp._logger != nil {
 		tp._logger.Debug(in)
@@ -237,12 +257,12 @@ func (tp *threadPool) WaitFor() error {
 			err = errors.New(fmt.Sprintf("%v", r))
 		}
 	}()
-	tp.debugfToOut("TheadPool.WaitFor [Before] - Complete: %v\n", tp.IsComplete())
+	tp.tracefToOut("TheadPool.WaitFor [Before] - Complete: %v\n", tp.IsComplete())
 	for tp.running && !tp.IsComplete() {
-		tp.debugfToOut("TheadPool.WaitFor [During] - Complete: %v\n", tp.IsComplete())
+		tp.tracefToOut("TheadPool.WaitFor [During] - Complete: %v\n", tp.IsComplete())
 		time.Sleep(WAIT_FOR_TIMEOUT)
 	}
-	tp.debugfToOut("TheadPool.WaitFor [After] - Complete: %v\n", tp.IsComplete())
+	tp.tracefToOut("TheadPool.WaitFor [After] - Complete: %v\n", tp.IsComplete())
 	return err
 }
 
@@ -256,7 +276,7 @@ func (tp *threadPool) IsComplete() bool {
 	}()
 	tp.RLock()
 	for _, r := range tp.threads {
-		tp.debugfToOut("Thread Id: %s, running: %v, complete: %v\n", r.UUID(), r.IsRunning(), r.IsComplete())
+		tp.tracefToOut("Thread Id: %s, running: %v, complete: %v\n", r.UUID(), r.IsRunning(), r.IsComplete())
 		if r.IsRunning() || !r.IsComplete() {
 			result = false
 			return result
@@ -305,9 +325,9 @@ func (tp *threadPool) clean() {
 		}
 	}()
 	for idx, t := range tp.threads {
-		tp.debugfToOut("Checking thread position #%v, running: %v, complete: %v\n", idx, t.IsRunning(), t.IsComplete())
+		tp.tracefToOut("Checking thread position #%v, running: %v, complete: %v\n", idx, t.IsRunning(), t.IsComplete())
 		if !t.IsRunning() || t.IsComplete() {
-			tp.debugfToOut("Cleaning thread position #%v\n", idx)
+			tp.tracefToOut("Cleaning thread position #%v\n", idx)
 			t.Kill()
 			isLocked = true
 			tp.Lock()
@@ -349,7 +369,7 @@ func (tp *threadPool) clean() {
 			runtime.GC()
 		}
 	}
-	tp.debugfToOut("Number of threads : %v\n", len(tp.threads))
+	tp.tracefToOut("Number of threads : %v\n", len(tp.threads))
 }
 
 func (tp *threadPool) run() {
@@ -393,7 +413,7 @@ func (tp *threadPool) run() {
 					}
 				}
 				if makedForClean {
-					tp.debugfToOut("Make clean: %v ...\n", len(tp.threads))
+					tp.tracefToOut("Make clean: %v ...\n", len(tp.threads))
 					tp.clean()
 				}
 			}
@@ -416,7 +436,7 @@ func (tp *threadPool) run() {
 											}
 										}
 									}()
-									tp.debugfToOut("Runnnig process id: %s ...\n", t.UUID())
+									tp.tracefToOut("Runnnig process id: %s ...\n", t.UUID())
 									err := t.Run()
 									if err != nil && tp.errHandler != nil {
 										tp.errHandler.HandleError(t.UUID(), err)
@@ -433,7 +453,7 @@ func (tp *threadPool) run() {
 					}
 				}
 				if makedForClean {
-					tp.debugfToOut("Make clean: %v ...\n", len(tp.threads))
+					tp.tracefToOut("Make clean: %v ...\n", len(tp.threads))
 					tp.clean()
 				}
 			}
@@ -475,7 +495,7 @@ func (tp *threadPool) run() {
 						}()
 						time.Sleep(THREAED_UP_GRACE_TIME)
 					} else {
-						tp.debugfToOut("Make clean: %v ...\n", len(tp.threads))
+						tp.tracefToOut("Make clean: %v ...\n", len(tp.threads))
 						makedForClean = true
 					}
 				}
@@ -484,7 +504,7 @@ func (tp *threadPool) run() {
 				tp._paused = false
 			}
 			if makedForClean {
-				tp.debugfToOut("Make clean: %v ...\n", len(tp.threads))
+				tp.tracefToOut("Make clean: %v ...\n", len(tp.threads))
 				tp.clean()
 			}
 		}

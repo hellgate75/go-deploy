@@ -3,10 +3,10 @@ group: default
 steps:
 - name: Run shell command and save it in a folder
   shell: 
-    exec: ls -latr
+    exec: "uname -a"
     saveState: list_folder
 - name: Print list_folder variable
   shell:
-    exec: echo -e "{{ list_folder }}"
+    exec: "echo -e '{{ list_folder }}'"
     withVars:
     - list_folder

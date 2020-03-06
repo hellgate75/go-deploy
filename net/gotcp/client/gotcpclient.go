@@ -307,7 +307,7 @@ func (rs *goTcpScript) runCmd(cmd string) error {
 	if err != nil {
 		return err
 	}
-	err = rs.client.ApplyCommand("shell", "false", cmd)
+	err = rs.client.ApplyCommand("shell", "false", cmd, nil, rs.stdout, rs.stderr)
 	if err != nil {
 		return err
 	}
@@ -346,9 +346,9 @@ func (rs *goTcpScript) runCmd(cmd string) error {
 
 		}
 	} else {
-		if rs.stdout != nil {
-			rs.stdout.Write([]byte(resp))
-		}
+//		if rs.stdout != nil {
+//			rs.stdout.Write([]byte(resp))
+//		}
 	}
 	return nil
 }
@@ -379,7 +379,7 @@ func (rs *goTcpScript) runScript() error {
 	if err != nil {
 		return err
 	}
-	err = rs.client.ApplyCommand("shell", "false", string(rs.script.Bytes()))
+	err = rs.client.ApplyCommand("shell", "false", string(rs.script.Bytes()), nil, rs.stdout, rs.stderr)
 	if err != nil {
 		return err
 	}
@@ -402,9 +402,9 @@ func (rs *goTcpScript) runScript() error {
 				return errors.New("GoTCPScript.runScript: Undefined error from server")
 			}
 		} else if resp[0:2] == "ok" {
-			if rs.stdout != nil {
-				rs.stdout.Write([]byte(resp))
-			}
+			//if rs.stdout != nil {
+			//	rs.stdout.Write([]byte(resp))
+			//}
 		} else {
 			if len(resp) > 3 {
 				if rs.stdout != nil {
@@ -418,9 +418,9 @@ func (rs *goTcpScript) runScript() error {
 
 		}
 	} else {
-		if rs.stdout != nil {
-			rs.stdout.Write([]byte(resp))
-		}
+//		if rs.stdout != nil {
+//			rs.stdout.Write([]byte(resp))
+//		}
 	}
 	return nil
 }
@@ -456,9 +456,9 @@ func (rs *goTcpScript) runScriptFile() error {
 				return errors.New("GoTCPScript.runScript: Undefined error from server")
 			}
 		} else if resp[0:2] == "ok" {
-			if rs.stdout != nil {
-				rs.stdout.Write([]byte(resp))
-			}
+			//if rs.stdout != nil {
+			//	rs.stdout.Write([]byte(resp))
+			//}
 		} else {
 			if len(resp) > 3 {
 				if rs.stdout != nil {
@@ -472,9 +472,9 @@ func (rs *goTcpScript) runScriptFile() error {
 
 		}
 	} else {
-		if rs.stdout != nil {
-			rs.stdout.Write([]byte(resp))
-		}
+		//if rs.stdout != nil {
+		//	rs.stdout.Write([]byte(resp))
+		//}
 	}
 	return nil
 }
