@@ -12,3 +12,4 @@ env: dev
 verbosity: INFO
 parallel: true
 maxThreads: 10
+singleSession: true

@@ -35,11 +35,11 @@ func ExecuteFeed(config defaults.ConfigPattern, feed *module.FeedExec, sessionsM
 	logger.Info("Selected Hosts: ")
 	for _, host := range selectedHostGroup.Hosts {
 		//create host client and open connection ...
-		color.Printf("- %s", color.Yellow.Render(host.Name))
+		logger.Infof("- %s", color.Yellow.Render(host.Name))
 		sessMapId := fmt.Sprintf("%s-%s", selectedHostGroup.Name, host.Name)
-		color.Printf(" -> session key: %s", color.Yellow.Render(sessMapId))
+		logger.Debugf("       -> session key: %s", color.Yellow.Render(sessMapId))
 		if session, ok := sessionsMap[sessMapId]; ok {
-			color.Printf(" -> session id: %s\n", color.Yellow.Render(session.GetSessionId()))
+			logger.Debugf("       -> session id: %s", session.GetSessionId())
 			if _, ok := clientsCache[sessMapId]; !ok {
 				itf, err := session.GetSystemObject("connection-handler")
 				var handler generic.ConnectionHandler
@@ -48,7 +48,7 @@ func ExecuteFeed(config defaults.ConfigPattern, feed *module.FeedExec, sessionsM
 					return errList
 				}
 				handler = itf.(generic.ConnectionHandler)
-				logger.Debugf("Handler Is present: %v", (handler != nil))
+				logger.Debugf("       -> Handler Is present: %v", (handler != nil))
 				var client generic.NetworkClient
 				client, err = generic.ConnectHandlerViaConfig(handler, host, config.Net, config.Config)
 				if err != nil {
@@ -57,9 +57,9 @@ func ExecuteFeed(config defaults.ConfigPattern, feed *module.FeedExec, sessionsM
 				}
 				defer client.Close()
 				clientsCache[sessMapId] = client
-				logger.Debugf("Client Is present and connected: %v", (client != nil))
+				logger.Debugf("       -> Client Is present and connected: %v", (client != nil))
 			} else {
-				logger.Debugf("Client already exists for group: %s host: %s", selectedHostGroup.Name, host.Name)
+				logger.Debugf("       -> Client already exists for group: %s host: %s", selectedHostGroup.Name, host.Name)
 			}
 		} else {
 			errList = append(errList, errors.New("Session Map not present for group: "+selectedHostGroup.Name+" and host: "+host.Name))

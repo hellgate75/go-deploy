@@ -45,9 +45,9 @@ func (bootstrap *bootstrap) Run(feed *module.FeedExec, logger log.Logger) []erro
 	var handler generic.ConnectionHandler = nil
 	var isGoTCPClient bool = false
 	if string(module.RuntimeNetworkType.NetProtocol) == string(module.NET_PROTOCOL_SSH) {
-		handler = net.NewSshConnectionHandler()
+		handler = net.NewSshConnectionHandler(module.RuntimeDeployConfig.SingleSession)
 	} else if string(module.RuntimeNetworkType.NetProtocol) == string(module.NET_PROTOCOL_GO_DEPLOY_CLIENT) {
-		handler = net.NewGoTCPConnectionHandler()
+		handler = net.NewGoTCPConnectionHandler(module.RuntimeDeployConfig.SingleSession)
 		isGoTCPClient = true
 	} else {
 		Logger.Error("Unable to determine the Connection Handler for: " + string(module.RuntimeNetworkType.NetProtocol))

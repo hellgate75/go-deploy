@@ -5,6 +5,10 @@ import (
 	"github.com/hellgate75/go-deploy/net/gotcp/client"
 )
 
-func NewGoTCPConnectionHandler() generic.ConnectionHandler {
+func NewGoTCPConnectionHandler(singleSession bool) generic.ConnectionHandler {
+	if singleSession {
+		return client.NewSingleSessionGoTCPConnection()
+
+	}
 	return client.NewGoTCPConnection()
 }

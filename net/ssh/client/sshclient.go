@@ -565,3 +565,10 @@ func NewSSHConnection() generic.ConnectionHandler {
 		_client: nil,
 	}
 }
+
+// NewSSHConnection: Creates a new SSH connection handler
+func NewSingleSessionSSHConnection() generic.ConnectionHandler {
+	return &sshConnection{
+		_client: nil,
+	}
+}

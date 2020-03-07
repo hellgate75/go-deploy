@@ -89,6 +89,7 @@ type DeployConfig struct {
 	EnvSelector        string              `yaml:"env,omitempty" json:"env,omitempty" xml:"env,chardata,omitempty"`
 	ParallelExecutions bool                `yaml:"parallel,omitempty" json:"parallel,omitempty" xml:"parallel,chardata,omitempty"`
 	MaxThreads         int64               `yaml:"maxThreads,omitempty" json:"maxThreads,omitempty" xml:"max-threads,chardata,omitempty"`
+	SingleSession      bool                `yaml:"singleSession,omitempty" json:"singleSession,omitempty" xml:"single-session,chardata,omitempty"`
 }
 
 /*

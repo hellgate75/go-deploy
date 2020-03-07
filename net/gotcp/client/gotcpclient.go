@@ -31,6 +31,7 @@ type goTcpTranfer struct {
 	client common.TCPClient
 	stdout io.Writer
 	stderr io.Writer
+	_singleSession bool
 }
 
 func (ts *goTcpTranfer) SetStdio(stdout, stderr io.Writer) generic.FileTransfer {
@@ -44,7 +45,7 @@ func (ts *goTcpTranfer) MkDir(path string) error {
 }
 
 func (ts *goTcpTranfer) MkDirAs(path string, mode os.FileMode) error {
-	err := mkDir(path, ts.client, mode, ts.stdout, ts.stderr)
+	err := mkDir(ts._singleSession, path, ts.client, mode, ts.stdout, ts.stderr)
 	return err
 }
 
@@ -60,7 +61,7 @@ func (ts *goTcpTranfer) TransferFileAs(path string, remotePath string, mode os.F
 	if stat.IsDir() {
 		return ts.TransferFolderAs(path, remotePath, mode)
 	}
-	err := copyFile(path, remotePath, ts.client, mode, ts.stdout, ts.stderr)
+	err := copyFile(ts._singleSession, path, remotePath, ts.client, mode, ts.stdout, ts.stderr)
 	if err != nil {
 		return err
 	}
@@ -79,20 +80,20 @@ func (ts *goTcpTranfer) TransferFolderAs(path string, remotePath string, mode os
 	if !stat.IsDir() {
 		return ts.TransferFileAs(path, remotePath, mode)
 	}
-	err := executeFunc(path, remotePath, ts.client, mode, ts.stdout, ts.stderr)
+	err := executeFunc(ts._singleSession, path, remotePath, ts.client, mode, ts.stdout, ts.stderr)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func executeFunc(path string, remotePath string, client common.TCPClient, mode os.FileMode, stdout io.Writer, stderr io.Writer) error {
+func executeFunc(singleSession bool,path string, remotePath string, client common.TCPClient, mode os.FileMode, stdout io.Writer, stderr io.Writer) error {
 	stat, errS := os.Stat(path)
 	if errS != nil {
 		return errS
 	}
 	if stat.IsDir() {
-		mkDir(remotePath, client, mode, stdout, stderr)
+		mkDir(singleSession, remotePath, client, mode, stdout, stderr)
 		files, err := ioutil.ReadDir(path)
 		if err != nil {
 			return err
@@ -100,13 +101,13 @@ func executeFunc(path string, remotePath string, client common.TCPClient, mode o
 		for _, f := range files {
 			var fName = path + depio.GetPathSeparator() + f.Name()
 			var fRemoteName = remotePath + "/" + f.Name()
-			err := executeFunc(fName, fRemoteName, client, f.Mode(), stdout, stderr)
+			err := executeFunc(singleSession, fName, fRemoteName, client, f.Mode(), stdout, stderr)
 			if err != nil {
 				return err
 			}
 		}
 	} else {
-		err := copyFile(path, remotePath, client, mode, stdout, stderr)
+		err := copyFile(singleSession, path, remotePath, client, mode, stdout, stderr)
 		if err != nil {
 			return err
 		}
@@ -114,16 +115,18 @@ func executeFunc(path string, remotePath string, client common.TCPClient, mode o
 	return nil
 }
 
-func mkDir(remotePath string, client common.TCPClient, mode os.FileMode, stdout io.Writer, stderr io.Writer) error {
-	defer func() {
-		client.SendText("exit")
-		client.Close()
-	}()
-	err := client.Open(false)
-	if err != nil {
-		return err
+func mkDir(singleSession bool, remotePath string, client common.TCPClient, mode os.FileMode, stdout io.Writer, stderr io.Writer) error {
+	if ! singleSession {
+		defer func() {
+			client.SendText("exit")
+			client.Close()
+		}()
+		err := client.Open(false)
+		if err != nil {
+			return err
+		}
 	}
-	err = client.ApplyCommand("transfer-file", "folder", remotePath, mode.String())
+	err := client.ApplyCommand("transfer-file", "folder", remotePath, mode.String())
 	if err != nil {
 		return err
 	}
@@ -169,16 +172,19 @@ func mkDir(remotePath string, client common.TCPClient, mode os.FileMode, stdout 
 	return nil
 }
 
-func copyFile(localPath string, remotePath string, client common.TCPClient, mode os.FileMode, stdout io.Writer, stderr io.Writer) error {
-	defer func() {
-		client.SendText("exit")
-		client.Close()
-	}()
-	err := client.Open(false)
-	if err != nil {
-		return err
+func copyFile(singleSession bool, localPath string, remotePath string, client common.TCPClient, mode os.FileMode, stdout io.Writer, stderr io.Writer) error {
+	if ! singleSession {
+		defer func() {
+			client.SendText("exit")
+			client.Close()
+		}()
+		err := client.Open(false)
+		if err != nil {
+			return err
+		}
+
 	}
-	err = client.ApplyCommand("transfer-file", localPath, remotePath, mode.String())
+	err := client.ApplyCommand("transfer-file", localPath, remotePath, mode.String())
 	if err != nil {
 		return err
 	}
@@ -230,6 +236,7 @@ type goTcpScript struct {
 	script     *bytes.Buffer
 	scriptFile string
 	err        error
+	_singleSession bool
 
 	stdout io.Writer
 	stderr io.Writer
@@ -300,14 +307,16 @@ func (rs *goTcpScript) SetStdio(stdout, stderr io.Writer) generic.CommandsScript
 }
 
 func (rs *goTcpScript) runCmd(cmd string) error {
-	defer func() {
-		rs.client.Close()
-	}()
-	err := rs.client.Open(false)
-	if err != nil {
-		return err
+	if ! rs._singleSession {
+		defer func() {
+			rs.client.Close()
+		}()
+		err := rs.client.Open(false)
+		if err != nil {
+			return err
+		}
 	}
-	err = rs.client.ApplyCommand("shell", "false", cmd, nil, rs.stdout, rs.stderr)
+	err := rs.client.ApplyCommand("shell", "false", cmd, nil, rs.stdout, rs.stderr)
 	if err != nil {
 		return err
 	}
@@ -372,14 +381,16 @@ func (rs *goTcpScript) runCmds() error {
 }
 
 func (rs *goTcpScript) runScript() error {
-	defer func() {
-		rs.client.Close()
-	}()
-	err := rs.client.Open(false)
-	if err != nil {
-		return err
+	if ! rs._singleSession {
+		defer func() {
+			rs.client.Close()
+		}()
+		err := rs.client.Open(false)
+		if err != nil {
+			return err
+		}
 	}
-	err = rs.client.ApplyCommand("shell", "false", string(rs.script.Bytes()), nil, rs.stdout, rs.stderr)
+	err := rs.client.ApplyCommand("shell", "false", string(rs.script.Bytes()), nil, rs.stdout, rs.stderr)
 	if err != nil {
 		return err
 	}
@@ -426,14 +437,16 @@ func (rs *goTcpScript) runScript() error {
 }
 
 func (rs *goTcpScript) runScriptFile() error {
-	defer func() {
-		rs.client.Close()
-	}()
-	err := rs.client.Open(false)
-	if err != nil {
-		return err
+	if ! rs._singleSession {
+		defer func() {
+			rs.client.Close()
+		}()
+		err := rs.client.Open(false)
+		if err != nil {
+			return err
+		}
 	}
-	err = rs.client.ApplyCommand("shell", "false", rs.scriptFile)
+	err := rs.client.ApplyCommand("shell", "false", rs.scriptFile)
 	if err != nil {
 		return err
 	}
@@ -483,6 +496,7 @@ type goTcpShell struct {
 	client         common.TCPClient
 	requestPty     bool
 	terminalConfig *generic.TerminalConfig
+	_singleSession bool
 
 	stdin  io.Reader
 	stdout io.Writer
@@ -500,7 +514,9 @@ func (rs *goTcpShell) Close() error {
 	if rs.stdin == nil || rs.stdout == nil || rs.stderr == nil {
 		return errors.New("GoTcpShell:Close() -> Shell not open for miss of stdout, stderr, stdin")
 	}
-	rs.stdout.Write([]byte("exit\n"))
+	if ! rs._singleSession {
+		rs.client.Close()
+	}
 
 	return nil
 }
@@ -508,6 +524,9 @@ func (rs *goTcpShell) Close() error {
 func (rs *goTcpShell) Start() error {
 	if rs.stdin == nil || rs.stdout == nil || rs.stderr == nil {
 		return errors.New("GoTcpShell:Start() -> Please provide stdout, stderr, stdin for the shell execution")
+	}
+	if ! rs._singleSession {
+		rs.client.Open(false)
 	}
 	err := rs.client.ApplyCommand("shell", "true", "", rs.stdin, rs.stdout, rs.stderr)
 	if err != nil {
@@ -518,12 +537,21 @@ func (rs *goTcpShell) Start() error {
 
 type goTcpClient struct {
 	client common.TCPClient
+	_singleSession bool
 }
 
 func (conn *goTcpClient) Clone() generic.NetworkClient {
 	if conn.client != nil {
-		return &goTcpClient{
-			client: conn.client.Clone(),
+		if conn._singleSession {
+			return &goTcpClient{
+				client: conn.client,
+				_singleSession: conn._singleSession,
+			}
+		} else {
+			return &goTcpClient{
+				client: conn.client.Clone(),
+				_singleSession: conn._singleSession,
+			}
 		}
 	} else {
 		return &goTcpClient{
@@ -544,10 +572,19 @@ func (c *goTcpClient) Terminal(config *generic.TerminalConfig) generic.RemoteShe
 	if c.client == nil {
 		return nil
 	}
+	if c._singleSession {
+		return &goTcpShell{
+			client:         c.client,
+			terminalConfig: config,
+			requestPty:     true,
+			_singleSession: c._singleSession,
+		}
+	}
 	return &goTcpShell{
 		client:         c.client.Clone(),
 		terminalConfig: config,
 		requestPty:     true,
+		_singleSession: c._singleSession,
 	}
 }
 
@@ -555,10 +592,19 @@ func (c *goTcpClient) NewCmd(cmd string) generic.CommandsScript {
 	if c.client == nil {
 		return nil
 	}
+	if c._singleSession {
+		return &goTcpScript{
+			_type:  cmdLine,
+			client: c.client,
+			script: bytes.NewBufferString(cmd + "\n"),
+			_singleSession: c._singleSession,
+		}
+	}
 	return &goTcpScript{
 		_type:  cmdLine,
 		client: c.client.Clone(),
 		script: bytes.NewBufferString(cmd + "\n"),
+		_singleSession: c._singleSession,
 	}
 }
 
@@ -566,10 +612,19 @@ func (c *goTcpClient) Script(script string) generic.CommandsScript {
 	if c.client == nil {
 		return nil
 	}
+	if c._singleSession {
+		return &goTcpScript{
+			_type:  rawScript,
+			client: c.client,
+			script: bytes.NewBufferString(script + "\n"),
+			_singleSession: c._singleSession,
+		}
+	}
 	return &goTcpScript{
 		_type:  rawScript,
 		client: c.client.Clone(),
 		script: bytes.NewBufferString(script + "\n"),
+		_singleSession: c._singleSession,
 	}
 }
 
@@ -577,10 +632,19 @@ func (c *goTcpClient) ScriptFile(fname string) generic.CommandsScript {
 	if c.client == nil {
 		return nil
 	}
+	if c._singleSession {
+		return &goTcpScript{
+			_type:      scriptFile,
+			client:     c.client,
+			scriptFile: fname,
+			_singleSession: c._singleSession,
+		}
+	}
 	return &goTcpScript{
 		_type:      scriptFile,
 		client:     c.client.Clone(),
 		scriptFile: fname,
+		_singleSession: c._singleSession,
 	}
 }
 
@@ -588,8 +652,15 @@ func (c *goTcpClient) FileTranfer() generic.FileTransfer {
 	if c.client == nil {
 		return nil
 	}
+	if c._singleSession {
+		return &goTcpTranfer{
+			client: c.client,
+			_singleSession: c._singleSession,
+		}
+	}
 	return &goTcpTranfer{
 		client: c.client.Clone(),
+		_singleSession: c._singleSession,
 	}
 }
 
@@ -597,14 +668,23 @@ func (c *goTcpClient) Shell() generic.RemoteShell {
 	if c.client == nil {
 		return nil
 	}
+	if c._singleSession {
+		return &goTcpShell{
+			client:     c.client,
+			requestPty: false,
+			_singleSession: c._singleSession,
+		}
+	}
 	return &goTcpShell{
 		client:     c.client.Clone(),
 		requestPty: false,
+		_singleSession: c._singleSession,
 	}
 }
 
 type goTcpConnection struct {
 	_client generic.NetworkClient
+	_singleSession bool
 }
 
 func (conn *goTcpConnection) GetClient() generic.NetworkClient {
@@ -619,10 +699,12 @@ func (conn *goTcpConnection) Clone() generic.ConnectionHandler {
 	if conn._client != nil {
 		return &goTcpConnection{
 			_client: conn._client.Clone(),
+			_singleSession: conn._singleSession,
 		}
 	} else {
 		return &goTcpConnection{
 			_client: nil,
+			_singleSession: conn._singleSession,
 		}
 	}
 }
@@ -655,8 +737,13 @@ func (conn *goTcpConnection) Connect(network, addr string, config *ssh.ClientCon
 }
 
 func (conn *goTcpConnection) ConnectWithCertificate(addr string, port string, certificate common.CertificateKeyPair, caCert string) error {
+	client := worker.NewClient(certificate, caCert, addr, port)
+	if conn._singleSession {
+		client.Open(false)
+	}
 	conn._client = &goTcpClient{
-		client: worker.NewClient(certificate, caCert, addr, port),
+		client: client,
+		_singleSession: conn._singleSession,
 	}
 	return nil
 }
@@ -665,5 +752,14 @@ func (conn *goTcpConnection) ConnectWithCertificate(addr string, port string, ce
 func NewGoTCPConnection() generic.ConnectionHandler {
 	return &goTcpConnection{
 		_client: nil,
+		_singleSession: false,
+	}
+}
+
+// NewSSHConnection: Creates a new SSH connection handler
+func NewSingleSessionGoTCPConnection() generic.ConnectionHandler {
+	return &goTcpConnection{
+		_client: nil,
+		_singleSession: true,
 	}
 }

@@ -6,10 +6,10 @@ import (
 	"github.com/hellgate75/go-deploy/net/ssh"
 )
 
-func NewSshConnectionHandler() generic.ConnectionHandler {
-	return ssh.NewSshConnectionHandler()
+func NewSshConnectionHandler(singleSession bool) generic.ConnectionHandler {
+	return ssh.NewSshConnectionHandler(singleSession)
 }
 
-func NewGoTCPConnectionHandler() generic.ConnectionHandler {
-	return gotcp.NewGoTCPConnectionHandler()
+func NewGoTCPConnectionHandler(singleSession bool) generic.ConnectionHandler {
+	return gotcp.NewGoTCPConnectionHandler(singleSession)
 }
