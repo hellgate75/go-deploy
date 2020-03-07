@@ -90,6 +90,7 @@ type DeployConfig struct {
 	ParallelExecutions bool                `yaml:"parallel,omitempty" json:"parallel,omitempty" xml:"parallel,chardata,omitempty"`
 	MaxThreads         int64               `yaml:"maxThreads,omitempty" json:"maxThreads,omitempty" xml:"max-threads,chardata,omitempty"`
 	SingleSession      bool                `yaml:"singleSession,omitempty" json:"singleSession,omitempty" xml:"single-session,chardata,omitempty"`
+	ReadTimeout      int64                `yaml:"readTimeout,omitempty" json:"readTimeout,omitempty" xml:"read-timeout,chardata,omitempty"`
 }
 
 /*

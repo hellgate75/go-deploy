@@ -193,14 +193,15 @@ func (dc *DeployConfig) Merge(dc2 *DeployConfig) *DeployConfig {
 		ParallelExecutions: dc2.ParallelExecutions || dc.ParallelExecutions,
 		MaxThreads:         maxInt64(dc2.MaxThreads, dc.MaxThreads),
 		SingleSession:		dc2.SingleSession || dc.SingleSession,
+		ReadTimeout:        maxInt64(dc2.ReadTimeout, dc.ReadTimeout),
 		UseHosts:           useHosts,
 		UseVars:            useVars,
 	}
 }
 
 func (dc *DeployConfig) String() string {
-	return fmt.Sprintf("DeployConfig{DeployName: \"%s\", UseHosts: %v, UseVars: %v, WorkDir: \"%s\", ConfigDir: \"%s\", ChartsDir: \"%s\", SystemDir: \"%s\", ModulesDir: \"%s\", ConfigLang: \"%v\", LogVerbosity: \"%v\", EnvSelector: \"%s\", SingleSession: %v, ParallelExecutions: %v, MaxThreads: %v}",
-		dc.DeployName, dc.UseHosts, dc.UseVars, dc.WorkDir, dc.ConfigDir, dc.ChartsDir, dc.SystemDir, dc.ModulesDir, dc.ConfigLang, dc.LogVerbosity, dc.EnvSelector, dc.SingleSession, dc.ParallelExecutions, dc.MaxThreads)
+	return fmt.Sprintf("DeployConfig{DeployName: \"%s\", UseHosts: %v, UseVars: %v, WorkDir: \"%s\", ConfigDir: \"%s\", ChartsDir: \"%s\", SystemDir: \"%s\", ModulesDir: \"%s\", ConfigLang: \"%v\", LogVerbosity: \"%v\", EnvSelector: \"%s\", SingleSession: %v, ParallelExecutions: %v, MaxThreads: %vm ReadTimeout: %v}",
+		dc.DeployName, dc.UseHosts, dc.UseVars, dc.WorkDir, dc.ConfigDir, dc.ChartsDir, dc.SystemDir, dc.ModulesDir, dc.ConfigLang, dc.LogVerbosity, dc.EnvSelector, dc.SingleSession, dc.ParallelExecutions, dc.MaxThreads, dc.ReadTimeout)
 }
 
 func (dc *DeployConfig) Yaml() (string, error) {

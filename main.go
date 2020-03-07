@@ -14,6 +14,7 @@ import (
 	"github.com/hellgate75/go-deploy/utils"
 	"github.com/hellgate75/go-tcp-client/client/worker"
 	clientlog "github.com/hellgate75/go-tcp-client/log"
+	clicommon "github.com/hellgate75/go-tcp-client/common"
 	"os"
 	"strconv"
 	"time"
@@ -110,6 +111,7 @@ func main() {
 					Logger.Debugf("Logger Verbosity Setted up to : %v", Logger.GetVerbosity())
 				}
 				module.RuntimeDeployConfig = dc
+				clicommon.DEFAULT_TIMEOUT=time.Duration(dc.ReadTimeout) * time.Second
 				errB = boostrap.Load(dc.ConfigDir, dc.EnvSelector, dc.ConfigLang, Logger)
 				Logger.Debugf("Errors during config load: %v", len(errB))
 				if len(errB) > 0 {

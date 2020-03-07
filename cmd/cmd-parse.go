@@ -23,6 +23,7 @@ var (
 	useVars   string = ""
 	format    string = "YAML"
 	env       string = ""
+	readTimeout int64 = 0
 	fs        *flag.FlagSet
 )
 
@@ -53,6 +54,7 @@ func init() {
 	fs.StringVar(&useHosts, "hosts", "", "Required Hosts files (comma separated file path list)")
 	fs.StringVar(&useVars, "vars", "", "Required Vars files (comma separated file path list)")
 	fs.StringVar(&format, "language", "YAML", "Config File Language (YAML, XML or JSON)")
+	fs.Int64Var(&readTimeout, "readTimeout", 5, "TCP Client Message Read timeout in seconds, used to keep listening for answer from clients")
 	fs.StringVar(&env, "env", "", "configuration file env suffix (no default)")
 }
 
@@ -97,5 +99,6 @@ func ParseArguments() (*module.DeployConfig, error) {
 		UseVars:      strings.Split(useVars, ","),
 		ConfigLang:   module.DescriptorTypeValue(format),
 		EnvSelector:  env,
+		ReadTimeout: readTimeout,
 	}, nil
 }
