@@ -8,7 +8,7 @@ import (
 	"github.com/hellgate75/go-deploy/types/defaults"
 	"github.com/hellgate75/go-deploy/types/module"
 	"github.com/hellgate75/go-deploy/types/threads"
-	"github.com/hellgate75/go-deploy/worker/pool"
+	"github.com/hellgate75/go-tcp-common/pool"
 )
 
 var clientsCache map[string]generic.NetworkClient = make(map[string]generic.NetworkClient)
