@@ -3,7 +3,7 @@ package worker
 import (
 	"errors"
 	"fmt"
-	"github.com/hellgate75/go-deploy/log"
+	"github.com/hellgate75/go-tcp-common/log"
 	"github.com/hellgate75/go-deploy/net/generic"
 	"github.com/hellgate75/go-deploy/types/defaults"
 	"github.com/hellgate75/go-deploy/types/module"

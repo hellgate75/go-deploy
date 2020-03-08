@@ -3,7 +3,7 @@ package pool
 import (
 	"errors"
 	"fmt"
-	"github.com/hellgate75/go-deploy/log"
+	"github.com/hellgate75/go-tcp-common/log"
 	"runtime"
 	"sync"
 	"time"

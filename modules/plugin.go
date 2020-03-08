@@ -3,7 +3,7 @@ package modules
 import (
 	"errors"
 	"fmt"
-	"github.com/hellgate75/go-deploy/log"
+	"github.com/hellgate75/go-tcp-common/log"
 	"github.com/hellgate75/go-deploy/modules/meta"
 	"github.com/hellgate75/go-deploy/modules/proxy"
 )

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
-	"github.com/hellgate75/go-deploy/log"
+	"github.com/hellgate75/go-tcp-common/log"
 	"math/rand"
 	"runtime"
 	"strconv"
