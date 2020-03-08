@@ -40,6 +40,7 @@ func init() {
 	Logger.Println("Author: ", color.LightYellow.Render(cmd.Authors))
 	Logger.Println(cmd.Disclaimer + "\n")
 	Logger.Trace("Init ...")
+	worker.Logger.AffiliateTo(Logger)
 }
 
 func main() {
@@ -65,7 +66,7 @@ func main() {
 		config, err := cmd.ParseArguments()
 		if config.LogVerbosity != "" && config.LogVerbosity != string(Logger.GetVerbosity()) {
 			Logger.SetVerbosity(log.VerbosityLevelFromString(config.LogVerbosity))
-			worker.Logger.SetVerbosity(clientlog.VerbosityLevelFromString(config.LogVerbosity))
+			//worker.Logger.SetVerbosity(clientlog.VerbosityLevelFromString(config.LogVerbosity))
 			Logger.Infof("Logger Verbosity Setted up to : %v", Logger.GetVerbosity())
 		}
 		if err != nil {
