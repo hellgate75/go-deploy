@@ -20,7 +20,7 @@ import (
 	"time"
 )
 
-var Logger log.Logger = log.NewLogger(log.INFO)
+var Logger log.Logger = log.NewLogger("go-deploy", log.INFO)
 
 func init() {
 	defer func() {

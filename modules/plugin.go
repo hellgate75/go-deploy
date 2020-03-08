@@ -24,16 +24,12 @@ type SeekRequest struct {
 var proxyVia proxy.Proxy = proxy.NewProxy()
 
 func seek(module string) (meta.Converter, error) {
-	var acceptance chan bool = make(chan bool)
-	var featureAcceptance chan bool = make(chan bool)
-	var response chan interface{} = make(chan interface{})
+	var errGlobal error = nil
 	defer func() {
 		if r := recover(); r != nil {
 			Logger.Errorf("modules.seek -> Error: %v", r)
+			errGlobal = errors.New(fmt.Sprintf("%v", r))
 		}
-		close(acceptance)
-		close(featureAcceptance)
-		close(response)
 	}()
 	var mod proxy.Module
 	var err error
@@ -48,60 +44,11 @@ func seek(module string) (meta.Converter, error) {
 	if err != nil {
 		return nil, err
 	}
-	return itf, nil
-	//	seekModule(module, symbol, acceptance, featureAcceptance, response)
-	//	Logger.Warn("After Call ...")
-	//	var accepted bool = false
-	//	select {
-	//	case res := <-acceptance:
-	//		Logger.Warn(fmt.Sprintf("Acceptance response received: %s", strconv.FormatBool(res)))
-	//		if res {
-	//			accepted = true
-	//		}
-	//	case <-time.After(time.Duration(moduleAcceptanceTimeoutInSeconds) * time.Second):
-	//		Logger.Warn("Call to modules' acceptance timed out ...")
-	//	}
-	//	var featureAccepted bool = false
-	//	if accepted {
-	//		select {
-	//		case res := <-featureAcceptance:
-	//			Logger.Warn(fmt.Sprintf("Feature Acceptance response received: %s", strconv.FormatBool(res)))
-	//			if res {
-	//				featureAccepted = true
-	//			}
-	//		case <-time.After(time.Duration(moduleAcceptanceTimeoutInSeconds) * time.Second):
-	//			Logger.Warn("Call to modules feature acceptance timed out ...")
-	//		}
-	//	}
-	//	var outcome interface{}
-	//	if featureAccepted {
-	//		select {
-	//		case res := <-response:
-	//			Logger.Warn(fmt.Sprintf("Module Component response received: %v", res))
-	//			outcome = res
-	//		case <-time.After(time.Duration(moduleAcceptanceTimeoutInSeconds) * time.Second):
-	//			Logger.Warn("Call to modules feature acceptance timed out ...")
-	//		}
-	//	}
-	//	Logger.Warn(fmt.Sprintf("Found module library component: ", outcome))
-	//	//	component, errL := plugin.Lookup(symbol)
-	//	//	if errL != nil {
-	//	//		return nil, errors.New(fmt.Sprintf("Errors looking up for \"%s\" in plugin module : \"%s\". Details: %s", symbol, module, errL.Error()))
-	//	//	}
-	//	var err error = nil
-	//	if outcome == nil {
-	//		err = errors.New(fmt.Sprintf("Unable to find component %s in module %s", symbol, module))
-	//	}
-	//	return outcome, err
+	itf.SetLogger(Logger)
+	return itf, errGlobal
 }
 
 func LoadConverterForModule(module string) (meta.Converter, error) {
-	//	var path string = io.GetCurrentFolder() + io.GetPathSeparator() + ModulesFolder + io.GetPathSeparator() + module + io.GetPathSeparator() + module + utils.GetShareLibExt()
-	//	var exists bool = io.ExistsFile(path)
-	//	Logger.Warn(fmt.Sprintf("modules.LoadConverterForModule -> Current Path: %s, exists: %s", path, strconv.FormatBool(exists)))
-	//	if !exists {
-	//		return nil, errors.New(fmt.Sprintf("plugin.LoadConverterForModule -> File %s doesn't exist", path))
-	//	}
 	converter, err := seek(module)
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("Errors fetching plugin module : \"%s\". Details: %s", module, err.Error()))

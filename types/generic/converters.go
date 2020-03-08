@@ -5,6 +5,7 @@ import (
 	"github.com/hellgate75/go-deploy/modules"
 	"github.com/hellgate75/go-deploy/modules/meta"
 	"github.com/hellgate75/go-deploy/types/threads"
+	"github.com/hellgate75/go-tcp-common/log"
 )
 
 /*
@@ -12,6 +13,9 @@ import (
  */
 type NilCommandConverter struct {
 	CmdType string
+}
+
+func (nilCommand *NilCommandConverter) SetLogger(l log.Logger) {
 }
 
 func (nilCommand *NilCommandConverter) Convert(cmdValues interface{}) (threads.StepRunnable, error) {

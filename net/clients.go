@@ -6,6 +6,8 @@ import (
 	"github.com/hellgate75/go-deploy/net/ssh"
 )
 
+type NewCoonectionHandlerFunc func(bool)(generic.ConnectionHandler)
+
 func NewSshConnectionHandler(singleSession bool) generic.ConnectionHandler {
 	return ssh.NewSshConnectionHandler(singleSession)
 }
