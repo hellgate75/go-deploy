@@ -43,11 +43,12 @@ func seek(module string) (meta.Converter, error) {
 	}
 	var itf meta.Converter
 	itf, err = mod.GetComponent()
-	Logger.Debugf("Module Component: %v", itf)
+	Logger.Debugf("Module (%s) Component: %v", module, itf)
 	if err != nil {
 		return nil, err
 	}
 	itf.SetLogger(Logger)
+	Logger.Debugf("Module (%s) Logger: %v", module, (Logger != nil))
 	return itf, errGlobal
 }
 

@@ -42,15 +42,21 @@ type proxy struct {
 
 func (p *proxy) DiscoverModule(name string) (Module, error) {
 	Logger.Debugf("module map: %v", p.modules)
-	for k, s := range p.modules {
-		Logger.Debugf("module map entry: %s", k)
-		if k == name {
-			return &module{
-				module: k,
-				stub:   s,
-			}, nil
-		}
+	if stub, ok := p.modules[name]; ok {
+		return &module{
+			module: name,
+			stub:   stub,
+		}, nil
 	}
+	//for k, s := range p.modules {
+	//	Logger.Debugf("module map entry: %s", k)
+	//	if k == name {
+	//		return &module{
+	//			module: k,
+	//			stub:   s,
+	//		}, nil
+	//	}
+	//}
 	return nil, errors.New(fmt.Sprintf("Unable to discover module: %s", name))
 }
 
@@ -131,9 +137,6 @@ var modulesMap map[string]meta.ProxyStub =nil
 func NewProxy() Proxy {
 	if modulesMap == nil {
 		modulesMap = getModules()
-		for key,value := range modulesMap {
-			Logger.Debugf("map -> %s = %v", key, value )
-		}
 	}
 	return &proxy{
 		modules: modulesMap,
