@@ -93,11 +93,11 @@ Accordingly to policies we identified following modes for the system:
 * Reading from a Stream (JMS, IoT, Database flows, etc...) - FUTURE
 
 
-## Official produict documentation
+## Official product documentation
 
 Official produict documentation is available at:
 
-* It's available a product [Wiki](https://github.com/hellgate75/go-deploy/wiki), tjat contains a lot of important information about haw to install and how to use tha product.
+* The product [Wiki](https://github.com/hellgate75/go-deploy/wiki) pages, that contain a lot of important information about haw to install and how to use this product.
 
 
 
