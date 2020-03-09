@@ -9,8 +9,95 @@ import (
 var RuntimeDeployConfig *DeployConfig = nil
 var RuntimeDeployType *DeployType = nil
 var RuntimeNetworkType *NetProtocolType = nil
+var RuntimePluginsType *PluginsConfig = nil
 
 var ChartsDescriptorFormat DescriptorTypeValue = DescriptorTypeValue("YAML")
+
+func (pc *PluginsConfig) Merge(pc2 *PluginsConfig) *PluginsConfig {
+	return &PluginsConfig{
+		EnableDeployClientCommandsPlugin: pc.EnableDeployClientCommandsPlugin || pc2.EnableDeployClientCommandsPlugin,
+		DeployClientCommandsPluginExtension: bestString(pc2.DeployClientCommandsPluginExtension, pc.DeployClientCommandsPluginExtension),
+		DeployClientCommandsPluginFolder: bestString(pc2.DeployClientCommandsPluginFolder, pc.DeployClientCommandsPluginFolder),
+		EnableDeployClientsPlugin: pc.EnableDeployClientsPlugin || pc2.EnableDeployClientsPlugin,
+		DeployClientsPluginExtension: bestString(pc2.DeployClientsPluginExtension, pc.DeployClientsPluginExtension),
+		DeployClientsPluginFolder: bestString(pc2.DeployClientsPluginFolder, pc.DeployClientsPluginFolder),
+		EnableDeployCommandsPlugin: pc.EnableDeployCommandsPlugin || pc2.EnableDeployCommandsPlugin,
+		DeployCommandsPluginExtension: bestString(pc2.DeployCommandsPluginExtension, pc.DeployCommandsPluginExtension),
+		DeployCommandsPluginFolder: bestString(pc2.DeployCommandsPluginFolder, pc.DeployCommandsPluginFolder),
+	}
+}
+
+func (pc *PluginsConfig) String() string {
+	return fmt.Sprintf("PluginsConfig{EnableDeployClientCommandsPlugin: %v, DeployClientCommandsPluginExtension \"%s\", DeployClientCommandsPluginFolder: \"%s\", EnableDeployClientsPlugin: %v, DeployClientsPluginExtension: \"%s\", DeployClientsPluginFolder: \"%s\", EnableDeployCommandsPlugin: %v, DeployCommandsPluginExtension: \"%s\", DeployCommandsPluginFolder: \"%s\"}",
+		pc.EnableDeployClientCommandsPlugin, pc.DeployClientCommandsPluginExtension, pc.DeployClientCommandsPluginFolder, pc.EnableDeployClientsPlugin,
+		pc.DeployClientsPluginExtension, pc.DeployClientsPluginFolder, pc.EnableDeployCommandsPlugin, pc.DeployCommandsPluginExtension, pc.DeployCommandsPluginFolder)
+}
+
+func (pc *PluginsConfig) Yaml() (string, error) {
+	return io.ToYaml(pc)
+}
+
+func (pc *PluginsConfig) FromYamlFile(path string) (*PluginsConfig, error) {
+	itf, err := io.FromYamlFile(path, pc)
+	if err != nil {
+		return nil, err
+	}
+	var conf *PluginsConfig = itf.(*PluginsConfig)
+	return conf, nil
+}
+
+func (pc *PluginsConfig) FromYamlCode(yamlCode string) (*PluginsConfig, error) {
+	itf, err := io.FromYamlCode(yamlCode, pc)
+	if err != nil {
+		return nil, err
+	}
+	var conf *PluginsConfig = itf.(*PluginsConfig)
+	return conf, nil
+}
+
+func (pc *PluginsConfig) Xml() (string, error) {
+	return io.ToXml(pc)
+}
+
+func (pc *PluginsConfig) FromXmlFile(path string) (*PluginsConfig, error) {
+	itf, err := io.FromXmlFile(path, pc)
+	if err != nil {
+		return nil, err
+	}
+	var conf *PluginsConfig = itf.(*PluginsConfig)
+	return conf, nil
+}
+
+func (pc *PluginsConfig) FromXmlCode(xmlCode string) (*PluginsConfig, error) {
+	itf, err := io.FromXmlCode(xmlCode, pc)
+	if err != nil {
+		return nil, err
+	}
+	var conf *PluginsConfig = itf.(*PluginsConfig)
+	return conf, nil
+}
+
+func (pc *PluginsConfig) Json() (string, error) {
+	return io.ToJson(pc)
+}
+
+func (pc *PluginsConfig) FromJsonFile(path string) (*PluginsConfig, error) {
+	itf, err := io.FromJsonFile(path, pc)
+	if err != nil {
+		return nil, err
+	}
+	var conf *PluginsConfig = itf.(*PluginsConfig)
+	return conf, nil
+}
+
+func (pc *PluginsConfig) FromJsonCode(jsonCode string) (*PluginsConfig, error) {
+	itf, err := io.FromJsonCode(jsonCode, pc)
+	if err != nil {
+		return nil, err
+	}
+	var conf *PluginsConfig = itf.(*PluginsConfig)
+	return conf, nil
+}
 
 func (dt *DeployType) Merge(dt2 *DeployType) *DeployType {
 	return &DeployType{

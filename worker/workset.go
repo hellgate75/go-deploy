@@ -49,6 +49,9 @@ func ExecuteFeed(connectionConfig module.ConnectionConfig, config defaults.Confi
 					return errList
 				}
 				handler = itf.(generic.ConnectionHandler)
+				if config.Plugins.EnableDeployClientCommandsPlugin {
+					handler.UsePlugins(config.Plugins.DeployClientCommandsPluginExtension, config.Plugins.DeployClientCommandsPluginFolder)
+				}
 				logger.Debugf("       -> Handler Is present: %v", (handler != nil))
 				var client generic.NetworkClient
 				client, err = generic.ConnectHandlerViaConfig(connectionConfig, handler, host, config.Net, config.Config)

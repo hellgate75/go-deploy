@@ -163,6 +163,14 @@ func main() {
 				}
 				nt = boostrap.GetDefaultNetType().Merge(nt)
 				module.RuntimeNetworkType = nt
+
+				var pc *module.PluginsConfig = boostrap.GetPluginsType()
+				if pc == nil {
+					pc = &module.PluginsConfig{}
+				}
+				pc = boostrap.GetDefaultPluginsType().Merge(pc)
+				module.RuntimePluginsType = pc
+
 				Logger.Debugf("Configuration Summary: \nDeploy Config: %v\nDeployType: %v\nNetType: %v\n", dc.String(), dt.String(), nt.String())
 				if dt.DeploymentType == module.FILE_SOURCE {
 					var filePath string = dc.WorkDir + io.GetPathSeparator() + target

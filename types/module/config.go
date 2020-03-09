@@ -93,6 +93,18 @@ type DeployConfig struct {
 	ReadTimeout      int64                `yaml:"readTimeout,omitempty" json:"readTimeout,omitempty" xml:"read-timeout,chardata,omitempty"`
 }
 
+type PluginsConfig struct {
+	EnableDeployClientsPlugin           bool   `yaml:"enableDeployClientsPlugin,omitempty" json:"enableDeployClientsPlugin,omitempty" xml:"enable-deploy-clients-plugin,chardata,omitempty"`
+	DeployClientsPluginExtension        string `yaml:"deployClientsPluginExtension,omitempty" json:"deployClientsPluginExtension,omitempty" xml:"deploy-clients-plugin-extension,chardata,omitempty"`
+	DeployClientsPluginFolder           string `yaml:"deployClientsPluginFolder,omitempty" json:"deployClientsPluginFolder,omitempty" xml:"deploy-clients-plugin-folder,chardata,omitempty"`
+	EnableDeployCommandsPlugin          bool   `yaml:"enableDeployCommandsPlugin,omitempty" json:"enableDeployCommandsPlugin,omitempty" xml:"enable-deploy-commands-plugin,chardata,omitempty"`
+	DeployCommandsPluginExtension       string `yaml:"deployCommandsPluginExtension,omitempty" json:"deployCommandsPluginExtension,omitempty" xml:"deploy-commands-plugin-extension,chardata,omitempty"`
+	DeployCommandsPluginFolder          string `yaml:"deployCommandsPluginFolder,omitempty" json:"deployCommandsPluginFolder,omitempty" xml:"deploy-commands-plugin-folder,chardata,omitempty"`
+	EnableDeployClientCommandsPlugin    bool   `yaml:"enableDeployClientCommandsPlugin,omitempty" json:"enableDeployClientCommandsPlugin,omitempty" xml:"enable-deploy-client-commands-plugin,chardata,omitempty"`
+	DeployClientCommandsPluginExtension string `yaml:"deployClientCommandsPluginExtension,omitempty" json:"deployClientCommandsPluginExtension,omitempty" xml:"deploy-client-commands-plugin-extension,chardata,omitempty"`
+	DeployClientCommandsPluginFolder    string `yaml:"deployClientCommandsPluginFolder,omitempty" json:"deployClientCommandsPluginFolder,omitempty" xml:"deploy-client-commands-plugin-folder,chardata,omitempty"`
+}
+
 /*
 * Coverter interface, responsible to comvert raw interface from the parsing to a specific structure
  */
@@ -142,6 +154,7 @@ type session struct {
 	deployType      *DeployType
 	netProtocolType *NetProtocolType
 	deployConfig    *DeployConfig
+	pluginsConfig    *PluginsConfig
 }
 
 func (session *session) GetSessionId() string {

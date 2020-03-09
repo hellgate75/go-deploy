@@ -10,6 +10,7 @@ type ConfigPattern struct {
 	Config     *module.DeployConfig
 	Type       *module.DeployType
 	Net        *module.NetProtocolType
+	Plugins    *module.PluginsConfig
 	Envs       []NameValue
 	Vars       []NameValue
 	HostGroups []HostGroups

@@ -2,8 +2,11 @@ package cmd
 
 import (
 	"github.com/hellgate75/go-deploy/io"
-	"github.com/hellgate75/go-tcp-common/log"
+	"github.com/hellgate75/go-deploy/net"
 	"github.com/hellgate75/go-deploy/types/module"
+	"github.com/hellgate75/go-tcp-client/client/proxy"
+	modproxy "github.com/hellgate75/go-deploy/modules/proxy"
+	"github.com/hellgate75/go-tcp-common/log"
 	"os"
 	"runtime"
 	"strings"
@@ -13,6 +16,7 @@ const (
 	DEPLOY_CONFIG_FILE_NAME string = "deploy-config"
 	DEPLOY_DATA_FILE_NAME   string = "deploy-type"
 	DEPLOY_NET_FILE_NAME    string = "deploy-net"
+	DEPLOY_PKUGINS_FILE_NAME    string = "deploy-plugins"
 	DEPLOY_ENVS_FILE_NAME   string = "deploy-envs"
 	DEFAULT_CONFIG_FOLDER   string = "env"
 	DEFAULT_CHARTS_FOLDER   string = "charts"
@@ -28,16 +32,19 @@ type Bootstrap interface {
 	Run(feed *module.FeedExec, logger log.Logger) []error
 	GetDeployConfig() *module.DeployConfig
 	GetDeployType() *module.DeployType
+	GetPluginsType() *module.PluginsConfig
 	GetNetType() *module.NetProtocolType
 	GetDefaultDeployConfig() *module.DeployConfig
 	GetDefaultDeployType() *module.DeployType
 	GetDefaultNetType() *module.NetProtocolType
+	GetDefaultPluginsType() *module.PluginsConfig
 }
 
 type bootstrap struct {
 	deployConfig *module.DeployConfig
 	deployType   *module.DeployType
 	netType      *module.NetProtocolType
+	pluginsType      *module.PluginsConfig
 }
 
 func (bootstrap *bootstrap) GetDeployConfig() *module.DeployConfig {
@@ -50,6 +57,10 @@ func (bootstrap *bootstrap) GetDeployType() *module.DeployType {
 
 func (bootstrap *bootstrap) GetNetType() *module.NetProtocolType {
 	return bootstrap.netType
+}
+
+func (bootstrap *bootstrap) GetPluginsType() *module.PluginsConfig {
+	return bootstrap.pluginsType
 }
 
 func (bootstrap *bootstrap) GetDefaultDeployConfig() *module.DeployConfig {
@@ -67,6 +78,20 @@ func (bootstrap *bootstrap) GetDefaultDeployType() *module.DeployType {
 		Method:         "",
 		PostBody:       "",
 		StrategyType:   module.ONE_SHOT_DEPLOYMENT,
+	}
+}
+
+func (bootstrap *bootstrap) GetDefaultPluginsType() *module.PluginsConfig {
+	return &module.PluginsConfig{
+		EnableDeployClientCommandsPlugin: proxy.UsePlugins,
+		EnableDeployClientsPlugin: net.UsePlugins,
+		EnableDeployCommandsPlugin: modproxy.UsePlugins,
+		DeployClientCommandsPluginExtension: proxy.PluginLibrariesExtension,
+		DeployClientCommandsPluginFolder: proxy.PluginLibrariesFolder,
+		DeployClientsPluginExtension: net.PluginLibrariesExtension,
+		DeployClientsPluginFolder: net.PluginLibrariesFolder,
+		DeployCommandsPluginExtension: modproxy.PluginLibrariesExtension,
+		DeployCommandsPluginFolder: modproxy.PluginLibrariesFolder,
 	}
 }
 
@@ -100,7 +125,9 @@ func NewBootStrap() Bootstrap {
 
 func getMatcher(format module.DescriptorTypeValue) func(string) bool {
 	return func(name string) bool {
-		if format == module.JSON_DESCRIPTOR {
+		if format == "" {
+			return true
+		} else  if format == module.JSON_DESCRIPTOR {
 			if idx := strings.Index(name, "."); idx > 0 {
 				return strings.ToLower(name[idx+1:]) == "json"
 			}
@@ -116,4 +143,18 @@ func getMatcher(format module.DescriptorTypeValue) func(string) bool {
 		}
 		return false
 	}
+}
+
+func getFileFormatDescritor(fileName string, defaultFormat module.DescriptorTypeValue) module.DescriptorTypeValue {
+	if "" == string(defaultFormat) {
+		var nameLower = strings.ToLower(fileName)
+		var nameLen = len(nameLower)
+		if nameLower[nameLen-4:] == "json" {
+			return module.JSON_DESCRIPTOR
+		} else if nameLower[nameLen-4:] == "xml" {
+			return module.XML_DESCRIPTOR
+		}
+		return module.YAML_DESCRIPTOR
+	}
+	return defaultFormat
 }

@@ -20,18 +20,22 @@ func (bootstrap *bootstrap) Init(baseDir string, suffix string, format module.De
 	var configFileObjectList []*module.DeployConfig = make([]*module.DeployConfig, 0)
 
 	var configFileList []string = io.FindFilesIn(baseDir, true, DEPLOY_CONFIG_FILE_NAME+suffixString)
+	if "" != suffixString && len(configFileList) == 0 {
+		configFileList = io.FindFilesIn(baseDir, true, DEPLOY_CONFIG_FILE_NAME)
+	}
 	for _, configFilePath := range configFileList {
 		logger.Debug("configFilePath:" + configFilePath)
 		if io.IsFolder(configFilePath) {
 			var files []string = io.GetMatchedFiles(configFilePath, true, matcher)
 			for _, configFilePathX := range files {
+				dformat := getFileFormatDescritor(configFilePathX, format)
 				var config *module.DeployConfig = &module.DeployConfig{}
 				var errX error = nil
-				if format == module.YAML_DESCRIPTOR {
+				if dformat == module.YAML_DESCRIPTOR {
 					config, errX = config.FromYamlFile(configFilePathX)
-				} else if format == module.XML_DESCRIPTOR {
+				} else if dformat == module.XML_DESCRIPTOR {
 					config, errX = config.FromXmlFile(configFilePathX)
-				} else if format == module.JSON_DESCRIPTOR {
+				} else if dformat == module.JSON_DESCRIPTOR {
 					config, errX = config.FromJsonFile(configFilePathX)
 				}
 				if errX != nil {
@@ -43,11 +47,12 @@ func (bootstrap *bootstrap) Init(baseDir string, suffix string, format module.De
 		} else {
 			var config *module.DeployConfig = &module.DeployConfig{}
 			var errX error = nil
-			if format == module.YAML_DESCRIPTOR {
+			dformat := getFileFormatDescritor(configFilePath, format)
+			if dformat == module.YAML_DESCRIPTOR {
 				config, errX = config.FromYamlFile(configFilePath)
-			} else if format == module.XML_DESCRIPTOR {
+			} else if dformat == module.XML_DESCRIPTOR {
 				config, errX = config.FromXmlFile(configFilePath)
-			} else if format == module.JSON_DESCRIPTOR {
+			} else if dformat == module.JSON_DESCRIPTOR {
 				config, errX = config.FromJsonFile(configFilePath)
 			}
 			if errX != nil {

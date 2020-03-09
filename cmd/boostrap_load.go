@@ -19,20 +19,25 @@ func (bootstrap *bootstrap) Load(baseDir string, suffix string, format module.De
 
 	var dataFileObjectList []*module.DeployType = make([]*module.DeployType, 0)
 	var netFileObjectList []*module.NetProtocolType = make([]*module.NetProtocolType, 0)
+	var pluginFileObjectList []*module.PluginsConfig = make([]*module.PluginsConfig, 0)
 
 	var dataFileList []string = io.FindFilesIn(baseDir, true, DEPLOY_DATA_FILE_NAME+suffixString)
+	if "" != suffixString && len(dataFileList) == 0 {
+		dataFileList = io.FindFilesIn(baseDir, true, DEPLOY_DATA_FILE_NAME)
+	}
 	for _, dataFilePath := range dataFileList {
 		logger.Debug("dataFilePath:" + dataFilePath)
 		if io.IsFolder(dataFilePath) {
 			var files []string = io.GetMatchedFiles(dataFilePath, true, matcher)
 			for _, dataFilePathX := range files {
 				var dType *module.DeployType = &module.DeployType{}
+				dformat := getFileFormatDescritor(dataFilePathX, format)
 				var errX error = nil
-				if format == module.YAML_DESCRIPTOR {
+				if dformat == module.YAML_DESCRIPTOR {
 					dType, errX = dType.FromYamlFile(dataFilePathX)
-				} else if format == module.XML_DESCRIPTOR {
+				} else if dformat == module.XML_DESCRIPTOR {
 					dType, errX = dType.FromXmlFile(dataFilePathX)
-				} else if format == module.JSON_DESCRIPTOR {
+				} else if dformat == module.JSON_DESCRIPTOR {
 					dType, errX = dType.FromJsonFile(dataFilePathX)
 				}
 				if errX != nil {
@@ -43,12 +48,13 @@ func (bootstrap *bootstrap) Load(baseDir string, suffix string, format module.De
 			}
 		} else {
 			var dType *module.DeployType = &module.DeployType{}
+			dformat := getFileFormatDescritor(dataFilePath, format)
 			var errX error = nil
-			if format == module.YAML_DESCRIPTOR {
+			if dformat == module.YAML_DESCRIPTOR {
 				dType, errX = dType.FromYamlFile(dataFilePath)
-			} else if format == module.XML_DESCRIPTOR {
+			} else if dformat == module.XML_DESCRIPTOR {
 				dType, errX = dType.FromXmlFile(dataFilePath)
-			} else if format == module.JSON_DESCRIPTOR {
+			} else if dformat == module.JSON_DESCRIPTOR {
 				dType, errX = dType.FromJsonFile(dataFilePath)
 			}
 			if errX != nil {
@@ -60,6 +66,9 @@ func (bootstrap *bootstrap) Load(baseDir string, suffix string, format module.De
 	}
 
 	var netFileList []string = io.FindFilesIn(baseDir, true, DEPLOY_NET_FILE_NAME+suffixString)
+	if "" != suffixString && len(netFileList) == 0 {
+		netFileList = io.FindFilesIn(baseDir, true, DEPLOY_NET_FILE_NAME)
+	}
 	for _, netFilePath := range netFileList {
 		logger.Debug("netFilePath:" + netFilePath)
 		if io.IsFolder(netFilePath) {
@@ -67,11 +76,12 @@ func (bootstrap *bootstrap) Load(baseDir string, suffix string, format module.De
 			for _, netFilePathX := range files {
 				var nType *module.NetProtocolType = &module.NetProtocolType{}
 				var errX error = nil
-				if format == module.YAML_DESCRIPTOR {
+				dformat := getFileFormatDescritor(netFilePathX, format)
+				if dformat == module.YAML_DESCRIPTOR {
 					nType, errX = nType.FromYamlFile(netFilePathX)
-				} else if format == module.XML_DESCRIPTOR {
+				} else if dformat == module.XML_DESCRIPTOR {
 					nType, errX = nType.FromXmlFile(netFilePathX)
-				} else if format == module.JSON_DESCRIPTOR {
+				} else if dformat == module.JSON_DESCRIPTOR {
 					nType, errX = nType.FromJsonFile(netFilePathX)
 				}
 				if errX != nil {
@@ -83,11 +93,12 @@ func (bootstrap *bootstrap) Load(baseDir string, suffix string, format module.De
 		} else {
 			var nType *module.NetProtocolType = &module.NetProtocolType{}
 			var errX error = nil
-			if format == module.YAML_DESCRIPTOR {
+			dformat := getFileFormatDescritor(netFilePath, format)
+			if dformat == module.YAML_DESCRIPTOR {
 				nType, errX = nType.FromYamlFile(netFilePath)
-			} else if format == module.XML_DESCRIPTOR {
+			} else if dformat == module.XML_DESCRIPTOR {
 				nType, errX = nType.FromXmlFile(netFilePath)
-			} else if format == module.JSON_DESCRIPTOR {
+			} else if dformat == module.JSON_DESCRIPTOR {
 				nType, errX = nType.FromJsonFile(netFilePath)
 			}
 			if errX != nil {
@@ -97,7 +108,52 @@ func (bootstrap *bootstrap) Load(baseDir string, suffix string, format module.De
 			}
 		}
 	}
-
+	
+	
+	var pluginsFileList []string = io.FindFilesIn(baseDir, true, DEPLOY_PKUGINS_FILE_NAME+suffixString)
+	if "" != suffixString && len(pluginsFileList) == 0 {
+		pluginsFileList = io.FindFilesIn(baseDir, true, DEPLOY_PKUGINS_FILE_NAME)
+	}
+	for _, pluginsFilePath := range pluginsFileList {
+		logger.Debug("pluginsFilePath:" + pluginsFilePath)
+		if io.IsFolder(pluginsFilePath) {
+			var files []string = io.GetMatchedFiles(pluginsFilePath, true, matcher)
+			for _, netFilePathX := range files {
+				var nPlugins *module.PluginsConfig = &module.PluginsConfig{}
+				var errX error = nil
+				dformat := getFileFormatDescritor(netFilePathX, format)
+				if dformat == module.YAML_DESCRIPTOR {
+					nPlugins, errX = nPlugins.FromYamlFile(netFilePathX)
+				} else if dformat == module.XML_DESCRIPTOR {
+					nPlugins, errX = nPlugins.FromXmlFile(netFilePathX)
+				} else if dformat == module.JSON_DESCRIPTOR {
+					nPlugins, errX = nPlugins.FromJsonFile(netFilePathX)
+				}
+				if errX != nil {
+					errors = append(errors, errX)
+				} else {
+					pluginFileObjectList = append(pluginFileObjectList, nPlugins)
+				}
+			}
+		} else {
+			var nPlugins *module.PluginsConfig = &module.PluginsConfig{}
+			var errX error = nil
+			dformat := getFileFormatDescritor(pluginsFilePath, format)
+			if dformat == module.YAML_DESCRIPTOR {
+				nPlugins, errX = nPlugins.FromYamlFile(pluginsFilePath)
+			} else if dformat == module.XML_DESCRIPTOR {
+				nPlugins, errX = nPlugins.FromXmlFile(pluginsFilePath)
+			} else if dformat == module.JSON_DESCRIPTOR {
+				nPlugins, errX = nPlugins.FromJsonFile(pluginsFilePath)
+			}
+			if errX != nil {
+				errors = append(errors, errX)
+			} else {
+				pluginFileObjectList = append(pluginFileObjectList, nPlugins)
+			}
+		}
+	}
+	
 	var deployType *module.DeployType = nil
 
 	for _, deployTypeX := range dataFileObjectList {
@@ -121,6 +177,19 @@ func (bootstrap *bootstrap) Load(baseDir string, suffix string, format module.De
 	}
 
 	bootstrap.netType = netType
-
+	
+	
+	var pluginsType *module.PluginsConfig= nil
+	
+	for _, pluginTypeX := range pluginFileObjectList {
+		if deployType == nil {
+			pluginsType = pluginTypeX
+		} else {
+			pluginsType = pluginsType.Merge(pluginTypeX)
+		}
+	}
+	
+	bootstrap.pluginsType = pluginsType
+	
 	return errors
 }

@@ -25,7 +25,7 @@ var (
 	systemDir string = ""
 	useHosts  string = ""
 	useVars   string = ""
-	format    string = "YAML"
+	format    string = ""
 	env       string = ""
 	readTimeout int64 = 0
 	fs        *flag.FlagSet
@@ -57,9 +57,9 @@ func init() {
 	fs.StringVar(&systemDir, "goDeployDir", userHomeDir()+io.GetPathSeparator()+DEFAULT_SYSTEM_FOLDER, "Go Deploy system folder")
 	fs.StringVar(&useHosts, "hosts", "", "Required Hosts files (comma separated file path list)")
 	fs.StringVar(&useVars, "vars", "", "Required Vars files (comma separated file path list)")
-	fs.StringVar(&format, "language", "YAML", "Config File Language (YAML, XML or JSON)")
+	fs.StringVar(&format, "language", "", "Config File Language (YAML, XML or JSON), by default AUTO-DETECT on files etension")
 	fs.Int64Var(&readTimeout, "readTimeout", 5, "TCP Client Message Read timeout in seconds, used to keep listening for answer from clients")
-	fs.StringVar(&env, "env", "", "configuration file env suffix (no default)")
+	fs.StringVar(&env, "env", "", "configuration file env suffix (no default value), it will be used to seek for files")
 	fs.StringVar(&proxy.PluginLibrariesFolder, "client-prugins-folder", proxy.PluginLibrariesFolder, "Folder where seek for client(s) plugin(s) library [Linux Only]")
 	fs.StringVar(&proxy.PluginLibrariesExtension, "client-prugins-extension", proxy.PluginLibrariesExtension, "File extension for client(s) plugin libraries [Linux Only]")
 	fs.BoolVar(&proxy.UsePlugins, "use-client-plugins", proxy.UsePlugins, "Enable/disable client(s) plugins [true|false] [Linux Only]")

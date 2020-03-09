@@ -3,13 +3,14 @@ package cmd
 import (
 	"fmt"
 	"github.com/gookit/color"
-	"github.com/hellgate75/go-tcp-common/log"
-	
 	"github.com/hellgate75/go-deploy/io"
 	"github.com/hellgate75/go-deploy/net"
 	"github.com/hellgate75/go-deploy/types/defaults"
 	"github.com/hellgate75/go-deploy/types/module"
 	"github.com/hellgate75/go-deploy/worker"
+	"github.com/hellgate75/go-tcp-client/client/proxy"
+	modproxy "github.com/hellgate75/go-deploy/modules/proxy"
+	"github.com/hellgate75/go-tcp-common/log"
 )
 
 func (bootstrap *bootstrap) Run(feed *module.FeedExec, logger log.Logger) []error {
@@ -107,11 +108,24 @@ func (bootstrap *bootstrap) Run(feed *module.FeedExec, logger log.Logger) []erro
 			sessionsMap[hostSessionMapKey].SetSystemObject("system-logger", logger)
 		}
 	}
+	if module.RuntimePluginsType.EnableDeployClientsPlugin {
+		//modproxy "github.com/hellgate75/go-deploy/modules/proxy"
+		proxy.UsePlugins = module.RuntimePluginsType.EnableDeployClientsPlugin
+		proxy.PluginLibrariesExtension = module.RuntimePluginsType.DeployClientsPluginExtension
+		proxy.PluginLibrariesFolder = module.RuntimePluginsType.DeployClientsPluginFolder
+	}
+
+	if module.RuntimePluginsType.EnableDeployCommandsPlugin{
+		modproxy.UsePlugins = module.RuntimePluginsType.EnableDeployCommandsPlugin
+		modproxy.PluginLibrariesExtension = module.RuntimePluginsType.DeployCommandsPluginExtension
+		modproxy.PluginLibrariesFolder = module.RuntimePluginsType.DeployCommandsPluginFolder
+	}
 	Logger.Info("Starting Feed execution ...")
 	execErrList := worker.ExecuteFeed(connectionConfig, defaults.ConfigPattern{
 		Config:     module.RuntimeDeployConfig,
 		Type:       module.RuntimeDeployType,
 		Net:        module.RuntimeNetworkType,
+		Plugins:    module.RuntimePluginsType,
 		Envs:       envs,
 		HostGroups: hosts,
 		Vars:       vars,

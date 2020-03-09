@@ -110,6 +110,9 @@ type ConnectionHandler interface {
 
 	// Close: Closes the remote connection
 	Close() error
+	
+	// UsePlugins: Enable management of plugins on the client side
+	UsePlugins(PluginLibraryExtension string, PluginLibrariesFolder string)
 
 	// ConnectWithPasswd: Connect the SSH server with given passwd authmethod.
 	ConnectWithPasswd(addr string, user string, passwd string) error
