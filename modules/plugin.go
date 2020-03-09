@@ -21,7 +21,7 @@ type SeekRequest struct {
 	Symbol string
 }
 
-var proxyVia proxy.Proxy = proxy.NewProxy()
+var proxyVia proxy.Proxy = nil
 
 func seek(module string) (meta.Converter, error) {
 	var errGlobal error = nil
@@ -31,6 +31,9 @@ func seek(module string) (meta.Converter, error) {
 			errGlobal = errors.New(fmt.Sprintf("%v", r))
 		}
 	}()
+	if proxyVia == nil {
+		proxyVia = proxy.NewProxy()
+	}
 	var mod proxy.Module
 	var err error
 	mod, err = proxyVia.DiscoverModule(module)

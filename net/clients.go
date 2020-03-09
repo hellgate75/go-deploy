@@ -33,8 +33,6 @@ func DiscoverConnectionHandler(clientName string) (generic.NewConnectionHandlerF
 	return proxy.GetConnectionHandlerFactory(clientName)
 }
 
-
-
 func filterByExtension(fileName string) bool {
 	n := len(PluginLibrariesExtension)
 	fileNameLen := len(fileName)

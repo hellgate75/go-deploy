@@ -3,14 +3,16 @@ package cmd
 import (
 	"flag"
 	"fmt"
-	"github.com/hellgate75/go-deploy/io"
-	"github.com/hellgate75/go-deploy/net"
-	"github.com/hellgate75/go-deploy/types/module"
 	"github.com/hellgate75/go-tcp-client/client/proxy"
 	"math/rand"
 	"os"
 	"strconv"
 	"strings"
+	modproxy "github.com/hellgate75/go-deploy/modules/proxy"
+	
+	"github.com/hellgate75/go-deploy/io"
+	"github.com/hellgate75/go-deploy/net"
+	"github.com/hellgate75/go-deploy/types/module"
 )
 
 var (
@@ -49,7 +51,7 @@ func init() {
 	fs.StringVar(&name, "name", name, "Deployment unit name")
 	fs.StringVar(&workdir, "workDir", ".", "Working directory")
 	fs.StringVar(&loglevel, "verbosity", "INFO", "Log Level Verbosity")
-	fs.StringVar(&modDir, "modDir", "."+io.GetPathSeparator()+DEFAULT_MODULES_FOLDER, "Go Deploy modules dir")
+	//fs.StringVar(&modDir, "modDir", "."+io.GetPathSeparator()+DEFAULT_MODULES_FOLDER, "Go Deploy modules dir")
 	fs.StringVar(&chartsDir, "chartsDir", "."+io.GetPathSeparator()+DEFAULT_CHARTS_FOLDER, "Deployment charts folder")
 	fs.StringVar(&configDir, "configDir", "."+io.GetPathSeparator()+DEFAULT_CONFIG_FOLDER, "Deployment config folder")
 	fs.StringVar(&systemDir, "goDeployDir", userHomeDir()+io.GetPathSeparator()+DEFAULT_SYSTEM_FOLDER, "Go Deploy system folder")
@@ -62,10 +64,12 @@ func init() {
 	fs.StringVar(&proxy.PluginLibrariesExtension, "client-prugins-extension", proxy.PluginLibrariesExtension, "File extension for client(s) plugin libraries [Linux Only]")
 	fs.BoolVar(&proxy.UsePlugins, "use-client-plugins", proxy.UsePlugins, "Enable/disable client(s) plugins [true|false] [Linux Only]")
 	fs.StringVar(&net.PluginLibrariesFolder, "prugins-folder", net.PluginLibrariesFolder, "Folder where seek for Go Deploy NET client(s) plugin(s) library [Linux Only]")
-	fs.StringVar(&net.PluginLibrariesExtension, "-prugins-extension", net.PluginLibrariesExtension, "File extension for Go Deploy NET client(s) plugin libraries [Linux Only]")
+	fs.StringVar(&net.PluginLibrariesExtension, "prugins-extension", net.PluginLibrariesExtension, "File extension for Go Deploy NET client(s) plugin libraries [Linux Only]")
 	fs.BoolVar(&net.UsePlugins, "use-plugins", net.UsePlugins, "Enable/disable Go Deploy NET client(s) plugins [true|false] [Linux Only]")
+	fs.StringVar(&modproxy.PluginLibrariesFolder, "modules-prugins-folder", modproxy.PluginLibrariesFolder, "Folder where seek for Go Deploy modules plugin(s) library [Linux Only]")
+	fs.StringVar(&modproxy.PluginLibrariesExtension, "prugins-modules-extension", modproxy.PluginLibrariesExtension, "File extension for Go Deploy modules plugin libraries [Linux Only]")
+	fs.BoolVar(&modproxy.UsePlugins, "use-modules-plugins", modproxy.UsePlugins, "Enable/disable Go Deploy modules plugins [true|false] [Linux Only]")
 }
-
 func RequiresHelp() bool {
 	for _, val := range os.Args {
 		if val == "--help" || val == "-help" || val == "-h" || val == "help" {
