@@ -97,7 +97,8 @@ Accordingly to policies we identified following modes for the system:
 
 Official produict documentation is available at:
 
-* *Work in progress*
+* Take a look to product [Wiki](https://github.com/hellgate75/go-deploy/wiki), a lot of important information are disclosed in that pages.
+
 
 ## Sample code
 
