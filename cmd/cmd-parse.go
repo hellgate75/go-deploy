@@ -4,7 +4,9 @@ import (
 	"flag"
 	"fmt"
 	"github.com/hellgate75/go-deploy/io"
+	"github.com/hellgate75/go-deploy/net"
 	"github.com/hellgate75/go-deploy/types/module"
+	"github.com/hellgate75/go-tcp-client/client/proxy"
 	"math/rand"
 	"os"
 	"strconv"
@@ -56,6 +58,12 @@ func init() {
 	fs.StringVar(&format, "language", "YAML", "Config File Language (YAML, XML or JSON)")
 	fs.Int64Var(&readTimeout, "readTimeout", 5, "TCP Client Message Read timeout in seconds, used to keep listening for answer from clients")
 	fs.StringVar(&env, "env", "", "configuration file env suffix (no default)")
+	fs.StringVar(&proxy.PluginLibrariesFolder, "client-prugins-folder", proxy.PluginLibrariesFolder, "Folder where seek for client(s) plugin(s) library [Linux Only]")
+	fs.StringVar(&proxy.PluginLibrariesExtension, "client-prugins-extension", proxy.PluginLibrariesExtension, "File extension for client(s) plugin libraries [Linux Only]")
+	fs.BoolVar(&proxy.UsePlugins, "use-client-plugins", proxy.UsePlugins, "Enable/disable client(s) plugins [true|false] [Linux Only]")
+	fs.StringVar(&net.PluginLibrariesFolder, "prugins-folder", net.PluginLibrariesFolder, "Folder where seek for Go Deploy NET client(s) plugin(s) library [Linux Only]")
+	fs.StringVar(&net.PluginLibrariesExtension, "-prugins-extension", net.PluginLibrariesExtension, "File extension for Go Deploy NET client(s) plugin libraries [Linux Only]")
+	fs.BoolVar(&net.UsePlugins, "use-plugins", net.UsePlugins, "Enable/disable Go Deploy NET client(s) plugins [true|false] [Linux Only]")
 }
 
 func RequiresHelp() bool {

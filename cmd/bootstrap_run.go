@@ -3,10 +3,10 @@ package cmd
 import (
 	"fmt"
 	"github.com/gookit/color"
-	"github.com/hellgate75/go-deploy/io"
 	"github.com/hellgate75/go-tcp-common/log"
+	
+	"github.com/hellgate75/go-deploy/io"
 	"github.com/hellgate75/go-deploy/net"
-	"github.com/hellgate75/go-deploy/net/generic"
 	"github.com/hellgate75/go-deploy/types/defaults"
 	"github.com/hellgate75/go-deploy/types/module"
 	"github.com/hellgate75/go-deploy/worker"
@@ -42,49 +42,50 @@ func (bootstrap *bootstrap) Run(feed *module.FeedExec, logger log.Logger) []erro
 	Logger.Debugf("\nConfig: %s\nType: %s\nNet: %s", configYaml, typeYaml, netYaml)
 
 	Logger.Info("Connection Protocol: " + color.Yellow.Render(string(module.RuntimeNetworkType.NetProtocol)))
-	var handler generic.ConnectionHandler = nil
-	var isGoTCPClient bool = false
-	if string(module.RuntimeNetworkType.NetProtocol) == string(module.NET_PROTOCOL_SSH) {
-		handler = net.NewSshConnectionHandler(module.RuntimeDeployConfig.SingleSession)
-	} else if string(module.RuntimeNetworkType.NetProtocol) == string(module.NET_PROTOCOL_GO_DEPLOY_CLIENT) {
-		handler = net.NewGoTCPConnectionHandler(module.RuntimeDeployConfig.SingleSession)
-		isGoTCPClient = true
-	} else {
+	handlerEnvelope, errHandler := net.DiscoverConnectionHandler(string(module.RuntimeNetworkType.NetProtocol))
+	if errHandler != nil {
 		Logger.Error("Unable to determine the Connection Handler for: " + string(module.RuntimeNetworkType.NetProtocol))
-		panic("Unable to determine the Connection Handler")
+		panic("Unable to determine the Connection Handler: " + errHandler.Error())
 	}
-	if handler == nil {
+	if handlerEnvelope == nil {
 		var message string = fmt.Sprintf("Unable to create ConnectionHandler for type: %s", string(module.RuntimeNetworkType.NetProtocol))
 		Logger.Error(message)
 		panic(message)
 	}
+	handler, handlerConfig := handlerEnvelope(module.RuntimeDeployConfig.SingleSession)
 	Logger.Infof("Connection Handler loaded: %s", color.Yellow.Render(fmt.Sprintf("%v", (handler != nil))))
-	if isGoTCPClient {
-		Logger.Warn("Using experimental GoTcp protocol instead of SSH ...")
-		var missCertificate bool = module.RuntimeNetworkType == nil || module.RuntimeNetworkType.Certificate == ""
-		var missKey bool = module.RuntimeNetworkType == nil || module.RuntimeNetworkType.KeyFile == ""
-		if missCertificate || missKey {
-			var message string = "Missing mandatory authentication TLS client key or certificate"
-			Logger.Error(message)
-			panic(message)
-		}
+	Logger.Warn("Using "+string(module.RuntimeNetworkType.NetProtocol)+" protocol ...")
+	var missKey bool = module.RuntimeNetworkType == nil || module.RuntimeNetworkType.KeyFile == ""
+	var missPassPhrase bool = module.RuntimeNetworkType == nil || module.RuntimeNetworkType.Passphrase == ""
+	var missUser bool = module.RuntimeNetworkType == nil || module.RuntimeNetworkType.UserName == ""
+	var missPassword bool = module.RuntimeNetworkType == nil || module.RuntimeNetworkType.Password == ""
+	var missCertificate bool = module.RuntimeNetworkType == nil || module.RuntimeNetworkType.Certificate == ""
+	var useUserPassword bool = false
+	var useUserKey bool = false
+	var useUserKeyPassphrase bool = false
+	var useCertificates bool = false
+	if !missUser && !missPassword && handlerConfig.UseUserPassword && handlerConfig.UseUserPassword {
+		useUserPassword = true
+	} else if !missUser && !missKey && missPassPhrase && handlerConfig.UseAuthKey{
+		useUserKey = true
+	} else if !missUser && !missKey && !missPassPhrase && handlerConfig.UseAuthKeyPassphrase {
+		useUserKeyPassphrase = true
+	} else if !missKey && !missCertificate && handlerConfig.UseCertificates {
+		useCertificates = true
 	} else {
-		Logger.Warn("Using SSH protocol ...")
-		var missKey bool = module.RuntimeNetworkType == nil || module.RuntimeNetworkType.KeyFile == ""
-		//		var missPassPhrase bool = module.RuntimeNetworkType == nil || module.RuntimeNetworkType.Passphrase == ""
-		var missUser bool = module.RuntimeNetworkType == nil || module.RuntimeNetworkType.UserName == ""
-		var missPassword bool = module.RuntimeNetworkType == nil || module.RuntimeNetworkType.Password == ""
-		if missUser {
-			var message string = "Missing mandatory authentication SSH username"
-			Logger.Error(message)
-			panic(message)
-		} else if missPassword && missKey {
-			var message string = "Missing mandatory authentication SSH passoword and rsa public key file"
-			Logger.Error(message)
-			panic(message)
-		}
+		var message string = "Missing mandatory authentication user and/or passoword and/or rsa public key / TLS Key file or certificates for client type: " + string(module.RuntimeNetworkType.NetProtocol)
+		Logger.Error(message)
+		panic(message)
 	}
-
+	
+	var connectionConfig module.ConnectionConfig = module.ConnectionConfig{
+		UseUserPassword: useUserPassword,
+		UseUserKey: useUserKey,
+		UseSSHConfig: false,
+		UseUserKeyPassphrase: useUserKeyPassphrase,
+		UseTLSCertificates: useCertificates,
+	}
+	
 	var sessionsMap map[string]module.Session = make(map[string]module.Session)
 
 	for _, hg := range hosts {
@@ -107,7 +108,7 @@ func (bootstrap *bootstrap) Run(feed *module.FeedExec, logger log.Logger) []erro
 		}
 	}
 	Logger.Info("Starting Feed execution ...")
-	execErrList := worker.ExecuteFeed(defaults.ConfigPattern{
+	execErrList := worker.ExecuteFeed(connectionConfig, defaults.ConfigPattern{
 		Config:     module.RuntimeDeployConfig,
 		Type:       module.RuntimeDeployType,
 		Net:        module.RuntimeNetworkType,
@@ -120,3 +121,4 @@ func (bootstrap *bootstrap) Run(feed *module.FeedExec, logger log.Logger) []erro
 	}
 	return errList
 }
+

@@ -286,3 +286,12 @@ func NewSession(sessionId string) Session {
 		return sessionX
 	}
 }
+
+type ConnectionConfig struct {
+	UseUserPassword         bool
+	UseUserKey              bool
+	UseUserKeyPassphrase    bool
+	UseSSHConfig            bool
+	UseTLSCertificates      bool
+}
+

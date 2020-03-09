@@ -16,7 +16,8 @@ var clientsCache map[string]generic.NetworkClient = make(map[string]generic.Netw
 func ExecuteSteps(prefix string, steps []*module.Step,
 	selectedHostGroup *defaults.HostGroups, threadPool pool.ThreadPool,
 	errorsHandler *ErrorHandler, config defaults.ConfigPattern,
-	sessionsMap map[string]module.Session, logger log.Logger) []error {
+	sessionsMap map[string]module.Session, logger log.Logger,
+	connectionConfig module.ConnectionConfig) []error {
 	var errList []error = make([]error, 0)
 	for _, step := range steps {
 		errorsHandler.Reset()
@@ -90,7 +91,8 @@ func ExecuteSteps(prefix string, steps []*module.Step,
 		}
 		if step.Children != nil && len(step.Children) > 0 {
 			var subPrefix string = fmt.Sprintf("%s [ %s ]", prefix, stepName)
-			errXList := ExecuteSteps(subPrefix, step.Children, selectedHostGroup, threadPool, errorsHandler, config, sessionsMap, logger)
+			errXList := ExecuteSteps(subPrefix, step.Children, selectedHostGroup, threadPool, errorsHandler,
+										config, sessionsMap, logger, connectionConfig)
 			if len(errXList) > 0 {
 				errList = append(errList, errXList...)
 			}
@@ -102,7 +104,7 @@ func ExecuteSteps(prefix string, steps []*module.Step,
 					feedName = "<none>"
 				}
 				logger.Warnf("Executing Feed: %s children of Step %s", feedName, stepName)
-				errXList := ExecuteFeed(config, feed, sessionsMap, logger)
+				errXList := ExecuteFeed(connectionConfig, config, feed, sessionsMap, logger)
 				if len(errXList) > 0 {
 					errList = append(errList, errXList...)
 				}

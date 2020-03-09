@@ -126,3 +126,14 @@ type ConnectionHandler interface {
 	// Connect: Connect the PEM certificate and client key using given address and port
 	ConnectWithCertificate(addr string, port string, certificate common.CertificateKeyPair, caCert string) error
 }
+
+
+type NewConnectionHandlerFunc func(bool)(ConnectionHandler, ConnectionHandlerConfig)
+
+type ConnectionHandlerConfig struct {
+	UseUserPassword             bool
+	UseAuthKey                  bool
+	UseAuthKeyPassphrase        bool
+	UseSSHConfig                bool
+	UseCertificates             bool
+}

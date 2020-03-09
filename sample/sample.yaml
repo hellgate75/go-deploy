@@ -5,7 +5,7 @@ steps:
   shell: 
     exec: "uname -a"
     saveState: os_name
-- name: Print list_folder variable
+- name: Print os_name variable using the remote host
   shell:
     exec: "echo {{ os_name }}"
     withVars:

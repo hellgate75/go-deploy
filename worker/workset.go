@@ -5,15 +5,16 @@ import (
 	"fmt"
 	"github.com/gookit/color"
 	"github.com/hellgate75/go-tcp-common/log"
-	"github.com/hellgate75/go-deploy/net/generic"
-	"github.com/hellgate75/go-deploy/types/defaults"
-	"github.com/hellgate75/go-deploy/types/module"
 	"github.com/hellgate75/go-tcp-common/pool"
 	"runtime"
 	"strings"
+	
+	"github.com/hellgate75/go-deploy/net/generic"
+	"github.com/hellgate75/go-deploy/types/defaults"
+	"github.com/hellgate75/go-deploy/types/module"
 )
 
-func ExecuteFeed(config defaults.ConfigPattern, feed *module.FeedExec, sessionsMap map[string]module.Session, logger log.Logger) []error {
+func ExecuteFeed(connectionConfig module.ConnectionConfig, config defaults.ConfigPattern, feed *module.FeedExec, sessionsMap map[string]module.Session, logger log.Logger) []error {
 	var errList []error = make([]error, 0)
 	var feedName string = feed.Name
 	if feedName == "" {
@@ -50,7 +51,7 @@ func ExecuteFeed(config defaults.ConfigPattern, feed *module.FeedExec, sessionsM
 				handler = itf.(generic.ConnectionHandler)
 				logger.Debugf("       -> Handler Is present: %v", (handler != nil))
 				var client generic.NetworkClient
-				client, err = generic.ConnectHandlerViaConfig(handler, host, config.Net, config.Config)
+				client, err = generic.ConnectHandlerViaConfig(connectionConfig, handler, host, config.Net, config.Config)
 				if err != nil {
 					errList = append(errList, err)
 					return errList
@@ -73,7 +74,8 @@ func ExecuteFeed(config defaults.ConfigPattern, feed *module.FeedExec, sessionsM
 	}
 	threadPool.SetErrorHandler(errorsHandler)
 	defer threadPool.Stop()
-	errXList := ExecuteSteps("", feed.Steps, selectedHostGroup, threadPool, errorsHandler, config, sessionsMap, logger)
+	errXList := ExecuteSteps("", feed.Steps, selectedHostGroup, threadPool,
+						errorsHandler, config, sessionsMap, logger, connectionConfig)
 	if len(errXList) > 0 {
 		errList = append(errList, errXList...)
 	}

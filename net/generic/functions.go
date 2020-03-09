@@ -13,49 +13,32 @@ import (
 
 var Logger log.Logger = nil
 
-func ConnectHandlerViaConfig(handler ConnectionHandler, host defaults.HostValue, netConfig *module.NetProtocolType, depConfig *module.DeployConfig) (NetworkClient, error) {
+func ConnectHandlerViaConfig(connConfig module.ConnectionConfig, handler ConnectionHandler, host defaults.HostValue, netConfig *module.NetProtocolType, depConfig *module.DeployConfig) (NetworkClient, error) {
 	var globalError error
-	if string(module.RuntimeNetworkType.NetProtocol) == string(module.NET_PROTOCOL_SSH) {
-		var missPassword bool = netConfig.Password == ""
-		var missKeyFile bool = netConfig.KeyFile == ""
-		var missKeyPassphrase bool = netConfig.Passphrase == ""
-		var hostRef string = host.HostName
-		if hostRef == "" {
-			hostRef = host.IpAddress
+	var hostRef string = host.HostName
+	if hostRef == "" {
+		hostRef = host.IpAddress
+	}
+	addr := fmt.Sprintf("%s:%s", hostRef, host.Port)
+	if connConfig.UseUserPassword {
+		globalError = handler.ConnectWithPasswd(addr, netConfig.UserName, netConfig.Password)
+	} else if connConfig.UseUserKeyPassphrase {
+		var keyFilePath string = netConfig.KeyFile
+		if strings.Index(keyFilePath, ":") < 0 &&
+			strings.Index(keyFilePath, "/") != 0 &&
+			strings.Index(keyFilePath, "\\") != 0 {
+			keyFilePath = depConfig.WorkDir + string(os.PathSeparator) + keyFilePath
 		}
-		addr := fmt.Sprintf("%s:%s", hostRef, host.Port)
-		if !missPassword && missKeyFile {
-			globalError = handler.ConnectWithPasswd(addr, netConfig.UserName, netConfig.Password)
-		} else if !missPassword && !missKeyFile && !missKeyPassphrase {
-			var keyFilePath string = netConfig.KeyFile
-			if strings.Index(keyFilePath, ":") < 0 &&
-				strings.Index(keyFilePath, "/") != 0 &&
-				strings.Index(keyFilePath, "\\") != 0 {
-				keyFilePath = depConfig.WorkDir + string(os.PathSeparator) + keyFilePath
-			}
-			globalError = handler.ConnectWithKeyAndPassphrase(addr, netConfig.UserName, keyFilePath, netConfig.Passphrase)
-		} else if !missKeyFile {
-			var keyFilePath string = netConfig.KeyFile
-			if strings.Index(keyFilePath, ":") < 0 &&
-				strings.Index(keyFilePath, "/") != 0 &&
-				strings.Index(keyFilePath, "\\") != 0 {
-				keyFilePath = depConfig.WorkDir + string(os.PathSeparator) + keyFilePath
-			}
-			globalError = handler.ConnectWithKey(addr, netConfig.UserName, keyFilePath)
-		} else {
-			Logger.Error("SSH: Unable to determine the Connection mode, between: password, key, key passphrase")
-			return nil, errors.New("SSH: Unable to determine the connection mode")
+		globalError = handler.ConnectWithKeyAndPassphrase(addr, netConfig.UserName, keyFilePath, netConfig.Passphrase)
+	} else if connConfig.UseUserKey {
+		var keyFilePath string = netConfig.KeyFile
+		if strings.Index(keyFilePath, ":") < 0 &&
+			strings.Index(keyFilePath, "/") != 0 &&
+			strings.Index(keyFilePath, "\\") != 0 {
+			keyFilePath = depConfig.WorkDir + string(os.PathSeparator) + keyFilePath
 		}
-		if globalError != nil {
-			return nil, globalError
-		}
-		return handler.GetClient(), nil
-
-	} else if string(module.RuntimeNetworkType.NetProtocol) == string(module.NET_PROTOCOL_GO_DEPLOY_CLIENT) {
-		var hostRef string = host.HostName
-		if hostRef == "" {
-			hostRef = host.IpAddress
-		}
+		globalError = handler.ConnectWithKey(addr, netConfig.UserName, keyFilePath)
+	} else if connConfig.UseTLSCertificates {
 		var keyFilePath string = netConfig.KeyFile
 		var certFilePath string = netConfig.Certificate
 		if strings.Index(keyFilePath, ":") < 0 &&
@@ -74,19 +57,18 @@ func ConnectHandlerViaConfig(handler ConnectionHandler, host defaults.HostValue,
 			strings.Index(caCertPath, "\\") != 0 {
 			caCertPath = depConfig.WorkDir + string(os.PathSeparator) + caCertPath
 		}
-
+		
 		certificate := common.CertificateKeyPair{
 			Key:  keyFilePath,
 			Cert: certFilePath,
 		}
 		globalError = handler.ConnectWithCertificate(hostRef, host.Port, certificate, caCertPath)
-		if globalError != nil {
-			return nil, globalError
-		}
-		return handler.GetClient(), nil
 	} else {
-		Logger.Error("Unable to determine the Connection Handler type for: " + string(netConfig.NetProtocol))
-		return nil, errors.New("Unable to determine the Connection Handler")
+		Logger.Error(string(netConfig.NetProtocol) + ": Unable to determine the Connection mode, between: password, key, key passphrase, certificates")
+		return nil, errors.New(string(netConfig.NetProtocol) + ": Unable to determine the connection mode")
 	}
-	return nil, errors.New("Unable to connect to the network")
+	if globalError != nil {
+		return nil, globalError
+	}
+	return handler.GetClient(), nil
 }

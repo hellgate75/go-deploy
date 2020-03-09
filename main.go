@@ -3,29 +3,42 @@ package main
 import (
 	"fmt"
 	"github.com/gookit/color"
-	"github.com/hellgate75/go-deploy/cmd"
-	"github.com/hellgate75/go-deploy/io"
-	"github.com/hellgate75/go-tcp-common/log"
-	"github.com/hellgate75/go-deploy/modules"
-	modproxy "github.com/hellgate75/go-deploy/modules/proxy"
-	ngen "github.com/hellgate75/go-deploy/net/generic"
-	"github.com/hellgate75/go-deploy/types/generic"
-	"github.com/hellgate75/go-deploy/types/module"
-	"github.com/hellgate75/go-deploy/utils"
 	"github.com/hellgate75/go-tcp-client/client/worker"
-	clientlog "github.com/hellgate75/go-tcp-common/log"
 	clicommon "github.com/hellgate75/go-tcp-client/common"
+	"github.com/hellgate75/go-tcp-common/log"
+	clientlog "github.com/hellgate75/go-tcp-common/log"
 	"os"
 	"strconv"
 	"time"
+	ngen "github.com/hellgate75/go-deploy/net/generic"
+	modproxy "github.com/hellgate75/go-deploy/modules/proxy"
+	"github.com/hellgate75/go-deploy/cmd"
+	"github.com/hellgate75/go-deploy/io"
+	"github.com/hellgate75/go-deploy/modules"
+	"github.com/hellgate75/go-deploy/net"
+	"github.com/hellgate75/go-deploy/types/generic"
+	"github.com/hellgate75/go-deploy/types/module"
+	"github.com/hellgate75/go-deploy/utils"
 )
 
-var Logger log.Logger = log.NewLogger("go-deploy", log.INFO)
+var Logger log.Logger = nil
 
 func init() {
 	defer func() {
 		if r := recover(); r != nil {
 			Logger.Errorf("Init - Recovery:\n- %v", r)
+			os.Exit(1)
+		}
+	}()
+	Logger = log.NewLogger("go-deploy", log.INFO)
+	setupLogger()
+	printInfo()
+}
+
+func setupLogger() {
+	defer func() {
+		if r := recover(); r != nil {
+			Logger.Errorf("SetUpLogger - Recovery:\n- %v", r)
 			os.Exit(1)
 		}
 	}()
@@ -35,12 +48,23 @@ func init() {
 	cmd.Logger = Logger
 	ngen.Logger = Logger
 	modproxy.Logger = Logger
+	net.Logger = Logger
+	Logger.Trace("Init ...")
+	worker.Logger.AffiliateTo(Logger)
+	
+}
+
+func printInfo() {
+	defer func() {
+		if r := recover(); r != nil {
+			Logger.Errorf("PrintInfo - Recovery:\n- %v", r)
+			os.Exit(1)
+		}
+	}()
 	Logger.Println(color.LightGreen.Render(cmd.Banner))
 	Logger.Println(color.LightYellow.Render("GO DEPLOY " + cmd.Version))
 	Logger.Println("Author: ", color.LightYellow.Render(cmd.Authors))
 	Logger.Println(cmd.Disclaimer + "\n")
-	Logger.Trace("Init ...")
-	worker.Logger.AffiliateTo(Logger)
 }
 
 func main() {
