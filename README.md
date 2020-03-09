@@ -51,6 +51,35 @@ It executes a main feed that can contain multiple sub-feed, imported in the curr
 We are preparing a site about that features.
 
 
+## Write your own modules
+
+In linux system it's possible to write new features using the current client ones or developing new features.
+
+Plugin(s) clients have own interfaces for writing a plugin, available pluggable clients are:
+
+* [Go-TCP Client](https://githib.com/hellgate75/go-tcp-client), TLS custom client
+
+For client(s) plugins (definition of custom clients), you can :
+
+* Develop Proxy Function interface as described and with same name of function [proxy.GetConnectionHandlerFactory](https://github.com/hellgate75/go-deploy-clients/blob/master/proxy/proxy.go)
+
+* Develp Client Wrapper as described in the interface [ConnectionHandler](/net/generic/interfaces.go)
+
+An example of this kind of plugin is available in following repositories:
+ 
+ * [Go-Deploy Client Modules](https://github.com/hellgate75/go-deploy-clients)
+
+For deploy custom command(s) plugins you can:
+
+* Develop Proxy Function interface [GetModulesMap](https://github.com/hellgate75/go-deploy-modules/blob/master/modules/stub.go)
+
+* Develop a Discovery Function and allocating a map of string (unique plugin name) and [ProxyStub](/modules/meta/meta.go) that contains the discovery function, providing the command [Converter](/modules/meta/meta.go) component. Converter interface is used to parse the code from the [Feed](/types/generic.config.go) file and provifing a runnable element implementing [StepRunnable](/types/threadas/pool) interface, filled with parsed data.
+
+An example of this kind of plugin is available in following repositories:
+ 
+ * [Go-Deploy Command Modules](https://github.com/hellgate75/go-deploy-modules)
+
+
 ## Coming soon
 
 Accordingly to policies we identified following modes for the system:
@@ -64,6 +93,11 @@ Accordingly to policies we identified following modes for the system:
 * Reading from a Stream (JMS, IoT, Database flows, etc...) - FUTURE
 
 
+## Official produict documentation
+
+Official produict documentation is available at:
+
+* *Work in progress*
 
 ## Sample code
 
