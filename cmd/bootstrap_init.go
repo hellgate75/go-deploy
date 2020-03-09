@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"errors"
+	"fmt"
 	"github.com/hellgate75/go-deploy/io"
 	"github.com/hellgate75/go-tcp-common/log"
 	"github.com/hellgate75/go-deploy/types/module"
@@ -15,7 +17,14 @@ func (bootstrap *bootstrap) Init(baseDir string, suffix string, format module.De
 	if suffix != "" {
 		suffixString = "-" + suffix
 	}
-	var errors []error = make([]error, 0)
+	var errorsList []error = make([]error, 0)
+	defer func() {
+		if r := recover(); r != nil {
+			var message string = fmt.Sprintf("cmd.Bootstrap.Init - Recovery:\n- %v", r)
+			Logger.Error(message)
+			errorsList = append(errorsList, errors.New(fmt.Sprintf("%v", r)))
+		}
+	}()
 	var matcher func(string) bool = getMatcher(format)
 
 	var configFileObjectList []*module.DeployConfig = make([]*module.DeployConfig, 0)
@@ -40,7 +49,7 @@ func (bootstrap *bootstrap) Init(baseDir string, suffix string, format module.De
 					config, errX = config.FromJsonFile(configFilePathX)
 				}
 				if errX != nil {
-					errors = append(errors, errX)
+					errorsList = append(errorsList, errX)
 				} else {
 					configFileObjectList = append(configFileObjectList, config)
 				}
@@ -57,7 +66,7 @@ func (bootstrap *bootstrap) Init(baseDir string, suffix string, format module.De
 				config, errX = config.FromJsonFile(configFilePath)
 			}
 			if errX != nil {
-				errors = append(errors, errX)
+				errorsList = append(errorsList, errX)
 			} else {
 				configFileObjectList = append(configFileObjectList, config)
 			}
@@ -76,5 +85,5 @@ func (bootstrap *bootstrap) Init(baseDir string, suffix string, format module.De
 
 	bootstrap.deployConfig = deployConfig
 
-	return errors
+	return errorsList
 }

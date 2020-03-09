@@ -19,7 +19,14 @@ func ExecuteSteps(prefix string, steps []*module.Step,
 	errorsHandler *ErrorHandler, config defaults.ConfigPattern,
 	sessionsMap map[string]module.Session, logger log.Logger,
 	connectionConfig module.ConnectionConfig) []error {
-	var errList []error = make([]error, 0)
+	var errorsList []error = make([]error, 0)
+	defer func() {
+		if r := recover(); r != nil {
+			var message string = fmt.Sprintf("worker.ExecuteSteps - Recovery:\n- %v", r)
+			logger.Error(message)
+			errorsList = append(errorsList, errors.New(fmt.Sprintf("%v", r)))
+		}
+	}()
 	for _, step := range steps {
 		errorsHandler.Reset()
 		stepName := step.Name
@@ -50,8 +57,8 @@ func ExecuteSteps(prefix string, steps []*module.Step,
 			err := threadPool.WaitFor()
 			threadPool.Stop()
 			if err != nil {
-				errList = append(errList, errors.New(fmt.Sprintf("%v", err)))
-				return errList
+				errorsList = append(errorsList, errors.New(fmt.Sprintf("%v", err)))
+				return errorsList
 			}
 			threadErrorsList := errorsHandler.GetAll()
 			if len(threadErrorsList) > 0 {
@@ -71,8 +78,8 @@ func ExecuteSteps(prefix string, steps []*module.Step,
 							logger.Successf("- [Host: %s, Process Id: %s, status: ok]", host.Name, threadX.UUID())
 						}
 					} else {
-						errList = append(errList, errors.New("Thread Map not present for group: "+selectedHostGroup.Name+" and host: "+host.Name))
-						return errList
+						errorsList = append(errorsList, errors.New("Thread Map not present for group: "+selectedHostGroup.Name+" and host: "+host.Name))
+						return errorsList
 					}
 				}
 			} else {
@@ -81,8 +88,8 @@ func ExecuteSteps(prefix string, steps []*module.Step,
 					if threadX, ok := threadsMap[sessMapId]; ok {
 						logger.Successf("- [Host: %s, Process Id: %s, status: ok]", host.Name, threadX.UUID())
 					} else {
-						errList = append(errList, errors.New("Thread Map not present for group: "+selectedHostGroup.Name+" and host: "+host.Name))
-						return errList
+						errorsList = append(errorsList, errors.New("Thread Map not present for group: "+selectedHostGroup.Name+" and host: "+host.Name))
+						return errorsList
 					}
 				}
 			}
@@ -95,7 +102,7 @@ func ExecuteSteps(prefix string, steps []*module.Step,
 			errXList := ExecuteSteps(subPrefix, step.Children, selectedHostGroup, threadPool, errorsHandler,
 										config, sessionsMap, logger, connectionConfig)
 			if len(errXList) > 0 {
-				errList = append(errList, errXList...)
+				errorsList = append(errorsList, errXList...)
 			}
 		}
 		if step.Feeds != nil && len(step.Feeds) > 0 {
@@ -107,11 +114,11 @@ func ExecuteSteps(prefix string, steps []*module.Step,
 				logger.Warnf("Executing Feed: %s children of Step %s", feedName, stepName)
 				errXList := ExecuteFeed(connectionConfig, config, feed, sessionsMap, logger)
 				if len(errXList) > 0 {
-					errList = append(errList, errXList...)
+					errorsList = append(errorsList, errXList...)
 				}
 			}
 		}
 	}
 
-	return errList
+	return errorsList
 }

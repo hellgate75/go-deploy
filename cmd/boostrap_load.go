@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"errors"
+	"fmt"
 	"github.com/hellgate75/go-deploy/io"
 	"github.com/hellgate75/go-tcp-common/log"
 	"github.com/hellgate75/go-deploy/types/module"
@@ -15,7 +17,14 @@ func (bootstrap *bootstrap) Load(baseDir string, suffix string, format module.De
 	if suffix != "" {
 		suffixString = "-" + suffix
 	}
-	var errors []error = make([]error, 0)
+	var errorsList []error = make([]error, 0)
+	defer func() {
+		if r := recover(); r != nil {
+			var message string = fmt.Sprintf("cmd.Bootstrap.Load - Recovery:\n- %v", r)
+			Logger.Error(message)
+			errorsList = append(errorsList, errors.New(fmt.Sprintf("%v", r)))
+		}
+	}()
 	var matcher func(string) bool = getMatcher(format)
 
 	var dataFileObjectList []*module.DeployType = make([]*module.DeployType, 0)
@@ -42,7 +51,7 @@ func (bootstrap *bootstrap) Load(baseDir string, suffix string, format module.De
 					dType, errX = dType.FromJsonFile(dataFilePathX)
 				}
 				if errX != nil {
-					errors = append(errors, errX)
+					errorsList = append(errorsList, errX)
 				} else {
 					dataFileObjectList = append(dataFileObjectList, dType)
 				}
@@ -59,7 +68,7 @@ func (bootstrap *bootstrap) Load(baseDir string, suffix string, format module.De
 				dType, errX = dType.FromJsonFile(dataFilePath)
 			}
 			if errX != nil {
-				errors = append(errors, errX)
+				errorsList = append(errorsList, errX)
 			} else {
 				dataFileObjectList = append(dataFileObjectList, dType)
 			}
@@ -86,7 +95,7 @@ func (bootstrap *bootstrap) Load(baseDir string, suffix string, format module.De
 					nType, errX = nType.FromJsonFile(netFilePathX)
 				}
 				if errX != nil {
-					errors = append(errors, errX)
+					errorsList = append(errorsList, errX)
 				} else {
 					netFileObjectList = append(netFileObjectList, nType)
 				}
@@ -103,7 +112,7 @@ func (bootstrap *bootstrap) Load(baseDir string, suffix string, format module.De
 				nType, errX = nType.FromJsonFile(netFilePath)
 			}
 			if errX != nil {
-				errors = append(errors, errX)
+				errorsList = append(errorsList, errX)
 			} else {
 				netFileObjectList = append(netFileObjectList, nType)
 			}
@@ -131,7 +140,7 @@ func (bootstrap *bootstrap) Load(baseDir string, suffix string, format module.De
 					nPlugins, errX = nPlugins.FromJsonFile(netFilePathX)
 				}
 				if errX != nil {
-					errors = append(errors, errX)
+					errorsList = append(errorsList, errX)
 				} else {
 					pluginFileObjectList = append(pluginFileObjectList, nPlugins)
 				}
@@ -148,7 +157,7 @@ func (bootstrap *bootstrap) Load(baseDir string, suffix string, format module.De
 				nPlugins, errX = nPlugins.FromJsonFile(pluginsFilePath)
 			}
 			if errX != nil {
-				errors = append(errors, errX)
+				errorsList = append(errorsList, errX)
 			} else {
 				pluginFileObjectList = append(pluginFileObjectList, nPlugins)
 			}
@@ -192,5 +201,5 @@ func (bootstrap *bootstrap) Load(baseDir string, suffix string, format module.De
 	
 	bootstrap.pluginsType = pluginsType
 	
-	return errors
+	return errorsList
 }

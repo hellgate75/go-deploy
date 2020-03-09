@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"github.com/gookit/color"
 	"github.com/hellgate75/go-deploy/io"
@@ -15,7 +16,14 @@ import (
 
 // Start Deploy Process.
 func (bootstrap *bootstrap) Run(feed *module.FeedExec, logger log.Logger) []error {
-	var errList []error = make([]error, 0)
+	var errorsList []error = make([]error, 0)
+	defer func() {
+		if r := recover(); r != nil {
+			var message string = fmt.Sprintf("cmd.Bootstrap.Run - Recovery:\n- %v", r)
+			Logger.Error(message)
+			errorsList = append(errorsList, errors.New(fmt.Sprintf("%v", r)))
+		}
+	}()
 	hosts, errH := loadHostsFiles()
 	if errH != nil || len(hosts) == 0 {
 		Logger.Error("Unable to load hosts...")
@@ -55,6 +63,9 @@ func (bootstrap *bootstrap) Run(feed *module.FeedExec, logger log.Logger) []erro
 		panic(message)
 	}
 	handler, handlerConfig := handlerEnvelope(module.RuntimeDeployConfig.SingleSession)
+	if module.RuntimePluginsType.EnableDeployClientCommandsPlugin {
+		handler.UsePlugins(module.RuntimePluginsType.DeployClientCommandsPluginExtension, module.RuntimePluginsType.DeployClientCommandsPluginFolder)
+	}
 	Logger.Infof("Connection Handler loaded: %s", color.Yellow.Render(fmt.Sprintf("%v", (handler != nil))))
 	Logger.Warn("Using "+string(module.RuntimeNetworkType.NetProtocol)+" protocol ...")
 	var missKey bool = module.RuntimeNetworkType == nil || module.RuntimeNetworkType.KeyFile == ""
@@ -132,8 +143,8 @@ func (bootstrap *bootstrap) Run(feed *module.FeedExec, logger log.Logger) []erro
 		Vars:       vars,
 	}, feed, sessionsMap, logger)
 	if len(execErrList) > 0 {
-		errList = append(errList, execErrList...)
+		errorsList = append(errorsList, execErrList...)
 	}
-	return errList
+	return errorsList
 }
 

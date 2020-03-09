@@ -26,6 +26,7 @@ const (
 
 var Logger log.Logger = nil
 
+// Interface that describes Bootstrap Component behaviors
 type Bootstrap interface {
 	Init(baseDir string, suffix string, format module.DescriptorTypeValue, logger log.Logger) []error
 	Load(baseDir string, suffix string, format module.DescriptorTypeValue, logger log.Logger) []error
@@ -145,16 +146,26 @@ func getMatcher(format module.DescriptorTypeValue) func(string) bool {
 	}
 }
 
+// Evaluate most matching descriptor between given or empty and file extension most suitable format, it can return
+// One of module.DescriptorTypeValue or "UNKNOWN", if no format is pecified and none taken from the file extension,
+// or <default-extension-format><-<file-extension-format> in case there is not match with required format
 func GetFileFormatDescritor(fileName string, defaultFormat module.DescriptorTypeValue) module.DescriptorTypeValue {
+	var fileFormatDescriptor module.DescriptorTypeValue = module.DescriptorTypeValue("UNKNOWN")
+	var nameLower = strings.ToLower(fileName)
+	var nameLen = len(nameLower)
+
+	if nameLower[nameLen-4:] == "json" {
+		fileFormatDescriptor = module.JSON_DESCRIPTOR
+	} else if nameLower[nameLen-4:] == "xml" {
+		fileFormatDescriptor = module.XML_DESCRIPTOR
+	} else if nameLower[nameLen-4:] == "yaml" || nameLower[nameLen-4:] == "yml" {
+		fileFormatDescriptor = module.YAML_DESCRIPTOR
+	}
 	if "" == string(defaultFormat) {
-		var nameLower = strings.ToLower(fileName)
-		var nameLen = len(nameLower)
-		if nameLower[nameLen-4:] == "json" {
-			return module.JSON_DESCRIPTOR
-		} else if nameLower[nameLen-4:] == "xml" {
-			return module.XML_DESCRIPTOR
-		}
-		return module.YAML_DESCRIPTOR
+		return fileFormatDescriptor
+	}
+	if string(fileFormatDescriptor) != string(defaultFormat) {
+		return module.DescriptorTypeValue(string(defaultFormat) + "<-" + string(fileFormatDescriptor))
 	}
 	return defaultFormat
 }
