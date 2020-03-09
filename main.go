@@ -84,7 +84,10 @@ func main() {
 		}
 		os.Exit(exitCode)
 	}()
-	if !cmd.RequiresHelp() {
+	if cmd.RequiresHelp() {
+		help = true
+		color.Yellow.Println("Help required")
+	} else {
 		Logger.Infof("Logger initial Verbosity : %v", Logger.GetVerbosity())
 		Logger.Trace("Main ...")
 		config, err := cmd.ParseArguments()
@@ -105,7 +108,7 @@ func main() {
 				var boostrap cmd.Bootstrap = cmd.NewBootStrap()
 				config.WorkDir = utils.FixFolder(config.WorkDir, io.GetCurrentFolder(), "")
 				config.ConfigDir = utils.FixFolder(config.ConfigDir, config.WorkDir, cmd.DEPLOY_CONFIG_FILE_NAME)
-
+				
 				errB := boostrap.Init(config.ConfigDir, config.EnvSelector, config.ConfigLang, Logger)
 				Logger.Debugf("Errors during config init: %v", len(errB))
 				if len(errB) > 0 {
@@ -136,7 +139,7 @@ func main() {
 					Logger.Debugf("Logger Verbosity Setted up to : %v", Logger.GetVerbosity())
 				}
 				module.RuntimeDeployConfig = dc
-				clicommon.DEFAULT_TIMEOUT=time.Duration(dc.ReadTimeout) * time.Second
+				clicommon.DEFAULT_TIMEOUT = time.Duration(dc.ReadTimeout) * time.Second
 				errB = boostrap.Load(dc.ConfigDir, dc.EnvSelector, dc.ConfigLang, Logger)
 				Logger.Debugf("Errors during config load: %v", len(errB))
 				if len(errB) > 0 {
@@ -163,14 +166,14 @@ func main() {
 				}
 				nt = boostrap.GetDefaultNetType().Merge(nt)
 				module.RuntimeNetworkType = nt
-
+				
 				var pc *module.PluginsConfig = boostrap.GetPluginsType()
 				if pc == nil {
 					pc = &module.PluginsConfig{}
 				}
 				pc = boostrap.GetDefaultPluginsType().Merge(pc)
 				module.RuntimePluginsType = pc
-
+				
 				Logger.Debugf("Configuration Summary: \nDeploy Config: %v\nDeployType: %v\nNetType: %v\n", dc.String(), dt.String(), nt.String())
 				if dt.DeploymentType == module.FILE_SOURCE {
 					var filePath string = dc.WorkDir + io.GetPathSeparator() + target
@@ -217,8 +220,5 @@ func main() {
 				}
 			}
 		}
-	} else {
-		help = true
-		color.Yellow.Println("Help required")
 	}
 }

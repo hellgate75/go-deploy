@@ -6,6 +6,7 @@ import (
 	"github.com/hellgate75/go-deploy/types/module"
 )
 
+// Loads Main Deploy Config files and merge them, saving in the Runtime package variables
 func (bootstrap *bootstrap) Init(baseDir string, suffix string, format module.DescriptorTypeValue, logger log.Logger) []error {
 	if baseDir == "" {
 		baseDir = "./" + DEFAULT_CONFIG_FOLDER
@@ -28,7 +29,7 @@ func (bootstrap *bootstrap) Init(baseDir string, suffix string, format module.De
 		if io.IsFolder(configFilePath) {
 			var files []string = io.GetMatchedFiles(configFilePath, true, matcher)
 			for _, configFilePathX := range files {
-				dformat := getFileFormatDescritor(configFilePathX, format)
+				dformat := GetFileFormatDescritor(configFilePathX, format)
 				var config *module.DeployConfig = &module.DeployConfig{}
 				var errX error = nil
 				if dformat == module.YAML_DESCRIPTOR {
@@ -47,7 +48,7 @@ func (bootstrap *bootstrap) Init(baseDir string, suffix string, format module.De
 		} else {
 			var config *module.DeployConfig = &module.DeployConfig{}
 			var errX error = nil
-			dformat := getFileFormatDescritor(configFilePath, format)
+			dformat := GetFileFormatDescritor(configFilePath, format)
 			if dformat == module.YAML_DESCRIPTOR {
 				config, errX = config.FromYamlFile(configFilePath)
 			} else if dformat == module.XML_DESCRIPTOR {

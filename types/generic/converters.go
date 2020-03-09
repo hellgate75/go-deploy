@@ -8,9 +8,7 @@ import (
 	"github.com/hellgate75/go-tcp-common/log"
 )
 
-/*
-* Unknown command structure
- */
+// Unknown Converter Structure
 type NilCommandConverter struct {
 	CmdType string
 }
@@ -25,6 +23,7 @@ func (nilCommand *NilCommandConverter) Convert(cmdValues interface{}) (threads.S
 
 var convertersMap map[string]meta.Converter = make(map[string]meta.Converter)
 
+// Creates a new meta.Converter based on the command name, crowling in the bult-in and custom libraries (if available)
 func NewConverter(cmdType string) meta.Converter {
 	Logger.Debugf("NewConverter -> cmdType: %s", cmdType)
 	//Verify local coverters cache

@@ -8,6 +8,7 @@ import (
 
 type Symbol interface{}
 
+// Get Required system logger verbosity
 func GetVerbosity() string {
 	if module.RuntimeDeployConfig != nil {
 		return module.RuntimeDeployConfig.LogVerbosity
@@ -32,6 +33,7 @@ type Converter interface {
 	SetLogger(l log.Logger)
 }
 
+// Interface that defines the Proxy Stub Components behaviors
 type ProxyStub interface {
 	Discover(module string) (Converter, error)
 }

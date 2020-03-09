@@ -16,6 +16,7 @@ const (
 	moduleAcceptanceTimeoutInSeconds int = 3
 )
 
+// Interface that describe a Request in the Deploy Manager Plugin Explorer
 type SeekRequest struct {
 	Module string
 	Symbol string
@@ -52,6 +53,7 @@ func seek(module string) (meta.Converter, error) {
 	return itf, errGlobal
 }
 
+// Load modules that matches with the command, and provide the most suitable Converter Component, or giver the reason of the error
 func LoadConverterForModule(module string) (meta.Converter, error) {
 	converter, err := seek(module)
 	if err != nil {

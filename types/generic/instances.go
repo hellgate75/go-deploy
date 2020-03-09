@@ -4,6 +4,7 @@ import (
 	"github.com/hellgate75/go-deploy/types/module"
 )
 
+// Create New module.Step by given name, step classifier, step data (blob of data to be converted)
 func NewStep(name string, stepType string, stepData interface{}) (*module.Step, error) {
 	data, err := NewConverter(stepType).Convert(stepData)
 	if err != nil {
@@ -18,6 +19,7 @@ func NewStep(name string, stepType string, stepData interface{}) (*module.Step, 
 	}, nil
 }
 
+// Create New module.Step by given name, step classifier, step data (blob of data to be converted) and children steps
 func NewStepWtihChildren(name string, stepType string, stepData interface{}, children []*module.Step) (*module.Step, error) {
 	data, err := NewConverter(stepType).Convert(stepData)
 	if err != nil {
@@ -32,6 +34,7 @@ func NewStepWtihChildren(name string, stepType string, stepData interface{}, chi
 	}, nil
 }
 
+// Create New module.Step by given name, and generic.Feed children list
 func NewImportStep(name string, feeds []*module.FeedExec) *module.Step {
 	return &module.Step{
 		Name:     name,
@@ -42,6 +45,7 @@ func NewImportStep(name string, feeds []*module.FeedExec) *module.Step {
 	}
 }
 
+// Create New module.Step by given name, and generic.Feed children list, with children module.Step elements
 func NewImportStepWithChildren(name string, feeds []*module.FeedExec, children []*module.Step) *module.Step {
 	return &module.Step{
 		Name:     name,

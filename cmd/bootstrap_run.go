@@ -13,6 +13,7 @@ import (
 	"github.com/hellgate75/go-tcp-common/log"
 )
 
+// Start Deploy Process.
 func (bootstrap *bootstrap) Run(feed *module.FeedExec, logger log.Logger) []error {
 	var errList []error = make([]error, 0)
 	hosts, errH := loadHostsFiles()

@@ -13,13 +13,18 @@ import (
 	"github.com/hellgate75/go-deploy/modules/meta"
 )
 
+// Use custom plugins loading proxies
 var UsePlugins bool = false
+// Use custom plugins folder to seek for libraries
 var PluginLibrariesFolder string = getDefaultPluginsFolder()
+// Assume this extension name for ;loading the libraries (we hope in future windows will allow plugins)
 var PluginLibrariesExtension = "so"
 
 var Logger log.Logger = nil
 
+// Define Behaviors of a Module Component
 type Module interface {
+	// Retrieve module meta.Converter component
 	GetComponent() (meta.Converter, error)
 }
 
@@ -32,7 +37,9 @@ func (m *module) GetComponent() (meta.Converter, error) {
 	return m.stub.Discover(m.module)
 }
 
+// Define Behaviors of a Proxy Component
 type Proxy interface {
+	// Discover a Module by given command name into own Components list
 	DiscoverModule(name string) (Module, error)
 }
 
@@ -48,15 +55,6 @@ func (p *proxy) DiscoverModule(name string) (Module, error) {
 			stub:   stub,
 		}, nil
 	}
-	//for k, s := range p.modules {
-	//	Logger.Debugf("module map entry: %s", k)
-	//	if k == name {
-	//		return &module{
-	//			module: k,
-	//			stub:   s,
-	//		}, nil
-	//	}
-	//}
 	return nil, errors.New(fmt.Sprintf("Unable to discover module: %s", name))
 }
 
@@ -134,6 +132,7 @@ func forEachModulesMapsInPlugins(callback func([]map[string]meta.ProxyStub)())  
 
 var modulesMap map[string]meta.ProxyStub =nil
 
+// Creates a New Proxy filled wit all available Built-In and Custom Modules, loaded just on first call
 func NewProxy() Proxy {
 	if modulesMap == nil {
 		modulesMap = getModules()

@@ -9,11 +9,13 @@ import (
 	"strings"
 )
 
+// Check existance of a given file by name
 func ExistsFile(path string) bool {
 	_, err := os.Stat(path)
 	return err == nil
 }
 
+// Retrieve current wotrking folder
 func GetCurrentFolder() string {
 	cPath, err := os.Getwd()
 	if err != nil {
@@ -42,7 +44,7 @@ func GetPathSeparator() string {
 	return string(os.PathSeparator)
 }
 
-//Verify if a atring file path corresponds to a directory
+//Verifies if a atring file path corresponds to a directory
 func IsFolder(path string) bool {
 	fileInfo, err := os.Stat(path)
 	if err != nil {
@@ -51,7 +53,7 @@ func IsFolder(path string) bool {
 	return fileInfo.IsDir()
 }
 
-// Get files in a folder (eventually recursively)
+// Gets files in a folder (eventually recursively)
 func GetFiles(path string, recursive bool) []string {
 	var out []string = make([]string, 0)
 	files, err := ioutil.ReadDir(path)
@@ -72,7 +74,7 @@ func GetFiles(path string, recursive bool) []string {
 	return out
 }
 
-// Get files in a folder (eventually recursively), which name matches with given function execution
+// Gets files in a folder (eventually recursively), which name matches with given function execution
 func GetMatchedFiles(path string, recursive bool, matcher func(string) bool) []string {
 	var out []string = make([]string, 0)
 	files, err := ioutil.ReadDir(path)
@@ -97,6 +99,7 @@ func GetMatchedFiles(path string, recursive bool, matcher func(string) bool) []s
 	return out
 }
 
+// Finds files recursively or not, in a given path folder, with a file name prefix token
 func FindFilesIn(path string, recursive bool, searchText string) []string {
 	return GetMatchedFiles(path, recursive, func(name string) bool {
 		return strings.Contains(name, searchText)

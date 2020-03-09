@@ -10,6 +10,7 @@ import (
 	"os"
 )
 
+// Trasform Yaml code in Object
 func FromYamlCode(yamlCode string, itf interface{}) (interface{}, error) {
 	err := yaml.Unmarshal([]byte(yamlCode), itf)
 	if err != nil {
@@ -19,6 +20,7 @@ func FromYamlCode(yamlCode string, itf interface{}) (interface{}, error) {
 	}
 }
 
+// Trasform Json code in Object
 func FromJsonCode(jsonCode string, itf interface{}) (interface{}, error) {
 	err := json.Unmarshal([]byte(jsonCode), itf)
 	if err != nil {
@@ -28,6 +30,7 @@ func FromJsonCode(jsonCode string, itf interface{}) (interface{}, error) {
 	}
 }
 
+// Trasform Xml code in Object
 func FromXmlCode(xmlCode string, itf interface{}) (interface{}, error) {
 	err := xml.Unmarshal([]byte(xmlCode), itf)
 	if err != nil {
@@ -37,6 +40,7 @@ func FromXmlCode(xmlCode string, itf interface{}) (interface{}, error) {
 	}
 }
 
+// Load a Yaml file and transform it in Object
 func FromYamlFile(path string, itf interface{}) (interface{}, error) {
 	_, errS := os.Stat(path)
 	if errS != nil {
@@ -58,6 +62,7 @@ func FromYamlFile(path string, itf interface{}) (interface{}, error) {
 	}
 }
 
+// Load a JSON file and transform it in Object
 func FromJsonFile(path string, itf interface{}) (interface{}, error) {
 	_, errS := os.Stat(path)
 	if errS != nil {
@@ -79,6 +84,7 @@ func FromJsonFile(path string, itf interface{}) (interface{}, error) {
 	}
 }
 
+// Load an Xml file and transform it in Object
 func FromXmlFile(path string, itf interface{}) (interface{}, error) {
 	_, errS := os.Stat(path)
 	if errS != nil {
@@ -100,6 +106,7 @@ func FromXmlFile(path string, itf interface{}) (interface{}, error) {
 	}
 }
 
+// Transform an interface in Yaml Code
 func ToYaml(itf interface{}) (string, error) {
 	bytes, err := yaml.Marshal(itf)
 	if err != nil {
@@ -109,6 +116,7 @@ func ToYaml(itf interface{}) (string, error) {
 	}
 }
 
+// Transform an interface in JSON Code
 func ToJson(itf interface{}) (string, error) {
 	bytes, err := json.Marshal(itf)
 	if err != nil {
@@ -118,6 +126,7 @@ func ToJson(itf interface{}) (string, error) {
 	}
 }
 
+// Transform an interface in XML Code
 func ToXml(itf interface{}) (string, error) {
 	bytes, err := xml.MarshalIndent(itf, "", "  ")
 	if err != nil {

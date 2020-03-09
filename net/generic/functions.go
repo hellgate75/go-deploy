@@ -13,6 +13,7 @@ import (
 
 var Logger log.Logger = nil
 
+// Apply and Open connection for a specific Connection Handler, based on the Connection HAndler Configuration and the input Parameters / network config files data
 func ConnectHandlerViaConfig(connConfig module.ConnectionConfig, handler ConnectionHandler, host defaults.HostValue, netConfig *module.NetProtocolType, depConfig *module.DeployConfig) (NetworkClient, error) {
 	var globalError error
 	var hostRef string = host.HostName

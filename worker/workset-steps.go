@@ -13,6 +13,7 @@ import (
 
 var clientsCache map[string]generic.NetworkClient = make(map[string]generic.NetworkClient)
 
+// Execute module.Step pointers list, recovering definition of per Session and Host Client components
 func ExecuteSteps(prefix string, steps []*module.Step,
 	selectedHostGroup *defaults.HostGroups, threadPool pool.ThreadPool,
 	errorsHandler *ErrorHandler, config defaults.ConfigPattern,

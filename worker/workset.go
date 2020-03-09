@@ -14,6 +14,7 @@ import (
 	"github.com/hellgate75/go-deploy/types/module"
 )
 
+// Execute Feed, after definition of per Session and Host Client components
 func ExecuteFeed(connectionConfig module.ConnectionConfig, config defaults.ConfigPattern, feed *module.FeedExec, sessionsMap map[string]module.Session, logger log.Logger) []error {
 	var errList []error = make([]error, 0)
 	var feedName string = feed.Name

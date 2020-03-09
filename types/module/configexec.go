@@ -1,9 +1,15 @@
 package module
 
 import (
+	"errors"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/hellgate75/go-deploy/io"
 	"github.com/hellgate75/go-deploy/utils"
+	"math/rand"
+	"runtime"
+	"strconv"
+	"sync"
 )
 
 var RuntimeDeployConfig *DeployConfig = nil
@@ -12,6 +18,162 @@ var RuntimeNetworkType *NetProtocolType = nil
 var RuntimePluginsType *PluginsConfig = nil
 
 var ChartsDescriptorFormat DescriptorTypeValue = DescriptorTypeValue("YAML")
+
+var sessionVars map[string]map[string]string = make(map[string]map[string]string)
+var sessionsMap map[string]*session = make(map[string]*session)
+var systemObjectsMap map[string]map[string]interface{} = make(map[string]map[string]interface{})
+
+type session struct {
+	sync.RWMutex
+	sessionId       string
+	deployType      *DeployType
+	netProtocolType *NetProtocolType
+	deployConfig    *DeployConfig
+	pluginsConfig    *PluginsConfig
+}
+
+func (session *session) GetSessionId() string {
+	return session.sessionId
+}
+func (session *session) GetDeployType() *DeployType {
+	return session.deployType
+}
+func (session *session) GetNetProtocolType() *NetProtocolType {
+	return session.netProtocolType
+}
+func (session *session) GetDeployConfig() *DeployConfig {
+	return session.deployConfig
+}
+func (session *session) GetVar(name string) (string, error) {
+	defer func() {
+		if r := recover(); r != nil {
+			Logger.Errorf("Session.GetVar : %v", r)
+		}
+		session.RUnlock()
+	}()
+	session.RLock()
+	if value, ok := sessionVars[session.sessionId][name]; ok {
+		return value, nil
+	} else {
+		return "", errors.New(fmt.Sprintf("Variable %s not found in session!!", name))
+	}
+}
+func (session *session) SetVar(name string, value string) bool {
+	var out bool = true
+	defer func() {
+		if r := recover(); r != nil {
+			Logger.Errorf("Session.GetVar : %v", r)
+		}
+		out = false
+		session.Unlock()
+	}()
+	session.Lock()
+	sessionVars[session.sessionId][name] = value
+	return out
+}
+func (session *session) GetKeys() []string {
+	defer func() {
+		if r := recover(); r != nil {
+			Logger.Errorf("Session.GetVar : %v", r)
+		}
+		session.RUnlock()
+	}()
+	var keys []string = make([]string, 0)
+	session.RLock()
+	for k, _ := range sessionVars[session.sessionId] {
+		keys = append(keys, k)
+	}
+	return keys
+}
+func (session *session) GetSystemObject(name string) (interface{}, error) {
+	defer func() {
+		if r := recover(); r != nil {
+			Logger.Errorf("Session.GetVar : %v", r)
+		}
+		session.RUnlock()
+	}()
+	session.RLock()
+	if value, ok := systemObjectsMap[session.sessionId][name]; ok {
+		return value, nil
+	} else {
+		return "", errors.New(fmt.Sprintf("Variable %s not found in session!!", name))
+	}
+}
+func (session *session) SetSystemObject(name string, value interface{}) bool {
+	var out bool = true
+	defer func() {
+		if r := recover(); r != nil {
+			Logger.Errorf("Session.GetVar : %v", r)
+		}
+		out = false
+		session.Unlock()
+	}()
+	session.Lock()
+	systemObjectsMap[session.sessionId][name] = value
+	return out
+}
+func (session *session) GetSystemKeys() []string {
+	defer func() {
+		if r := recover(); r != nil {
+			Logger.Errorf("Session.GetVar : %v", r)
+		}
+		session.RUnlock()
+	}()
+	var keys []string = make([]string, 0)
+	session.RLock()
+	for k, _ := range systemObjectsMap[session.sessionId] {
+		keys = append(keys, k)
+	}
+	return keys
+}
+
+func NewSessionId() string {
+	uuid, err := uuid.NewUUID()
+	if err != nil {
+		Logger.Errorf("NewSessionId unable to create google.UUID -> Reason: %s", err.Error())
+		block1 := strconv.FormatInt(rand.Int63(), 16)
+		block2 := strconv.FormatInt(rand.Int63(), 16)
+		block3 := strconv.FormatInt(rand.Int63(), 16)
+		block4 := strconv.FormatInt(rand.Int63(), 16)
+		block5 := strconv.FormatInt(rand.Int63(), 16)
+		return fmt.Sprintf("%s-%s-%s-%s-%s", block1, block2, block3, block4, block5)
+	}
+	return uuid.String()
+}
+
+func DestroySession(sessionId string) {
+	if _, ok := sessionVars[sessionId]; ok {
+		sessionVars[sessionId] = nil
+	}
+	if _, ok := systemObjectsMap[sessionId]; ok {
+		systemObjectsMap[sessionId] = nil
+	}
+	if _, ok := sessionsMap[sessionId]; ok {
+		sessionsMap[sessionId] = nil
+	}
+	runtime.GC()
+}
+
+func NewSession(sessionId string) Session {
+	if _, ok := sessionVars[sessionId]; !ok {
+		sessionVars[sessionId] = make(map[string]string)
+	}
+	if _, ok := systemObjectsMap[sessionId]; !ok {
+		systemObjectsMap[sessionId] = make(map[string]interface{})
+	}
+	if sessionX, ok := sessionsMap[sessionId]; ok {
+		return sessionX
+	} else {
+		sessionX := &session{
+			sessionId:       sessionId,
+			deployConfig:    RuntimeDeployConfig,
+			deployType:      RuntimeDeployType,
+			netProtocolType: RuntimeNetworkType,
+		}
+		sessionsMap[sessionId] = sessionX
+		return sessionX
+	}
+}
 
 func (pc *PluginsConfig) Merge(pc2 *PluginsConfig) *PluginsConfig {
 	return &PluginsConfig{

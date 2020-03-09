@@ -145,7 +145,7 @@ func getMatcher(format module.DescriptorTypeValue) func(string) bool {
 	}
 }
 
-func getFileFormatDescritor(fileName string, defaultFormat module.DescriptorTypeValue) module.DescriptorTypeValue {
+func GetFileFormatDescritor(fileName string, defaultFormat module.DescriptorTypeValue) module.DescriptorTypeValue {
 	if "" == string(defaultFormat) {
 		var nameLower = strings.ToLower(fileName)
 		var nameLen = len(nameLower)

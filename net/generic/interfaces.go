@@ -130,9 +130,10 @@ type ConnectionHandler interface {
 	ConnectWithCertificate(addr string, port string, certificate common.CertificateKeyPair, caCert string) error
 }
 
-
+// Function defining the Connection Handler / Connection Handler Configuration Pair instance Function
 type NewConnectionHandlerFunc func(bool)(ConnectionHandler, ConnectionHandlerConfig)
 
+// Defines the available connection methods for a built-in or Custom given Client interface
 type ConnectionHandlerConfig struct {
 	UseUserPassword             bool
 	UseAuthKey                  bool

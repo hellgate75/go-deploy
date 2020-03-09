@@ -5,6 +5,7 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
+	"github.com/hellgate75/go-deploy/cmd"
 	"github.com/hellgate75/go-tcp-common/log"
 	"github.com/hellgate75/go-deploy/types/module"
 	"gopkg.in/yaml.v3"
@@ -91,6 +92,7 @@ func (feed OptionsSet) Validate() ([]*module.Step, []error) {
 	return steps, errors
 }
 
+//Feed Interface, that describes the available option for the load of the file
 type IFeed interface {
 	Load(path string) error
 	Save(path string) error
@@ -107,14 +109,15 @@ func (feed *Feed) Load(path string) error {
 	if err != nil {
 		return err
 	}
-	if string(module.RuntimeDeployConfig.ConfigLang) == "YAML" {
+	dFormat := cmd.GetFileFormatDescritor(path, module.RuntimeDeployConfig.ConfigLang)
+	if dFormat == module.YAML_DESCRIPTOR {
 		err = yaml.Unmarshal(data, feed)
-	} else if string(module.RuntimeDeployConfig.ConfigLang) == "XML" {
+	} else if dFormat == module.XML_DESCRIPTOR {
 		err = xml.Unmarshal(data, feed)
-	} else if string(module.RuntimeDeployConfig.ConfigLang) == "JSON" {
+	} else if dFormat == module.JSON_DESCRIPTOR {
 		err = json.Unmarshal(data, feed)
 	} else {
-		return errors.New("Feed.Load: Unavailable converter for type: " + string(module.RuntimeDeployConfig.ConfigLang))
+		return errors.New("Feed.Load: Unavailable converter for type: " + string(dFormat))
 	}
 	if err != nil {
 		return err
@@ -180,6 +183,7 @@ func (feed Feed) Validate() (*module.FeedExec, []error) {
 	}, errorList
 }
 
+//Internl function that transforms Blob data in list of module.Step Structure pointers
 func EvaluateSteps(name string, key interface{}, value interface{}) ([]*module.Step, []error) {
 	var errorsList []error = make([]error, 0)
 	var steps []*module.Step = make([]*module.Step, 0)
@@ -293,6 +297,7 @@ func EvaluateSteps(name string, key interface{}, value interface{}) ([]*module.S
 	return steps, errorsList
 }
 
+//Create new empty Feed interface, ready for load and/or save
 func NewFeed(defaultName string) IFeed {
 	return &Feed{
 		Name:  defaultName,

@@ -6,6 +6,7 @@ import (
 	"github.com/hellgate75/go-deploy/types/module"
 )
 
+// Loads Config Type, Network Type and Plugins Type files and merge them, saving in the Runtime package variables
 func (bootstrap *bootstrap) Load(baseDir string, suffix string, format module.DescriptorTypeValue, logger log.Logger) []error {
 	if baseDir == "" {
 		baseDir = "./" + DEFAULT_CONFIG_FOLDER
@@ -31,7 +32,7 @@ func (bootstrap *bootstrap) Load(baseDir string, suffix string, format module.De
 			var files []string = io.GetMatchedFiles(dataFilePath, true, matcher)
 			for _, dataFilePathX := range files {
 				var dType *module.DeployType = &module.DeployType{}
-				dformat := getFileFormatDescritor(dataFilePathX, format)
+				dformat := GetFileFormatDescritor(dataFilePathX, format)
 				var errX error = nil
 				if dformat == module.YAML_DESCRIPTOR {
 					dType, errX = dType.FromYamlFile(dataFilePathX)
@@ -48,7 +49,7 @@ func (bootstrap *bootstrap) Load(baseDir string, suffix string, format module.De
 			}
 		} else {
 			var dType *module.DeployType = &module.DeployType{}
-			dformat := getFileFormatDescritor(dataFilePath, format)
+			dformat := GetFileFormatDescritor(dataFilePath, format)
 			var errX error = nil
 			if dformat == module.YAML_DESCRIPTOR {
 				dType, errX = dType.FromYamlFile(dataFilePath)
@@ -76,7 +77,7 @@ func (bootstrap *bootstrap) Load(baseDir string, suffix string, format module.De
 			for _, netFilePathX := range files {
 				var nType *module.NetProtocolType = &module.NetProtocolType{}
 				var errX error = nil
-				dformat := getFileFormatDescritor(netFilePathX, format)
+				dformat := GetFileFormatDescritor(netFilePathX, format)
 				if dformat == module.YAML_DESCRIPTOR {
 					nType, errX = nType.FromYamlFile(netFilePathX)
 				} else if dformat == module.XML_DESCRIPTOR {
@@ -93,7 +94,7 @@ func (bootstrap *bootstrap) Load(baseDir string, suffix string, format module.De
 		} else {
 			var nType *module.NetProtocolType = &module.NetProtocolType{}
 			var errX error = nil
-			dformat := getFileFormatDescritor(netFilePath, format)
+			dformat := GetFileFormatDescritor(netFilePath, format)
 			if dformat == module.YAML_DESCRIPTOR {
 				nType, errX = nType.FromYamlFile(netFilePath)
 			} else if dformat == module.XML_DESCRIPTOR {
@@ -121,7 +122,7 @@ func (bootstrap *bootstrap) Load(baseDir string, suffix string, format module.De
 			for _, netFilePathX := range files {
 				var nPlugins *module.PluginsConfig = &module.PluginsConfig{}
 				var errX error = nil
-				dformat := getFileFormatDescritor(netFilePathX, format)
+				dformat := GetFileFormatDescritor(netFilePathX, format)
 				if dformat == module.YAML_DESCRIPTOR {
 					nPlugins, errX = nPlugins.FromYamlFile(netFilePathX)
 				} else if dformat == module.XML_DESCRIPTOR {
@@ -138,7 +139,7 @@ func (bootstrap *bootstrap) Load(baseDir string, suffix string, format module.De
 		} else {
 			var nPlugins *module.PluginsConfig = &module.PluginsConfig{}
 			var errX error = nil
-			dformat := getFileFormatDescritor(pluginsFilePath, format)
+			dformat := GetFileFormatDescritor(pluginsFilePath, format)
 			if dformat == module.YAML_DESCRIPTOR {
 				nPlugins, errX = nPlugins.FromYamlFile(pluginsFilePath)
 			} else if dformat == module.XML_DESCRIPTOR {

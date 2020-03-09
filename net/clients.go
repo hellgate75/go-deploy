@@ -13,10 +13,14 @@ import (
 
 var Logger log.Logger = nil
 
+// Use custom plugins loading proxies
 var UsePlugins bool = false
+// Use custom plugins folder to seek for libraries
 var PluginLibrariesFolder string = getDefaultPluginsFolder()
+// Assume this extension name for ;loading the libraries (we hope in future windows will allow plugins)
 var PluginLibrariesExtension = "so"
 
+// Looks up for connection Handler linked to a given client name
 func DiscoverConnectionHandler(clientName string) (generic.NewConnectionHandlerFunc, error) {
 	if UsePlugins {
 		Logger.Debugf("client.proxy.GetSender() -> Loading library for command: %s", clientName)

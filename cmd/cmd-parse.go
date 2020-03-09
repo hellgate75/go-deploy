@@ -70,6 +70,8 @@ func init() {
 	fs.StringVar(&modproxy.PluginLibrariesExtension, "prugins-modules-extension", modproxy.PluginLibrariesExtension, "File extension for Go Deploy modules plugin libraries [Linux Only]")
 	fs.BoolVar(&modproxy.UsePlugins, "use-modules-plugins", modproxy.UsePlugins, "Enable/disable Go Deploy modules plugins [true|false] [Linux Only]")
 }
+
+// Verify a command line request for Help() or Usage()
 func RequiresHelp() bool {
 	for _, val := range os.Args {
 		if val == "--help" || val == "-help" || val == "-h" || val == "help" {
@@ -80,10 +82,12 @@ func RequiresHelp() bool {
 	return false
 }
 
+// Print Usage of the command
 func Usage() {
 	fs.Usage()
 }
 
+// Get(s) the given target file for loading the Feed
 func GetTarget() string {
 	if len(os.Args) == 2 && os.Args[0][0:1] != "-" {
 		return os.Args[0]
@@ -95,6 +99,7 @@ func GetTarget() string {
 	return ""
 }
 
+// Parse Command line arguments
 func ParseArguments() (*module.DeployConfig, error) {
 	if err := fs.Parse(os.Args[1:]); err != nil {
 		return nil, err

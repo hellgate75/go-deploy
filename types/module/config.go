@@ -1,14 +1,7 @@
 package module
 
 import (
-	"errors"
-	"fmt"
-	"github.com/google/uuid"
 	"github.com/hellgate75/go-tcp-common/log"
-	"math/rand"
-	"runtime"
-	"strconv"
-	"sync"
 )
 
 var Logger log.Logger = nil
@@ -37,25 +30,43 @@ const (
 	yamlDescriptorType deployDescriptorTypeValue = iota + 1
 	jsonDescriptorType
 	xmlDescriptorType
+	// Unknown Feed(s) and activation Source
 	UNKNOWN                       DeploymentTypeValue  = "UNKNOWN"
+	// File Feed(s) and activation Source
 	FILE_SOURCE                   DeploymentTypeValue  = "FILE_SOURCE"
+	// HTTP Call Feed(s) and activation Source
 	HTTP_SOURCE                   DeploymentTypeValue  = "HTTP_SOURCE"
+	// Rest service Feed(s) and activation Source
 	REST_SOURCE                   DeploymentTypeValue  = "REST_SOURCE"
+	// Pipe channel Feed(s) and activation Source
 	PIPE_SOURCE                   DeploymentTypeValue  = "PIPE_SOURCE"
+	// Streaing engine Feed(s) and activation Source
 	STREAM_SOURCE                 DeploymentTypeValue  = "STREAM_SOURCE"
+	// YAML File Descriptor
 	YAML_DESCRIPTOR               DescriptorTypeValue  = "YAML"
+	// JSON File Descriptor
 	JSON_DESCRIPTOR               DescriptorTypeValue  = "JSON"
+	// XML File Descriptor
 	XML_DESCRIPTOR                DescriptorTypeValue  = "XML"
+	// ONE SHOT Deployment Strategy
 	ONE_SHOT_DEPLOYMENT           StrategyTypeValue    = "ONE_SHOT_DEPLOYMENT"
+	// Continuous Deployment Strategy
 	CONTINUOUS_DEPLOYMENT         StrategyTypeValue    = "CONTINUOUS_DEPLOYMENT"
+	// Awake On-Demand Deployment Strategy
 	ON_DEMAND_DEPLOYMENT          StrategyTypeValue    = "ON_DEMAND_DEPLOYMENT"
+	// Sheduled and periodic Deployment Strategy
 	PERIODIC_DEPLOYMENT           StrategyTypeValue    = "PERIODIC_DEPLOYMENT"
+	// REST Service Get Requiest Identifier
 	REST_GET_REQUEST              RestMethodTypeValue  = "GET"
+	// REST Service Post Requiest Identifier
 	REST_POST_REQUEST             RestMethodTypeValue  = "POST"
+	// SSH Built-in Client protocol
 	NET_PROTOCOL_SSH              NetProtocolTypeValue = "SSH"
+	// Go! TLS/TCP Client protocol
 	NET_PROTOCOL_GO_DEPLOY_CLIENT NetProtocolTypeValue = "GO_DEPLOY"
 )
 
+// Deploy Behaviour Configuration Struture
 type DeployType struct {
 	DeploymentType DeploymentTypeValue `yaml:"deploymentType,omitempty" json:"deploymentType,omitempty" xml:"deployment-type,chardata,omitempty"`
 	DescriptorType DescriptorTypeValue `yaml:"descriptorType,omitempty" json:"descriptorType,omitempty" xmk:"descriptor-type,chardata,omitempty"`
@@ -65,6 +76,7 @@ type DeployType struct {
 	PostBody       string              `yaml:"postBody,omitempty" json:"postBody,omitempty" json:"post-body,chardata,omitempty"`
 }
 
+// Networking and Client Configuration Struture
 type NetProtocolType struct {
 	NetProtocol NetProtocolTypeValue `yaml:"protocol,omitempty" json:"protocol,omitempty" xml:"protocol,chardata,omitempty"`
 	UserName    string               `yaml:"userName,omitempty" json:"userName,omitempty" xml:"username,chardata,omitempty"`
@@ -75,6 +87,7 @@ type NetProtocolType struct {
 	Certificate string               `yaml:"certificate,omitempty" json:"certificate,omitempty" xml:"certificate,chardata,omitempty"`
 }
 
+// Main Configuration Struture
 type DeployConfig struct {
 	DeployName         string              `yaml:"deployName,omitempty" json:"deployName,omitempty" xml:"deploy-name,chardata,omitempty"`
 	LogVerbosity       string              `yaml:"verbosity,omitempty" json:"verbosity,omitempty" xml:"verbosity,chardata,omitempty"`
@@ -93,6 +106,7 @@ type DeployConfig struct {
 	ReadTimeout      int64                `yaml:"readTimeout,omitempty" json:"readTimeout,omitempty" xml:"read-timeout,chardata,omitempty"`
 }
 
+// Plugins Configuration Struture
 type PluginsConfig struct {
 	EnableDeployClientsPlugin           bool   `yaml:"enableDeployClientsPlugin,omitempty" json:"enableDeployClientsPlugin,omitempty" xml:"enable-deploy-clients-plugin,chardata,omitempty"`
 	DeployClientsPluginExtension        string `yaml:"deployClientsPluginExtension,omitempty" json:"deployClientsPluginExtension,omitempty" xml:"deploy-clients-plugin-extension,chardata,omitempty"`
@@ -105,18 +119,15 @@ type PluginsConfig struct {
 	DeployClientCommandsPluginFolder    string `yaml:"deployClientCommandsPluginFolder,omitempty" json:"deployClientCommandsPluginFolder,omitempty" xml:"deploy-client-commands-plugin-folder,chardata,omitempty"`
 }
 
-/*
-* Coverter interface, responsible to comvert raw interface from the parsing to a specific structure
- */
+// Printable interface, allows system to print as sting any implementing components (almost all in this project)
 type Printable interface {
-	/*
-	* Traslates the object in printable version <BR/>
-	* Return: <BR/>
-	* (string) Representation of the structure<BR/>
-	 */
+	// Traslates the object in printable version <BR/>
+	// Return: <BR/>
+	// (string) Representation of the structure<BR/>
 	String() string
 }
 
+// Step Structure
 type Step struct {
 	Name     string
 	StepType string
@@ -125,181 +136,48 @@ type Step struct {
 	Feeds    []*FeedExec
 }
 
+// Executable Feed Structure
 type FeedExec struct {
 	Name      string
 	HostGroup string
 	Steps     []*Step
 }
 
-var sessionVars map[string]map[string]string = make(map[string]map[string]string)
-var sessionsMap map[string]*session = make(map[string]*session)
-var systemObjectsMap map[string]map[string]interface{} = make(map[string]map[string]interface{})
-
+// Session Interface
 type Session interface {
+	// Retrives Session Unique Id
 	GetSessionId() string
+	// Retrives Session Deploy Type
 	GetDeployType() *DeployType
+	// Retrives Session Network Protocol Type
 	GetNetProtocolType() *NetProtocolType
+	// Retrives Session Deploy Config
 	GetDeployConfig() *DeployConfig
+	// Retrives a Session Variable by key
 	GetVar(name string) (string, error)
+	// Sets a Session Variable
 	SetVar(name string, value string) bool
+	// Retrives all Session Variable keys
 	GetKeys() []string
+	// Retrives a Session Object by key
 	GetSystemObject(name string) (interface{}, error)
+	// Sets a Session Variable
+	// Build-in are required variables present in Vars files
 	SetSystemObject(name string, value interface{}) bool
+	// Retrives all Session Object keys
+	// Build-in session objects :
+	// connection-handler -> Current Session ConnectionHandler
+	// rutime-config -> Session module.DeployConfig
+	// runtime-type -> Session module.DeployType
+	// runtime-net -> Session module.NetworkType
+	// host-groups -> Current Running defaults.HostGroup
+	// envs -> Session Environemnts Row defaults.NameValuePair list
+	// vars -> Session Variables Row defaults.NameValuePair list
+	// system-logger -> Centrilized Go! Deploy logger instance
 	GetSystemKeys() []string
 }
 
-type session struct {
-	sync.RWMutex
-	sessionId       string
-	deployType      *DeployType
-	netProtocolType *NetProtocolType
-	deployConfig    *DeployConfig
-	pluginsConfig    *PluginsConfig
-}
-
-func (session *session) GetSessionId() string {
-	return session.sessionId
-}
-func (session *session) GetDeployType() *DeployType {
-	return session.deployType
-}
-func (session *session) GetNetProtocolType() *NetProtocolType {
-	return session.netProtocolType
-}
-func (session *session) GetDeployConfig() *DeployConfig {
-	return session.deployConfig
-}
-func (session *session) GetVar(name string) (string, error) {
-	defer func() {
-		if r := recover(); r != nil {
-			Logger.Errorf("Session.GetVar : %v", r)
-		}
-		session.RUnlock()
-	}()
-	session.RLock()
-	if value, ok := sessionVars[session.sessionId][name]; ok {
-		return value, nil
-	} else {
-		return "", errors.New(fmt.Sprintf("Variable %s not found in session!!", name))
-	}
-}
-func (session *session) SetVar(name string, value string) bool {
-	var out bool = true
-	defer func() {
-		if r := recover(); r != nil {
-			Logger.Errorf("Session.GetVar : %v", r)
-		}
-		out = false
-		session.Unlock()
-	}()
-	session.Lock()
-	sessionVars[session.sessionId][name] = value
-	return out
-}
-func (session *session) GetKeys() []string {
-	defer func() {
-		if r := recover(); r != nil {
-			Logger.Errorf("Session.GetVar : %v", r)
-		}
-		session.RUnlock()
-	}()
-	var keys []string = make([]string, 0)
-	session.RLock()
-	for k, _ := range sessionVars[session.sessionId] {
-		keys = append(keys, k)
-	}
-	return keys
-}
-func (session *session) GetSystemObject(name string) (interface{}, error) {
-	defer func() {
-		if r := recover(); r != nil {
-			Logger.Errorf("Session.GetVar : %v", r)
-		}
-		session.RUnlock()
-	}()
-	session.RLock()
-	if value, ok := systemObjectsMap[session.sessionId][name]; ok {
-		return value, nil
-	} else {
-		return "", errors.New(fmt.Sprintf("Variable %s not found in session!!", name))
-	}
-}
-func (session *session) SetSystemObject(name string, value interface{}) bool {
-	var out bool = true
-	defer func() {
-		if r := recover(); r != nil {
-			Logger.Errorf("Session.GetVar : %v", r)
-		}
-		out = false
-		session.Unlock()
-	}()
-	session.Lock()
-	systemObjectsMap[session.sessionId][name] = value
-	return out
-}
-func (session *session) GetSystemKeys() []string {
-	defer func() {
-		if r := recover(); r != nil {
-			Logger.Errorf("Session.GetVar : %v", r)
-		}
-		session.RUnlock()
-	}()
-	var keys []string = make([]string, 0)
-	session.RLock()
-	for k, _ := range systemObjectsMap[session.sessionId] {
-		keys = append(keys, k)
-	}
-	return keys
-}
-
-func NewSessionId() string {
-	uuid, err := uuid.NewUUID()
-	if err != nil {
-		Logger.Errorf("NewSessionId unable to create google.UUID -> Reason: %s", err.Error())
-		block1 := strconv.FormatInt(rand.Int63(), 16)
-		block2 := strconv.FormatInt(rand.Int63(), 16)
-		block3 := strconv.FormatInt(rand.Int63(), 16)
-		block4 := strconv.FormatInt(rand.Int63(), 16)
-		block5 := strconv.FormatInt(rand.Int63(), 16)
-		return fmt.Sprintf("%s-%s-%s-%s-%s", block1, block2, block3, block4, block5)
-	}
-	return uuid.String()
-}
-
-func DestroySession(sessionId string) {
-	if _, ok := sessionVars[sessionId]; ok {
-		sessionVars[sessionId] = nil
-	}
-	if _, ok := systemObjectsMap[sessionId]; ok {
-		systemObjectsMap[sessionId] = nil
-	}
-	if _, ok := sessionsMap[sessionId]; ok {
-		sessionsMap[sessionId] = nil
-	}
-	runtime.GC()
-}
-
-func NewSession(sessionId string) Session {
-	if _, ok := sessionVars[sessionId]; !ok {
-		sessionVars[sessionId] = make(map[string]string)
-	}
-	if _, ok := systemObjectsMap[sessionId]; !ok {
-		systemObjectsMap[sessionId] = make(map[string]interface{})
-	}
-	if sessionX, ok := sessionsMap[sessionId]; ok {
-		return sessionX
-	} else {
-		sessionX := &session{
-			sessionId:       sessionId,
-			deployConfig:    RuntimeDeployConfig,
-			deployType:      RuntimeDeployType,
-			netProtocolType: RuntimeNetworkType,
-		}
-		sessionsMap[sessionId] = sessionX
-		return sessionX
-	}
-}
-
+// Client Connection Features Availabolity Configuration
 type ConnectionConfig struct {
 	UseUserPassword         bool
 	UseUserKey              bool
