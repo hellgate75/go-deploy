@@ -109,11 +109,9 @@ Source test script is :
 ```
 It accepts optional parameters or the help request.
 
-In order to use this sample please download and install [Go TCP Server](https://github.com/hellgate75/go-tcp-server) and run on same or different machine, then you can change the hosts file [here](/sample/env/hosts.yaml)
+Commands included in the main and sub-feeds will give you an overview of capabilities provided by the framework.
 
-Commands included in the main and sub-feeds will give an overview of capabilities provided by the system.
-
-In order to execute the sample you must install [Go! TCP Server](https://github.com/hellate75/go-tcp-server) and execute the binaries in the sample 
+In order to execute the sample you must install [Go! TCP Server](https://github.com/hellate75/go-tcp-server) and execute the binaries in the sample folder 
 
 
 Enjoy the experience.
