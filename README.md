@@ -97,20 +97,23 @@ Accordingly to policies we identified following modes for the system:
 
 Official produict documentation is available at:
 
-* Take a look to product [Wiki](https://github.com/hellgate75/go-deploy/wiki), a lot of important information are disclosed in that pages.
+* It's available a product [Wiki](https://github.com/hellgate75/go-deploy/wiki), tjat contains a lot of important information about haw to install and how to use tha product.
+
 
 
 ## Sample code
 
 Source test script is :
 ```
-[test-sample.sh](/test-sample.sh)
+./test.sh
 ```
 It accepts optional parameters or the help request.
 
 In order to use this sample please download and install [Go TCP Server](https://github.com/hellgate75/go-tcp-server) and run on same or different machine, then you can change the hosts file [here](/sample/env/hosts.yaml)
 
 Commands included in the main and sub-feeds will give an overview of capabilities provided by the system.
+
+In order to execute the sample you must install [Go! TCP Server](https://github.com/hellate75/go-tcp-server) and execute the binaries in the sample 
 
 
 Enjoy the experience.
