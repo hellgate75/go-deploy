@@ -1,0 +1,29 @@
+language: go
+
+# Don't build other branches that are being used for PRs.
+# Currently only the master branch is used in this repo.
+branches:
+  only:
+    - master
+
+go:
+ - 1.13
+ - 1.14
+
+install:
+ - go get -u github.com/golang/dep/cmd/dep
+ - go get -u github.com/golang/go/src/cmd/gofmt
+
+script:
+ - chmod -Rf 777 *
+ - dep ensure -update -v
+ - dep status
+ - go vet .
+ - go fmt .
+ - gofmt -e -s -w .
+# - travis_wait 20 go test -p 10 -timeout 20m -v -cover -covermode atomic ./...
+# No build on trevis-ci because of this error : "/home/travis/.gimme/versions/go1.11.linux.amd64/pkg/tool/linux_amd64/link: cannot implicitly include runtime/cgo in a shared library"
+# And this is not a shared library
+# - go build -buildmode=shared -pkgdir ./vendor .
+  - go build -v .
+ - echo "Build complete, Folks !!!"
