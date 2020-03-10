@@ -19,8 +19,12 @@ cd $PROJECT_FOLDER
 echo "Content of folder $PROJECT_FOLDER"
 ls -latr
 echo "Running go procedure into folder:$PROJECT_FOLDER"
-go mod init
-go mod tidy
+go get -u github.com/golang/dep/cmd/dep
+dep init -v -skip-tools -no-examples
+dep ensure -update -v
+dep status ./... -f
+#go mod init
+#go mod tidy
 echo "Testing project into folder:$PROJECT_FOLDER"
 go test -v ./...
 OUT_FILE_NAME="$PROJECT_NAME-$(uname -o|awk 'BEGIN {FS=OFS="/"}{print $NF}')-$(uname -m)$EXTENSION"
