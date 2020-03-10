@@ -10,10 +10,10 @@ WORKDIR="$(pwd)"
 echo "Working dir: $WORKDIR"
 echo "Cpontent of dir: $WORKDIR"
 ls -latr
-echo "Creating base folder '$PROJECT_FOLDER' into folder: GOPATH '$GOPATH'"
-mkdir -p $PROJECT_FOLDER
-echo "Linking project folder: '$PROJECT_FOLDER' into folder: GOPATH '$GOPATH'"
-ln -s $WORKDIR $PROJECT_FOLDER
+echo "Creating base folder '$BASE_FOLDER' into folder: GOPATH '$GOPATH'"
+mkdir -p $BASE_FOLDER
+echo "Linking project folder: '$PROJECT_FOLDER' from source folder: '$WORKDIR'"
+ln -s -T $PROJECT_FOLDER $WORKDIR
 echo "Changing folder to $PROJECT_FOLDER"
 cd $PROJECT_FOLDER
 echo "Content of folder $PROJECT_FOLDER"
