@@ -1,5 +1,6 @@
 <p align="right">
- <image src="https://github.com/hellgate75/go-deploy/workflows/Go/badge.svg?branch=master"></image>
+ <img src="https://github.com/hellgate75/go-deploy/workflows/Go/badge.svg?branch=master"></img>
+&nbsp;&nbsp;<img src="https://travis-ci.org/hellgate75/go-deploy.svg?branch=master" alt="trevis-ci" width="98" height="20" />&nbsp;&nbsp;<a href="https://travis-ci.org/hellgate75/go-deploy">Check last build on Travis-CI</a>
  </p>
 <p align="center">
 <image width="150" height="50" src="images/kube-go.png"></image>&nbsp;
