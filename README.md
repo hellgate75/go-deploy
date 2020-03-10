@@ -1,3 +1,6 @@
+<p align="right">
+ <image src="https://github.com/hellgate75/go-deploy/workflows/Go/badge.svg?branch=master"></image>
+ </p>
 <p align="center">
 <image width="150" height="50" src="images/kube-go.png"></image>&nbsp;
 <image width="260" height="410" src="images/golang-logo.png">
