@@ -1,14 +1,10 @@
-language: go
-go:
-- master
-sudo: false
+language: ruby
+service:
+ - docker
 email: false
-install:
- - export GOPATH="${TRAVIS_BUILD_DIR}/Godeps/_workspace:$GOPATH"
- - export PATH="${TRAVIS_BUILD_DIR}/Godeps/_workspace/bin:$PATH"
- - export GO111MODULE=off
-#before_script:
-# - go vet ./...
+before_script:
+- docker pull golang:1.13
+- docker pull golang:1.14
 script:
-- go test -v ./...
-- go build -v ./...
+- docker run --rm -it -v "$PWD":/usr/src/myapp -w /usr/src/myapp golang:1.13 go build -v ./...
+- docker run --rm -it -v "$PWD":/usr/src/myapp -w /usr/src/myapp golang:1.14 go build -v ./...
