@@ -6,13 +6,18 @@ BUILD_MODE="exe"
 EXTENSION=""
 BASE_FOLDER="$GOPATH/src/github.com/$GITHUB_USER"
 PROJECT_FOLDER="$BASE_FOLDER/$PROJECT_NAME"
-echo "Working dir: $(pwd)"
+WORKDIR="$(pwd)"
+echo "Working dir: $WORKDIR"
+echo "Cpontent of dir: $WORKDIR"
+ls -latr
 echo "Creating base folder '$PROJECT_FOLDER' into folder: GOPATH '$GOPATH'"
 mkdir -p $PROJECT_FOLDER
 echo "Linking project folder: '$PROJECT_FOLDER' into folder: GOPATH '$GOPATH'"
 ln -s $PROJECT_FOLDER $(pwd)
 echo "Changing folder to $PROJECT_FOLDER"
 cd $PROJECT_FOLDER
+echo "Content of folder $PROJECT_FOLDER"
+ls -latr
 echo "Running go procedure into folder:$PROJECT_FOLDER"
 go mod init
 go mod tidy
