@@ -1,7 +1,8 @@
 #!/bin/sh
 export GO111MODULE=on
+GITHUB_USER="hellgate75"
 PROJECT_NAME="go-deploy"
-BASE_FOLDER="$GOPATH/src/github.com/hellgate75"
+BASE_FOLDER="$GOPATH/src/github.com/$GITHUB_USER"
 PROJECT_FOLDER="$BASE_FOLDER/$PROJECT_NAME"
 echo "Creating base folder $BASE_FOLDER into folder: GOPATH $GOPATH"
 mkdir -p $BASE_FOLDER
