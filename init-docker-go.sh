@@ -13,7 +13,7 @@ ls -latr
 echo "Creating base folder '$BASE_FOLDER' into folder: GOPATH '$GOPATH'"
 mkdir -p $BASE_FOLDER
 echo "Linking project folder: '$PROJECT_FOLDER' from source folder: '$WORKDIR'"
-ln -s -T $PROJECT_FOLDER $WORKDIR
+ln -s -T $WORKDIR $PROJECT_FOLDER
 echo "Changing folder to $PROJECT_FOLDER"
 cd $PROJECT_FOLDER
 echo "Content of folder $PROJECT_FOLDER"
