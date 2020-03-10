@@ -19,7 +19,7 @@ cd $PROJECT_FOLDER
 echo "Content of folder $PROJECT_FOLDER"
 ls -latr
 echo "Running go procedure into folder:$PROJECT_FOLDER"
-go get -u github.com/golang/dep/cmd/dep
+go get -u github.com/golang/dep/...
 dep init -v -skip-tools -no-examples
 dep ensure -update -v
 dep status ./... -f
