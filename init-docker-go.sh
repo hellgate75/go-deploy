@@ -19,9 +19,6 @@ cd $PROJECT_FOLDER
 echo "Content of folder $PROJECT_FOLDER"
 ls -latr
 echo "Running go procedure into folder:$PROJECT_FOLDER"
-#go get github.com/Masterminds/vcs@v1.13.0
-#go get github.com/golang/protobuf/proto@latest
-#go get github.com/Masterminds/semver@059deebd1619
 go get -u github.com/golang/dep/...
 dep init -v -skip-tools -no-examples
 dep ensure -update -v
@@ -32,4 +29,4 @@ echo "Testing project into folder:$PROJECT_FOLDER"
 go test -v ./...
 OUT_FILE_NAME="$PROJECT_NAME-$(uname -o|awk 'BEGIN {FS=OFS="/"}{print $NF}')-$(uname -m)$EXTENSION"
 echo "Building project for making: $OUT_FILE_NAME"
-go build -v -buildmode "$BUILD_MODE" -o "$OUT_FILE_NAME" ./...
+go build -v -buildmode "$BUILD_MODE" -o "$OUT_FILE_NAME" .
