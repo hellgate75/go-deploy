@@ -1,25 +1,17 @@
 language: go
-
-env: GO111MODULE=on GOFLAGS='-mod vendor'
-
-branches:
-  only:
-  - master
-
 go:
-- 1.13.x
-
-git:
-  depth: 1
-
-install: true
-
+ - 1.12.x
+ - 1.13.x
+ - 1.14.x
+- master
+sudo: false
 email: false
-
 before_script:
-- curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $GOPATH/bin v1.23.1
+- go vet ./...
+install: true
 script:
-- golangci-lint run       # run a bunch of code checkers/linters in parallel
-- go test -v -race ./...  # Run all the tests with the race detector enabled
-- go build -v -race ./...  # Run all the tests with the race detector enabled
-
+ # Add Godeps dependencies to GOPATH and PATH
+- export GOPATH="${TRAVIS_BUILD_DIR}/Godeps/_workspace:$GOPATH"
+- export PATH="${TRAVIS_BUILD_DIR}/Godeps/_workspace/bin:$PATH"
+- env GO111MODULE=on go test -v ./...
+- env GO111MODULE=on go build -v ./...
