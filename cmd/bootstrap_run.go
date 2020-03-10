@@ -77,7 +77,7 @@ func (bootstrap *bootstrap) Run(feed *module.FeedExec, logger log.Logger) []erro
 	var useUserKey bool = false
 	var useUserKeyPassphrase bool = false
 	var useCertificates bool = false
-	if !missUser && !missPassword && handlerConfig.UseUserPassword && handlerConfig.UseUserPassword {
+	if !missUser && !missPassword && handlerConfig.UseUserPassword {
 		useUserPassword = true
 	} else if !missUser && !missKey && missPassPhrase && handlerConfig.UseAuthKey{
 		useUserKey = true
