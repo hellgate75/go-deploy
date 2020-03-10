@@ -6,5 +6,5 @@ before_script:
 - docker pull golang:1.13
 - docker pull golang:1.14
 script:
-- docker run --rm -it -e GO111MODULE=on -e GOPATH=/usr/src/myapp/go -v "$PWD":/usr/src/myapp -w /usr/src/myapp golang:1.13 ln -s $GOPATH/src/github.com/hellgate75/go-deploy ./ && cd $GOPATH/src/github.com/hellgate75/go-deploy && go mod init && go mod tidy && go test -v ./...  &&  go build -v ./...
-- docker run --rm -it -e GO111MODULE=on -v "$PWD":/usr/src/myapp -w /usr/src/myapp golang:1.14 ln -s $GOPATH/src/github.com/hellgate75/go-deploy ./ && cd $GOPATH/src/github.com/hellgate75/go-deploy && go mod init && go mod tidy && go test -v ./... && go build -v ./...
+- docker run --rm -it -e GO111MODULE=on -v "$PWD":/usr/src/myapp -w /usr/src/myapp golang:1.13 $(PWD)/init-docker-go.sh
+- docker run --rm -it -e GO111MODULE=on -v "$PWD":/usr/src/myapp -w /usr/src/myapp golang:1.14 $(PWD)/init-docker-go.sh
