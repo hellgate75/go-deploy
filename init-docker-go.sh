@@ -1,5 +1,5 @@
 #!/bin/sh
-export GO111MODULE=on
+export GO111MODULE=off
 GITHUB_USER="hellgate75"
 PROJECT_NAME="go-deploy"
 BUILD_MODE="exe"
@@ -19,7 +19,9 @@ cd $PROJECT_FOLDER
 echo "Content of folder $PROJECT_FOLDER"
 ls -latr
 echo "Running go procedure into folder:$PROJECT_FOLDER"
-go get github.com/Masterminds/semver@059deebd1619
+#go get github.com/Masterminds/vcs@v1.13.0
+#go get github.com/golang/protobuf/proto@latest
+#go get github.com/Masterminds/semver@059deebd1619
 go get -u github.com/golang/dep/...
 dep init -v -skip-tools -no-examples
 dep ensure -update -v
