@@ -3,6 +3,7 @@ export GO111MODULE=off
 GITHUB_USER="hellgate75"
 PROJECT_NAME="go-deploy"
 BUILD_MODE="exe"
+BUILD_TARGET="."
 EXTENSION=""
 BASE_FOLDER="$GOPATH/src/github.com/$GITHUB_USER"
 PROJECT_FOLDER="$BASE_FOLDER/$PROJECT_NAME"
@@ -29,4 +30,4 @@ echo "Testing project into folder:$PROJECT_FOLDER"
 go test -v ./...
 OUT_FILE_NAME="$PROJECT_NAME-$(uname -o|awk 'BEGIN {FS=OFS="/"}{print $NF}')-$(uname -m)$EXTENSION"
 echo "Building project for making: $OUT_FILE_NAME"
-go build -v -buildmode "$BUILD_MODE" -o "$OUT_FILE_NAME" .
+go build -v -buildmode "$BUILD_MODE" -o "$OUT_FILE_NAME" $BUILD_TARGET
