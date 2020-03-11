@@ -2,7 +2,7 @@ package defaults
 
 import (
 	"fmt"
-	"github.com/hellgate75/go-deploy/io"
+	"github.com/hellgate75/go-tcp-common/io"
 	"github.com/hellgate75/go-deploy/types/module"
 )
 

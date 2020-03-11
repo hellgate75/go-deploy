@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/hellgate75/go-deploy/io"
+	"github.com/hellgate75/go-tcp-common/io"
 	"github.com/hellgate75/go-deploy/net"
 	"github.com/hellgate75/go-deploy/types/module"
 	"github.com/hellgate75/go-tcp-client/client/proxy"

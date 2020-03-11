@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gookit/color"
-	"github.com/hellgate75/go-deploy/io"
+	"github.com/hellgate75/go-tcp-common/io"
 	"github.com/hellgate75/go-deploy/net"
 	"github.com/hellgate75/go-deploy/types/defaults"
 	"github.com/hellgate75/go-deploy/types/module"

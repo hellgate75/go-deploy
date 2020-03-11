@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"github.com/hellgate75/go-deploy/io"
+	"github.com/hellgate75/go-tcp-common/io"
 	"path/filepath"
 	"runtime"
 	"strings"

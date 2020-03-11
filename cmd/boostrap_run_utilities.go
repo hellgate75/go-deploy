@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"errors"
-	"github.com/hellgate75/go-deploy/io"
+	"github.com/hellgate75/go-tcp-common/io"
 	"github.com/hellgate75/go-deploy/types/defaults"
 	"github.com/hellgate75/go-deploy/types/module"
 	"strings"
