@@ -352,12 +352,13 @@ func (npt *NetProtocolType) Merge(npt2 *NetProtocolType) *NetProtocolType {
 		UserName:    bestString(npt2.UserName, npt.UserName),
 		Password:    bestString(npt2.Password, npt.Password),
 		Certificate: bestString(npt2.Certificate, npt.Certificate),
+		Insecure: 	 npt2.Insecure || npt.Insecure,
 	}
 }
 
 func (npt *NetProtocolType) String() string {
-	return fmt.Sprintf("NetProtocolType{NetProtocol: \"%v\", UserName: \"%s\", Password: \"%s\", KeyFile: \"%s\", CaCert: \"%s\", Passphrase: \"%s\"}",
-		npt.NetProtocol, npt.UserName, npt.Password, npt.KeyFile, npt.CaCert, npt.Passphrase)
+	return fmt.Sprintf("NetProtocolType{NetProtocol: \"%v\", UserName: \"%s\", Password: \"%s\", KeyFile: \"%s\", CaCert: \"%s\", Passphrase: \"%s\", Insecure: %v:}",
+		npt.NetProtocol, npt.UserName, npt.Password, npt.KeyFile, npt.CaCert, npt.Passphrase, npt.Insecure)
 }
 
 func (npt *NetProtocolType) Yaml() (string, error) {

@@ -2,3 +2,4 @@ protocol: GO_DEPLOY
 certificate: certs/client.pem
 keyFile:  certs/client.key
 caCert:  certs/ca.crt
+insecure: true

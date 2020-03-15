@@ -131,7 +131,7 @@ type ConnectionHandler interface {
 }
 
 // Function defining the Connection Handler / Connection Handler Configuration Pair instance Function
-type NewConnectionHandlerFunc func(bool)(ConnectionHandler, ConnectionHandlerConfig)
+type NewConnectionHandlerFunc func(bool,bool)(ConnectionHandler, ConnectionHandlerConfig)
 
 // Defines the available connection methods for a built-in or Custom given Client interface
 type ConnectionHandlerConfig struct {

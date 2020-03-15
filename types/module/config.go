@@ -85,6 +85,7 @@ type NetProtocolType struct {
 	CaCert      string               `yaml:"caCert,omitempty" json:"caCert,omitempty" xml:"ca-cert,chardata,omitempty"`
 	Passphrase  string               `yaml:"passphrase,omitempty" json:"passphrase,omitempty" xml:"passphrase,chardata,omitempty"`
 	Certificate string               `yaml:"certificate,omitempty" json:"certificate,omitempty" xml:"certificate,chardata,omitempty"`
+	Insecure	bool               	  `yaml:"insecure,omitempty" json:"insecure,omitempty" xml:"insecure,chardata,omitempty"`
 }
 
 // Main Configuration Struture

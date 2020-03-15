@@ -62,7 +62,7 @@ func (bootstrap *bootstrap) Run(feed *module.FeedExec, logger log.Logger) []erro
 		Logger.Error(message)
 		panic(message)
 	}
-	handler, handlerConfig := handlerEnvelope(module.RuntimeDeployConfig.SingleSession)
+	handler, handlerConfig := handlerEnvelope(module.RuntimeDeployConfig.SingleSession, module.RuntimeNetworkType.Insecure)
 	if module.RuntimePluginsType.EnableDeployClientCommandsPlugin {
 		handler.UsePlugins(module.RuntimePluginsType.DeployClientCommandsPluginExtension, module.RuntimePluginsType.DeployClientCommandsPluginFolder)
 	}
